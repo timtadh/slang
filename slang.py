@@ -40,9 +40,9 @@ def imm(regs, stack, pc, reg, immediate):
     regs[reg] = immediate
     return pc + 1
 def j(regs, stack, pc, reg, addr):
-    return addr
+    return regs[reg]
 def pc(regs, stack, pc, reg, addr):
-    regs[reg] = pc + 1
+    regs[reg] = pc + 2
     return pc + 1
 def add(regs, stack, pc, r1, r2):
     print '->', regs[r1], regs[r2], regs[r1] + regs[r2]
@@ -95,28 +95,50 @@ def run(program):
 if __name__ == '__main__':
     run([
 #init prog
-        (IMM, 4, 0),
-        (IMM, 3, 0),
-        (SAVE, 3, 4),
-        (IMM, 3, 1),
-        (SAVE, 3, 4),
-        (IMM, 3, 2),
-        (SAVE, 3, 4),
-        (IMM, 1, 3),
+        (IMM, 4, 0), # 0
+        (IMM, 3, 0), # 1
+        (SAVE, 3, 4), # 2
+        (IMM, 3, 1), # 3
+        (SAVE, 3, 4), # 4
+        (IMM, 3, 2), # 5
+        (SAVE, 3, 4), # 6
+        (IMM, 1, 3), # 7
 # start prog
-        (IMM, 4, 0),
-        (ADD, 4, 1),
-        (IMM, 3, 29),
-        (SAVE, 4, 3, 'save arg 1'),
-        (IMM, 3, 1),
-        (ADD, 4, 3),
-        (IMM, 3, 37),
-        (SAVE, 4, 3, 'save arg 2'),
-        (ADD, 4, 4),
+        (IMM , 4, 0), # 8
+        (ADD , 4, 1), # 9
+        (IMM , 3, 29), # 10
+        (SAVE, 4, 3, 'save arg 1'), # 11
+        (IMM , 3, 1), # 12
+        (ADD , 4, 3), # 13
+        (IMM , 3, 37), # 14
+        (SAVE, 4, 3, 'save arg 2'), # 15
+        (ADD , 4, 4), # 16
+
+#call func
+        (IMM, 3, 33), # 17
+        (PC , 2, 0), # 18
+        (J  , 3, 0), # 19
+#return func
+
+        (IMM, 3, 0), # 20
+        (ADD, 3, 1), # 21
+        (IMM, 4, 2), # 22
+        (SUB, 3, 4), # 23
+        (LOAD, 3, 3), # 24
+        (PRIN, 3, 3), # 25
+
+        (IMM, 3, 0), # 26
+        (ADD, 3, 1), # 27
+        (IMM, 4, 1), # 28
+        (SUB, 3, 4), # 29
+        (LOAD, 3, 3), # 30
+        (PRIN, 3, 3), # 31
+    #exit
+        (EXIT, 0, 0), # 32
 
 #func add
     #stack save
-        (IMM, 4, 0),
+        (IMM, 4, 0, 'START FUNC'), # 33
         (ADD, 4, 1),
         (IMM, 3, 2),
         (ADD, 4, 3, 'reg[4] += 2'),
@@ -178,20 +200,10 @@ if __name__ == '__main__':
         (SAVE, 1, 4, 'save result'), # save result
         (IMM, 4, 1),
         (ADD, 1, 4, 'inc fp'),
-#end func
-        (IMM, 3, 0),
-        (ADD, 3, 1),
-        (IMM, 4, 2),
-        (SUB, 3, 4),
-        (LOAD, 3, 3),
-        (PRIN, 3, 3),
 
-        (IMM, 3, 0),
-        (ADD, 3, 1),
-        (IMM, 4, 1),
-        (SUB, 3, 4),
-        (LOAD, 3, 3),
-        (PRIN, 3, 3),
-    #exit
-        (EXIT, 0, 0),
+    # return
+        (IMM, 4, 0),
+        (ADD, 4, 2),
+        (J,   4, 0),
+#end func
     ])
