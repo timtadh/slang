@@ -36,17 +36,18 @@ def div(a):
     return _div
 
 @operator
-def concat(a):
-    class _concat(object):
-        objs = list()
-        def __init__(self, a):
-            self.objs.append(str(a))
-        def __call__(self, b):
-            self.objs.append(str(b))
-            return self
-        def __repr__(self):
-            return ' '.join(str(o) for o in self.objs)
-    return _concat(a)
+def _str(a):
+    return str(a)
+
+@operator
+def _print(a):
+    print a,
+    return a
+
+@operator
+def _println(b):
+    print b
+    return b
 
 ops = dict((name.lstrip('_'), obj)
         for name,obj in locals().iteritems()
@@ -67,31 +68,30 @@ def run(tokens):
     def inner(c, tokens):
         objs = list()
         while c[0] != 'c_paren':
-            if c[0] == 'o_paren': c, n = match(c, tokens)
+            if c[0] == 'o_paren': c, n = expr(c, tokens)
             else:
                 n = c[1]
                 c = tokens.next()
             objs.append(n)
         assert len(objs) <= 2
-        print objs
+        #print objs
         if len(objs) == 1:
             return c, objs[0]
         elif len(objs) == 2:
             r = objs[0](objs[1])
         return c, r
-    def match(c, tokens):
+    def expr(c, tokens):
         if c[0] != 'o_paren': raise Exception, 'no open paren'
         c, expr = inner(tokens.next(), tokens)
         if c[0] != 'c_paren': raise Exception, 'no close paren'
         try: c = tokens.next()
         except StopIteration: c = None
         return c, expr
-    c, ret = match(tokens.next(), tokens)
+    c, ret = expr(tokens.next(), tokens)
     if c is not None: raise Exception, 'Not all tokens consumed'
     #print
     #print
     #print ret
-    return ret
 
 if __name__ == '__main__':
-    print run(tokenize('( ( concat ( ( sub 1 ) 2 ) ) hello )', ops))
+    run(tokenize('( ( add ( println ( str ( ( sub 1 ) 2 ) ) ) ) ( println hello ) )', ops))
