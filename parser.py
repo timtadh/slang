@@ -84,7 +84,7 @@ if __name__ == '__main__':
         f = func(a, b) {
             c = add(a,b)
             return c
-        },
+        }
         r = f(2,3)
         print(r)
     ''', lexer=Lexer())
