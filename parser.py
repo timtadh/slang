@@ -34,7 +34,6 @@ class Parser(object):
     def p_Start(self, t):
         'Start : Block'
         t[0] = t[1]
-        print self.table
 
     def p_Block1(self, t):
         'Block : Block Stmt'
@@ -52,10 +51,10 @@ class Parser(object):
                     Node('NAME')
                         .addkid(t[1])
                 ).addkid(
-                    Node('FUNC')
+                    Node('Func')
                         .addkid(t[5])
-                        .addkid(t[7])
                         .addkid(t[8])
+                        .addkid(t[9])
                 )
         )
 
@@ -67,7 +66,7 @@ class Parser(object):
                     Node('NAME')
                         .addkid(t[1])
                 ).addkid(
-                    Node('FUNC')
+                    Node('Func')
                         .addkid(t[7])
                         .addkid(t[8])
                 )
@@ -83,19 +82,19 @@ class Parser(object):
 
     def p_Return1(self, t):
         'Return : RETURN Params'
-        t[0] = Node('RETURN').addkid(t[2])
+        t[0] = Node('Return').addkid(t[2])
 
     def p_Return2(self, t):
         'Return : CONTINUE Call'
-        t[0] = Node('CONTINUE').addkid(t[2])
+        t[0] = Node('Continue').addkid(t[2])
 
     def p_Call1(self, t):
         'Call : NAME LPAREN Params RPAREN'
-        t[0] = Node('CALL').addkid(Node('NAME').addkid(t[1])).addkid(t[3])
+        t[0] = Node('Call').addkid(Node('NAME').addkid(t[1])).addkid(t[3])
 
     def p_Call2(self, t):
         'Call : NAME LPAREN RPAREN'
-        t[0] = Node('CALL').addkid(Node('NAME').addkid(t[1]))
+        t[0] = Node('Call').addkid(Node('NAME').addkid(t[1]))
 
     def p_Dparams1(self, t):
         'Dparams : Dparams COMMA NAME'
@@ -133,4 +132,5 @@ if __name__ == '__main__':
         }
         r = f(2,3)
         print(r)
-    ''', lexer=Lexer())
+        exit()
+    ''', lexer=Lexer()).dotty()

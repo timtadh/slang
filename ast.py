@@ -4,6 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
+import collections
 
 class Node(object):
 
@@ -55,3 +56,29 @@ class Node(object):
         s = "%d:%s" % (len(self.children), str(self.label))
         s = '\n'.join([s]+[string(c) for c in self.children])
         return s
+
+    def dotty(self):
+        def string(s):
+            if isinstance(s, Node): return str(s.label)
+            return str(s)
+        node = '%(name)s [shape=rect, label="%(label)s"];'
+        edge = '%s -> %s;'
+        nodes = list()
+        edges = list()
+
+        i = 0
+        queue = collections.deque()
+        queue.append((i, self))
+        i += 1
+        while len(queue) > 0:
+            c, n = queue.popleft()
+            name = 'n%d' % c
+            label = string(n)
+            nodes.append(node % locals())
+            if not hasattr(n, 'children'): continue
+            for c in n.children:
+                edges.append(edge % (name, ('n%d' % i)))
+                queue.append((i, c))
+                i += 1
+        return 'digraph G {\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
+
