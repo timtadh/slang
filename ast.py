@@ -46,9 +46,12 @@ class Node(object):
         return not self.__eq__(b)
 
     def __repr__(self):
-        return super(Node, self).__repr__()[:-1] + " %s>" % self.label
+        return super(Node, self).__repr__()[:-1] + " %s>" % str(self.label)
 
     def __str__(self):
-        s = "%d:%s" % (len(self.children), self.label)
-        s = '\n'.join([s]+[str(c) for c in self.children])
+        def string(s):
+            if isinstance(s, Node): return str(s)
+            return '0:%s' % str(s)
+        s = "%d:%s" % (len(self.children), str(self.label))
+        s = '\n'.join([s]+[string(c) for c in self.children])
         return s
