@@ -13,19 +13,27 @@ from lexer import tokens, Lexer
 ## works.
 class Parser(object):
 
+    tokens = tokens
+    precedence = tuple()
+
     def __new__(cls, **kwargs):
         ## Does magic to allow PLY to do its thing.
         self = super(Parser, cls).__new__(cls, **kwargs)
         self.table = dict()
+        self.loc = list()
         self.yacc = yacc.yacc(module=self, **kwargs)
         return self.yacc
 
-    tokens = tokens
-    precedence = tuple()
+    def get_table(self):
+        c = self.table
+        for s in self.loc:
+            c = self.table[c]
+        return c
 
     def p_Start(self, t):
         'Start : Block'
         t[0] = t[1]
+        print self.table
 
     def p_Block1(self, t):
         'Block : Block Stmt'

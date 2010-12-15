@@ -4,10 +4,8 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-
 from ply import lex
 from ply.lex import Token
-
 
 reserved = dict(
     (word.lower(), word) for word in (
