@@ -4,10 +4,39 @@ slang : Simple Language
 Slang is going to be a very simple functional language to be used to teach the
 basics of interpretation and complilation.
 
-Intermediate Lanaguage
+Table of Contents
+-----------------
+
+1. Quick Example Program
+1. Intermediate Language
+2. Slang Langauge Spec
+
+
+Quick Example Program
+---------------------
+
+Here is the type of language I am aiming for, note you will be able to define
+functions on the stack.
+
+    f = func(a, b) {
+        c = add(a,b)
+        return c
+    }
+    r = f(2,3)
+    print(r)
+    exit()
+
+
+Intermediate Language
 ----------------------
-At the moment the only thing implemented is the intermediate language. I wrote
-an interpreter for this simple language to allow me to test it easier.
+The "Intermediate Language" will be used to test the compiler before conversion
+to x86. Technically this isn't in anyway nessary. However, I have not done much
+x86 assembly programming, so this is an easier way for me to just get started.
+I made it as simple as possible. It doesn't even currently have a branch
+instruction. However, based on my understanding of lambda calculus (which is
+very vague actually) I shouldn't need a branch instruction. If it turns out I do
+I can always add it in later. This instruction set is viable for doing basic
+operations.
 
 Here is the langauge spec, note all operands go CMD to <- from
 
@@ -23,4 +52,45 @@ Here is the langauge spec, note all operands go CMD to <- from
     EXIT                            # exit program
     PRIN  reg                       # print register a
 
-language spec to come
+There are 5 registers for the VM:
+
+    $0 = bp = base pointer
+    $1 = fp = frame pointer
+    $2 = ra = return address
+    $3 = t1 = temp 1
+    $4 = t2 = temp 2
+
+
+Slang Langauge Spec
+-------------------
+
+Tokens:
+
+    NAME   : '([a-zA-Z_])(([a-zA-Z_])|([0-9]))*'
+    INT    : '(-?0[xX]([a-fA-F0-9])+)|(-?([0-9])+)'
+    COMMA  : ','
+    LPAREN : '('
+    RPAREN : ')'
+    LCURLY : '{'
+    RCURLY : '}'
+    EQUAL  : '='
+
+Productions:
+
+    Start : Block
+    Block : Block Stmt
+    Block : Stmt
+    Stmt : NAME EQUAL FUNC LPAREN Dparams RPAREN LCURLY Block Return RCURLY
+    Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Block Return RCURLY
+    Stmt : NAME EQUAL Call
+    Stmt : Call
+    Return : RETURN Params
+    Return : CONTINUE Call
+    Call : NAME LPAREN Params RPAREN
+    Call : NAME LPAREN RPAREN
+    Dparams : Dparams COMMA NAME
+    Dparams : NAME
+    Params : Params COMMA Value
+    Params : Value
+    Value : NAME
+    Value : INT
