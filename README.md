@@ -4,6 +4,17 @@ slang : Simple Language
 Slang is going to be a very simple functional language to be used to teach the
 basics of interpretation and complilation.
 
+### Current status:
+
+1. Intermediate Language [DONE]
+1. Lexer [DONE]
+1. Grammar [DONE]
+1. Parser [DONE]
+1. AST Definition [DONE]
+1. Symbol Table
+1. IL Generation (subtasks need to be defined here...)
+1. ...
+
 Table of Contents
 -----------------
 
