@@ -11,43 +11,67 @@ import machine as il
 prebuilt_funcs = dict()
 
 def generate(root):
-    def gen(node, objs):
-        print objs
-        print node.label
-        if node.label == 'Block':
-            funcs = dict()
-            names = dict()
-            code = list()
-            for c in node.children:
-                if c.label == 'Assign':
-                    if c.children[1].label == 'Call':
-                        name, _code = gen(c, objs)
-                        names[name] =
-                    elif c.children[1].label == 'Func':
-                        name, _code = gen(c, objs)
-                        funcs[name] = _code
-                    else:
-                        raise Exception, 'Unexpected Node %s' % (c.children[1].label)
-                else:
-                    code += gen(c, objs)
-            return funcs, code
-        elif node.label == 'Assign':
-            return node.children[0].children[0].label, gen(node.children[1], objs)
-        #results = [gen(c, dict(objs)) for c in node.children]
-        return list()
+    functions = dict()
+    generate.fcount = 0
+    def Func(node, objs):
+        print 'Func', objs.keys()
+    def Assign(node, objs):
+        if node.children[1].label == 'Call':
+            for i, name in \
+              enumerate(n.children[0].label
+                    for n in node.children[0].children
+              ):
+                objs[name] = {'type':'value', 'slot':None, 'arg': i}
+            code = Call(node.children[1], objs)
+        elif node.children[1].label == 'Func':
+            name = node.children[0].children[0].label
+            label = 'func_%d' % generate.fcount
+            objs[name] = {
+                'type':'function', 'slot':None,
+                'label':label
+            }
+            generate.fcount += 1
+            functions[label] = Func(node.children[1], dict(objs))
+            code = [
+                (il.IMM, 3, label),
+                #TODO: put the value into the slot
+            ]
+        else:
+            raise Exception, 'Unexpected node %s' % (node.children[1].label)
+        print 'Assign', objs.keys()
+    def Call(node, objs):
+        print 'Call', objs.keys()
+    def Block(node, objs):
+        codelist = list()
+        for c in node.children:
+            if c.label == 'Assign':
+                code = Assign(c, objs)
+            elif c.label == 'Call':
+                pass
+            else:
+                raise Exception, 'Unexpected node %s' % (c.label)
+        print 'Block', objs.keys()
+        return code
     objs = dict(prebuilt_funcs)
-    return gen(root, objs)
+    r = Block(root, objs)
+    print '---'
+    for x,y in objs.iteritems():
+        print x, y
+    return r
 
 if __name__ == '__main__':
+
     root = Parser().parse('''
+        quit = func() {
+            exit()
+            return
+        }
         f = func(a, b) {
             c = add(a,b)
-            return c
+            return c, b
         }
-        r = f(2,3)
+        r, r2 = f(2,3)
         print(r)
-        exit()
+        quit()
     ''', lexer=Lexer())
-    func, code = generate(root)
-    print func
-    print code
+    print generate(root)

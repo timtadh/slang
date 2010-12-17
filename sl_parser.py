@@ -93,6 +93,10 @@ class Parser(object):
         t[0] = Node('Return').addkid(t[2])
 
     def p_Return2(self, t):
+        'Return : RETURN'
+        t[0] = Node('Return')
+
+    def p_Return3(self, t):
         'Return : CONTINUE Call'
         t[0] = Node('Continue').addkid(t[2])
 
