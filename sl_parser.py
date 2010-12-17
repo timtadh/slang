@@ -15,9 +15,7 @@ from ast import Node
 class Parser(object):
 
     tokens = tokens
-    precedence = (
-        ('left', 'EQUAL'),
-    )
+    precedence = (    )
 
     def __new__(cls, **kwargs):
         ## Does magic to allow PLY to do its thing.
@@ -46,31 +44,39 @@ class Parser(object):
         t[0] = Node('Block').addkid(t[1])
 
     def p_Stmt1(self, t):
-        'Stmt : NAME COLON EQUAL FUNC LPAREN Dparams RPAREN LCURLY Block Return RCURLY'
+        'Stmt : Dparams EQUAL FUNC LPAREN Dparams RPAREN LCURLY Block Return RCURLY'
+        if len(t[1].children) != 1:
+            raise Exception, (
+                'You cannot have more than one return value for'
+                ' a function declaration at line %d'
+            ) % t.lineno(2)
         t[0] = (
             Node('Assign')
                 .addkid(
-                    Node('NAME')
-                        .addkid(Node(t[1]))
+                    t[1].children[0]
                 ).addkid(
                     Node('Func')
-                        .addkid(t[6])
-                        .addkid(t[9])
-                        .addkid(t[10])
+                        .addkid(t[5])
+                        .addkid(t[8])
+                        .addkid(t[0])
                 )
         )
 
     def p_Stmt2(self, t):
-        'Stmt : NAME COLON EQUAL FUNC LPAREN RPAREN LCURLY Block Return RCURLY'
+        'Stmt : Dparams EQUAL FUNC LPAREN RPAREN LCURLY Block Return RCURLY'
+        if len(t[1].children) != 1:
+            raise Exception, (
+                'You cannot have more than one return value for'
+                ' a function declaration at line %d'
+            ) % t.lineno(2)
         t[0] = (
             Node('Assign')
                 .addkid(
-                    Node('NAME')
-                        .addkid(Node(t[1]))
+                    t[1].children[0]
                 ).addkid(
                     Node('Func')
+                        .addkid(t[7])
                         .addkid(t[8])
-                        .addkid(t[9])
                 )
         )
 
@@ -128,7 +134,7 @@ class Parser(object):
 
 if __name__ == '__main__':
     print Parser().parse('''
-        f := func(a, b) {
+        f = func(a, b) {
             c = add(a,b)
             return c, b
         }
