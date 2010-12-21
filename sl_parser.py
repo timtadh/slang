@@ -44,7 +44,7 @@ class Parser(object):
         t[0] = Node('Block').addkid(t[1])
 
     def p_Stmt1(self, t):
-        'Stmt : Dparams EQUAL FUNC LPAREN Dparams RPAREN LCURLY Block Return RCURLY'
+        'Stmt : Names EQUAL FUNC LPAREN Dparams RPAREN LCURLY Block Return RCURLY'
         if len(t[1].children) != 1:
             raise Exception, (
                 'You cannot have more than one return value for'
@@ -58,12 +58,12 @@ class Parser(object):
                     Node('Func')
                         .addkid(t[5])
                         .addkid(t[8])
-                        .addkid(t[0])
+                        .addkid(t[9])
                 )
         )
 
     def p_Stmt2(self, t):
-        'Stmt : Dparams EQUAL FUNC LPAREN RPAREN LCURLY Block Return RCURLY'
+        'Stmt : Names EQUAL FUNC LPAREN RPAREN LCURLY Block Return RCURLY'
         if len(t[1].children) != 1:
             raise Exception, (
                 'You cannot have more than one return value for'
@@ -81,7 +81,7 @@ class Parser(object):
         )
 
     def p_Stmt3(self, t):
-        'Stmt : Dparams EQUAL Call'
+        'Stmt : Names EQUAL Call'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
     def p_Stmt4(self, t):
@@ -90,7 +90,9 @@ class Parser(object):
 
     def p_Return1(self, t):
         'Return : RETURN Params'
-        t[0] = Node('Return').addkid(t[2])
+        t[0] = Node('Return')
+        for c in t[2].children:
+            t[0].addkid(c)
 
     def p_Return2(self, t):
         'Return : RETURN'
@@ -108,13 +110,21 @@ class Parser(object):
         'Call : NAME LPAREN RPAREN'
         t[0] = Node('Call').addkid(Node('NAME').addkid(Node(t[1])))
 
-    def p_Dparams1(self, t):
-        'Dparams : Dparams COMMA NAME'
+    def p_Names1(self, t):
+        'Names : Names COMMA NAME'
         t[0] = t[1].addkid(Node('NAME').addkid(Node(t[3])))
 
+    def p_Names2(self, t):
+        'Names : NAME'
+        t[0] = Node('Names').addkid(Node('NAME').addkid(Node(t[1])))
+
+    def p_Dparams1(self, t):
+        'Dparams : Dparams COMMA Decl'
+        t[0] = t[1].addkid(t[3])
+
     def p_Dparams2(self, t):
-        'Dparams : NAME'
-        t[0] = Node('Dparams').addkid(Node('NAME').addkid(Node(t[1])))
+        'Dparams : Decl'
+        t[0] = Node('Dparams').addkid(t[1])
 
     def p_Params1(self, t):
         'Params : Params COMMA Value'
@@ -129,8 +139,20 @@ class Parser(object):
         t[0] = Node('NAME').addkid(Node(t[1]))
 
     def p_Value2(self, t):
-        'Value : INT'
+        'Value : INT_VAL'
         t[0] = Node('INT').addkid(Node(t[1]))
+
+    def p_Decl(self, t):
+        'Decl : NAME Type'
+        t[0] = Node('Decl').addkid(Node('NAME').addkid(Node(t[1]))).addkid(t[2])
+
+    def p_Type1(self, t):
+        'Type : FUNC'
+        t[0] = Node('func')
+
+    def p_Type2(self, t):
+        'Type : INT'
+        t[0] = Node('int')
 
     def p_error(self, t):
         raise SyntaxError, "Syntax error at '%s', %s.%s" % (t,t.lineno,t.lexpos)
@@ -138,11 +160,15 @@ class Parser(object):
 
 if __name__ == '__main__':
     print Parser().parse('''
-        f = func(a, b) {
-            c = add(a,b)
-            return c, b
+        end = func(r1 int, r2 int) {
+            print(r1)
+            print(r2)
+            exit()
+            return
         }
-        r, r2 = f(2,3)
-        print(r)
-        exit()
+        f = func(a int, b int, end func) {
+            c = add(a,b)
+            continue end(c, b)
+        }
+        f(2,3, end)
     ''', lexer=Lexer()).dotty()

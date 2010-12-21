@@ -9,12 +9,12 @@ from ply.lex import Token
 
 reserved = dict(
     (word.lower(), word) for word in (
-        'RETURN', 'CONTINUE', 'FUNC',
+        'RETURN', 'CONTINUE', 'FUNC', 'INT'
     )
 )
 
 tokens = reserved.values() + [
-    'NAME', 'INT', 'COMMA', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUAL',
+    'NAME', 'INT_VAL', 'COMMA', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUAL',
     'COLON',
 ]
 
@@ -56,14 +56,14 @@ class Lexer(object):
     const_hex = '-?0[xX](' + H + ')+'
     @Token(const_hex)
     def t_CONST_HEX(self, token):
-        token.type = 'INT'
+        token.type = 'INT_VAL'
         token.value = int(token.value, 16)
         return token
 
     const_dec_oct = '-?(' + D + ')+'
     @Token(const_dec_oct)
     def t_CONST_DEC_OCT(self, token):
-        token.type = 'INT'
+        token.type = 'INT_VAL'
         if (len(token.value) > 1 and token.value[0] == '0'
             or (token.value[0] == '-' and token.value[1] == '0')):
             token.value = int(token.value, 8)
@@ -74,6 +74,13 @@ class Lexer(object):
     @Token(r'\n+')
     def t_newline(self, t):
         t.lexer.lineno += t.value.count("\n")
+
+    @Token(r'(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|(//.*)')
+    def t_COMMENT(self, token):
+        #print token.lexer.lineno, len(token.value.split('\n')), token.value.split('\n')
+        lines = len(token.value.split('\n')) - 1
+        if lines < 0: lines = 0
+        token.lexer.lineno += lines
 
     # Ignored characters
     t_ignore = " \t"

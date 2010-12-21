@@ -6,14 +6,25 @@
 
 
 from sl_parser import Parser, Lexer
-import machine as il
+import il
 
 prebuilt_funcs = dict()
 
 def generate(root):
     functions = dict()
     generate.fcount = 0
+    def Params(node, objs):
+        inn = 0
+        out = 0
+        if node.children[0].label == 'Dparams':
+            inn = len(node.children[0].children)
+        if node.children[-1].label == 'Return':
+            out = len(node.children[-1].children)
+        return inn, out
     def Func(node, objs):
+        if node.children[0].label == 'Dparams':
+            #inn = len(node.children[0].children)
+            pass
         print 'Func', objs.keys()
     def Assign(node, objs):
         if node.children[1].label == 'Call':
@@ -24,18 +35,12 @@ def generate(root):
                 objs[name] = {'type':'value', 'slot':None, 'arg': i}
             code = Call(node.children[1], objs)
         elif node.children[1].label == 'Func':
+            func = node.children[1]
             name = node.children[0].children[0].label
-            label = 'func_%d' % generate.fcount
-            objs[name] = {
-                'type':'function', 'slot':None,
-                'label':label
-            }
-            generate.fcount += 1
-            functions[label] = Func(node.children[1], dict(objs))
-            code = [
-                (il.IMM, 3, label),
-                #TODO: put the value into the slot
-            ]
+            label = 'func_%d' % generate.fcount; generate.fcount += 1
+            inn, out = Params(func, objs)
+            objs[name] = il.Func(label, inn, out)
+            functions[label] = Func(func, dict(objs))
         else:
             raise Exception, 'Unexpected node %s' % (node.children[1].label)
         print 'Assign', objs.keys()
@@ -62,16 +67,16 @@ def generate(root):
 if __name__ == '__main__':
 
     root = Parser().parse('''
-        quit = func() {
+        end = func(r1 int, r2 int) {
+            print(r1)
+            print(r2)
             exit()
             return
         }
-        f = func(a, b) {
+        f = func(a int, b int, end func) {
             c = add(a,b)
-            return c, b
+            continue end(c, b)
         }
-        r, r2 = f(2,3)
-        print(r)
-        quit()
+        f(2,3, end)
     ''', lexer=Lexer())
     print generate(root)
