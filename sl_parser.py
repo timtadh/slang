@@ -196,23 +196,27 @@ class Parser(object):
 
     def p_Type1(self, t):
         'Type : INT'
-        t[0] = Node('int')
+        t[0] = Node('IntType')
 
     def p_Type2(self, t):
         'Type : FUNC LPAREN Types RPAREN LPAREN Types RPAREN '
-        t[0] = Node('func')
+        t[0] = (
+            Node('FuncType')
+                .addkid(Node('Params').addkid(t[3]))
+                .addkid(Node('Returns').addkid(t[6]))
+        )
 
     def p_Type3(self, t):
         'Type : FUNC LPAREN Types RPAREN'
-        t[0] = Node('func')
+        t[0] = Node('FuncType').addkid(Node('Params').addkid(t[3]))
 
     def p_Type4(self, t):
         'Type : FUNC LPAREN RPAREN LPAREN Types RPAREN '
-        t[0] = Node('func')
+        t[0] = Node('FuncType').addkid(Node('Returns').addkid(t[5]))
 
     def p_Type5(self, t):
         'Type : FUNC'
-        t[0] = Node('func')
+        t[0] = Node('FuncType')
 
 
 
@@ -232,7 +236,7 @@ if __name__ == '__main__':
             r = add(c, d)
             return r
         }
-        f = func(a int, b int, end func(int, int)) {
+        f = func(a int, b int, end func(int, func(func()(int), int)(int))) {
             c = add(a,b)
             continue end(c, b)
         }
