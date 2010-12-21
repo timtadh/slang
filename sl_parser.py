@@ -80,11 +80,51 @@ class Parser(object):
                 )
         )
 
+
     def p_Stmt3(self, t):
+        'Stmt : Names EQUAL FUNC LPAREN Dparams RPAREN LPAREN Types RPAREN LCURLY Block Return RCURLY'
+        if len(t[1].children) != 1:
+            raise Exception, (
+                'You cannot have more than one return value for'
+                ' a function declaration at line %d'
+            ) % t.lineno(2)
+        t[0] = (
+            Node('Assign')
+                .addkid(
+                    t[1].children[0]
+                ).addkid(
+                    Node('Func')
+                        .addkid(t[5])
+                        .addkid(t[8])
+                        .addkid(t[11])
+                        .addkid(t[12])
+                )
+        )
+
+    def p_Stmt4(self, t):
+        'Stmt : Names EQUAL FUNC LPAREN RPAREN LPAREN Types RPAREN LCURLY Block Return RCURLY'
+        if len(t[1].children) != 1:
+            raise Exception, (
+                'You cannot have more than one return value for'
+                ' a function declaration at line %d'
+            ) % t.lineno(2)
+        t[0] = (
+            Node('Assign')
+                .addkid(
+                    t[1].children[0]
+                ).addkid(
+                    Node('Func')
+                        .addkid(t[7])
+                        .addkid(t[10])
+                        .addkid(t[11])
+                )
+        )
+
+    def p_Stmt5(self, t):
         'Stmt : Names EQUAL Call'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
-    def p_Stmt4(self, t):
+    def p_Stmt6(self, t):
         'Stmt : Call'
         t[0] = t[1]
 
@@ -146,13 +186,35 @@ class Parser(object):
         'Decl : NAME Type'
         t[0] = Node('Decl').addkid(Node('NAME').addkid(Node(t[1]))).addkid(t[2])
 
+    def p_Types1(self, t):
+        'Types : Types COMMA Type'
+        t[0] = t[1].addkid(t[3])
+
+    def p_Types2(self, t):
+        'Types : Type'
+        t[0] = Node('Params').addkid(t[1])
+
     def p_Type1(self, t):
+        'Type : INT'
+        t[0] = Node('int')
+
+    def p_Type2(self, t):
+        'Type : FUNC LPAREN Types RPAREN LPAREN Types RPAREN '
+        t[0] = Node('func')
+
+    def p_Type3(self, t):
+        'Type : FUNC LPAREN Types RPAREN'
+        t[0] = Node('func')
+
+    def p_Type4(self, t):
+        'Type : FUNC LPAREN RPAREN LPAREN Types RPAREN '
+        t[0] = Node('func')
+
+    def p_Type5(self, t):
         'Type : FUNC'
         t[0] = Node('func')
 
-    def p_Type2(self, t):
-        'Type : INT'
-        t[0] = Node('int')
+
 
     def p_error(self, t):
         raise SyntaxError, "Syntax error at '%s', %s.%s" % (t,t.lineno,t.lexpos)
@@ -166,7 +228,11 @@ if __name__ == '__main__':
             exit()
             return
         }
-        f = func(a int, b int, end func) {
+        add = func(c int, d int) (int) {
+            r = add(c, d)
+            return r
+        }
+        f = func(a int, b int, end func(int, int)) {
             c = add(a,b)
             continue end(c, b)
         }

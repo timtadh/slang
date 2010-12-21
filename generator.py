@@ -23,7 +23,6 @@ def generate(root):
         return inn, out
     def Func(node, objs):
         if node.children[0].label == 'Dparams':
-            #inn = len(node.children[0].children)
             pass
         print 'Func', objs.keys()
     def Assign(node, objs):
