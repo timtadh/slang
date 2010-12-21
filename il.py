@@ -27,11 +27,15 @@ class Func(object):
         self.inn = inn
         self.out = out
 
+    def __repr__(self): return str(self)
+
     def __str__(self):
-        s = '<il.Func "%s" in:%d out:%d>' % (self.label, len(self.inn), len(self.out))
+        s = '<il.Func "%s" in:%s out:%s>' % (self.label, self.inn, self.out)
         return s
 
 class Int(object):
+
+    def __repr__(self): return str(self)
 
     def __str__(self):
         s = '<il.Int>'

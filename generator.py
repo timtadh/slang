@@ -14,54 +14,58 @@ def generate(root):
     functions = dict()
     generate.fcount = 0
     def Params(node, objs):
-        inn = 0
-        out = 0
-        if node.children[0].label == 'Dparams':
-            inn = len(node.children[0].children)
-        if node.children[-1].label == 'Return':
-            out = len(node.children[-1].children)
+        inn = dict()
+        out = list()
+        for c in node.children:
+            if c.label == 'Takes':
+                for d in c.children:
+                    name = d.children[0].label
+                    typ_ = Type(d.children[1])
+                    inn[name] = typ_
+            elif c.label == 'Returns':
+                for d in c.children:
+                    typ_ = Type(d)
+                    out.append(typ_)
         return inn, out
     def Type(node):
         if node.label == 'IntType':
             return il.Int()
-        inn = list()
-        out = list()
-        print node
-        print
-        for c in node.children:
-            if c.label == 'Params':
-                for t in c.children[0].children:
-                    inn.append(Type(t))
-            elif c.label == 'Returns':
-                for t in c.children[0].children:
-                    out.append(Type(t))
-        return il.Func(inn, out)
-    def Func(node, objs):
-        if node.children[0].label == 'Dparams':
-            for c in node.children[0].children:
-                name = c.children[0].label
-                typ_ = Type(c.children[1])
-                print name, typ_
+        elif node.label == 'FuncType':
+            inn = list()
+            out = list()
+            for c in node.children:
+                if c.label == 'Params':
+                    for t in c.children[0].children:
+                        inn.append(Type(t))
+                elif c.label == 'Returns':
+                    for t in c.children[0].children:
+                        out.append(Type(t))
+            return il.Func(inn, out)
+    def Func(node, objs, inn, out):
+        print inn, out
         print 'Func', objs.keys()
     def Assign(node, objs):
+        #print node
+        #print
         if node.children[1].label == 'Call':
-            for i, name in \
-              enumerate(n.children[0].label
-                    for n in node.children[0].children
-              ):
-                objs[name] = {'type':'value', 'slot':None, 'arg': i}
-            code = Call(node.children[1], objs)
+            code = Call(
+                node.children[1],
+                objs,
+                [n.label for n in node.children[0].children]
+            )
         elif node.children[1].label == 'Func':
             func = node.children[1]
             name = node.children[0].label
             label = 'func_%d' % generate.fcount; generate.fcount += 1
             inn, out = Params(func, objs)
-            #objs[name] = il.Func(label, inn, out)
-            functions[label] = Func(func, dict(objs))
+            print name, label, inn, out
+            objs[name] = il.Func(inn, out, label=label)
+            functions[label] = Func(func, dict(objs), inn, out)
         else:
             raise Exception, 'Unexpected node %s' % (node.children[1].label)
         print 'Assign', objs.keys()
-    def Call(node, objs):
+    def Call(node, objs, returns):
+        print 'call returns ->', returns
         print 'Call', objs.keys()
     def Block(node, objs):
         codelist = list()
@@ -69,7 +73,7 @@ def generate(root):
             if c.label == 'Assign':
                 code = Assign(c, objs)
             elif c.label == 'Call':
-                pass
+                code = Call(c, objs, list())
             else:
                 raise Exception, 'Unexpected node %s' % (c.label)
         print 'Block', objs.keys()
@@ -84,20 +88,20 @@ def generate(root):
 if __name__ == '__main__':
 
     root = Parser().parse('''
-        end = func(r1 int, r2 int) {
+        /*end = func(r1 int, r2 int) {
             print(r1)
             print(r2)
             exit()
             return
-        }
+        }*/
         add = func(d int, e int)(int) {
             x = __add(d, e)
             return x
         }
-        f = func(a int, b int, add func(int, int)(int), end func(int, int)) {
+        /*f = func(a int, b int, add func(int, int)(int), end func(int, int)) {
             c = add(a,b)
             continue end(c, b)
-        }
-        f(2,3, add, end)
+        }*/
+        x, y, z = f(2,3, add, end)
     ''', lexer=Lexer())
     print generate(root)
