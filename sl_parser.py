@@ -56,7 +56,7 @@ class Parser(object):
                     t[1].children[0]
                 ).addkid(
                     Node('Func')
-                        .addkid(t[5])
+                        .addkid(Node('Takes', children=t[5].children))
                         .addkid(t[8])
                         .addkid(t[9])
                 )
@@ -94,8 +94,8 @@ class Parser(object):
                     t[1].children[0]
                 ).addkid(
                     Node('Func')
-                        .addkid(t[5])
-                        .addkid(t[8])
+                        .addkid(Node('Takes', children=t[5].children))
+                        .addkid(Node('Returns', children=t[8].children))
                         .addkid(t[11])
                         .addkid(t[12])
                 )
@@ -114,7 +114,7 @@ class Parser(object):
                     t[1].children[0]
                 ).addkid(
                     Node('Func')
-                        .addkid(t[7])
+                        .addkid(Node('Returns', children=t[7].children))
                         .addkid(t[10])
                         .addkid(t[11])
                 )
@@ -128,11 +128,18 @@ class Parser(object):
         'Stmt : Call'
         t[0] = t[1]
 
+    def p_Stmt8(self, t):
+        'Stmt : Names EQUAL INT_VAL'
+        if len(t[1].children) != 1:
+            raise Exception, (
+                'You cannot have more than one value assigned for a contant'
+                ' declaration at line %d'
+            ) % t.lineno(2)
+        t[0] = Node('Assign').addkid(t[1].children[0]).addkid(Node('INT').addkid(Node(t[3])))
+
     def p_Return1(self, t):
         'Return : RETURN Params'
-        t[0] = Node('Return')
-        for c in t[2].children:
-            t[0].addkid(c)
+        t[0] = Node('Return', children=t[2].children)
 
     def p_Return2(self, t):
         'Return : RETURN'
@@ -144,19 +151,19 @@ class Parser(object):
 
     def p_Call1(self, t):
         'Call : NAME LPAREN Params RPAREN'
-        t[0] = Node('Call').addkid(Node('NAME').addkid(Node(t[1]))).addkid(t[3])
+        t[0] = Node('Call').addkid(Node(t[1])).addkid(t[3])
 
     def p_Call2(self, t):
         'Call : NAME LPAREN RPAREN'
-        t[0] = Node('Call').addkid(Node('NAME').addkid(Node(t[1])))
+        t[0] = Node('Call').addkid(Node(t[1]))
 
     def p_Names1(self, t):
         'Names : Names COMMA NAME'
-        t[0] = t[1].addkid(Node('NAME').addkid(Node(t[3])))
+        t[0] = t[1].addkid(Node(t[3]))
 
     def p_Names2(self, t):
         'Names : NAME'
-        t[0] = Node('Names').addkid(Node('NAME').addkid(Node(t[1])))
+        t[0] = Node('Names').addkid(Node(t[1]))
 
     def p_Dparams1(self, t):
         'Dparams : Dparams COMMA Decl'
@@ -184,7 +191,7 @@ class Parser(object):
 
     def p_Decl(self, t):
         'Decl : NAME Type'
-        t[0] = Node('Decl').addkid(Node('NAME').addkid(Node(t[1]))).addkid(t[2])
+        t[0] = Node('Decl').addkid(Node(t[1])).addkid(t[2])
 
     def p_Types1(self, t):
         'Types : Types COMMA Type'
@@ -192,7 +199,7 @@ class Parser(object):
 
     def p_Types2(self, t):
         'Types : Type'
-        t[0] = Node('Params').addkid(t[1])
+        t[0] = Node('Types').addkid(t[1])
 
     def p_Type1(self, t):
         'Type : INT'
@@ -202,17 +209,17 @@ class Parser(object):
         'Type : FUNC LPAREN Types RPAREN LPAREN Types RPAREN '
         t[0] = (
             Node('FuncType')
-                .addkid(Node('Params').addkid(t[3]))
-                .addkid(Node('Returns').addkid(t[6]))
+                .addkid(Node('Takes', children=t[3].children))
+                .addkid(Node('Returns', children=t[6].children))
         )
 
     def p_Type3(self, t):
         'Type : FUNC LPAREN Types RPAREN'
-        t[0] = Node('FuncType').addkid(Node('Params').addkid(t[3]))
+        t[0] = Node('FuncType').addkid(Node('Takes', children=t[3].children))
 
     def p_Type4(self, t):
         'Type : FUNC LPAREN RPAREN LPAREN Types RPAREN '
-        t[0] = Node('FuncType').addkid(Node('Returns').addkid(t[5]))
+        t[0] = Node('FuncType').addkid(Node('Returns', children=t[6].children))
 
     def p_Type5(self, t):
         'Type : FUNC'
@@ -232,13 +239,23 @@ if __name__ == '__main__':
             exit()
             return
         }
-        add = func(c int, d int) (int) {
-            r = add(c, d)
-            return r
+        add = func(d int, e int)(int) {
+            x = __add(d, e)
+            return x
         }
-        f = func(a int, b int, end func(int, func(func()(int), int)(int))) {
+        f = func(add func(int, int)(int), end func(int, int)) {
+            two = func()(int) {
+                r = 2
+                return r
+            }
+            three = func()(int) {
+                r = 3
+                return r
+            }
+            a = two()
+            b = three()
             c = add(a,b)
             continue end(c, b)
         }
-        f(2,3, end)
+        x,y,z = f(add, end)
     ''', lexer=Lexer()).dotty()

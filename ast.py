@@ -8,9 +8,9 @@ import collections
 
 class Node(object):
 
-    def __init__(self, label):
+    def __init__(self, label, children=None):
         self.label = label
-        self.children = list()
+        self.children = children if children is not None else list()
 
     def addkid(self, node, before=False):
         if before:  self.children.insert(0, node)

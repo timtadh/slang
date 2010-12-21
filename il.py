@@ -22,17 +22,20 @@ class Inst(object):
 
 class Func(object):
 
-    def __init__(self, label, inn, out):
+    def __init__(self, inn, out, label=None):
         self.label = label
         self.inn = inn
         self.out = out
 
     def __str__(self):
-        s = '<il.Func "%s" in:%d out:%d>' % (self.label, self.inn, self.out)
+        s = '<il.Func "%s" in:%d out:%d>' % (self.label, len(self.inn), len(self.out))
         return s
 
 class Int(object):
-    pass
+
+    def __str__(self):
+        s = '<il.Int>'
+        return s
 
 class Const(object):
 

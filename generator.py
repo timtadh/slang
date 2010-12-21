@@ -21,9 +21,27 @@ def generate(root):
         if node.children[-1].label == 'Return':
             out = len(node.children[-1].children)
         return inn, out
+    def Type(node):
+        if node.label == 'IntType':
+            return il.Int()
+        inn = list()
+        out = list()
+        print node
+        print
+        for c in node.children:
+            if c.label == 'Params':
+                for t in c.children[0].children:
+                    inn.append(Type(t))
+            elif c.label == 'Returns':
+                for t in c.children[0].children:
+                    out.append(Type(t))
+        return il.Func(inn, out)
     def Func(node, objs):
         if node.children[0].label == 'Dparams':
-            pass
+            for c in node.children[0].children:
+                name = c.children[0].label
+                typ_ = Type(c.children[1])
+                print name, typ_
         print 'Func', objs.keys()
     def Assign(node, objs):
         if node.children[1].label == 'Call':
@@ -35,10 +53,10 @@ def generate(root):
             code = Call(node.children[1], objs)
         elif node.children[1].label == 'Func':
             func = node.children[1]
-            name = node.children[0].children[0].label
+            name = node.children[0].label
             label = 'func_%d' % generate.fcount; generate.fcount += 1
             inn, out = Params(func, objs)
-            objs[name] = il.Func(label, inn, out)
+            #objs[name] = il.Func(label, inn, out)
             functions[label] = Func(func, dict(objs))
         else:
             raise Exception, 'Unexpected node %s' % (node.children[1].label)
@@ -72,10 +90,14 @@ if __name__ == '__main__':
             exit()
             return
         }
-        f = func(a int, b int, end func) {
+        add = func(d int, e int)(int) {
+            x = __add(d, e)
+            return x
+        }
+        f = func(a int, b int, add func(int, int)(int), end func(int, int)) {
             c = add(a,b)
             continue end(c, b)
         }
-        f(2,3, end)
+        f(2,3, add, end)
     ''', lexer=Lexer())
     print generate(root)
