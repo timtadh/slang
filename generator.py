@@ -42,8 +42,16 @@ def generate(root):
                         out.append(Type(t))
             return il.Func(inn, out)
     def Func(node, objs, inn, out):
+        objs = dict(objs)
+        objs.update(inn)
+        print
+        print
+        #TODO: parameter logic
+        block = Block(node.children[-2], objs)
+        #TODO: Return logic / Continue logic
         print inn, out
         print 'Func', objs.keys()
+        return block
     def Assign(node, objs):
         #print node
         #print
@@ -60,10 +68,15 @@ def generate(root):
             inn, out = Params(func, objs)
             print name, label, inn, out
             objs[name] = il.Func(inn, out, label=label)
-            functions[label] = Func(func, dict(objs), inn, out)
+            functions[label] = {
+                'code' : Func(func, dict(objs), inn, out),
+                'symbols' : objs
+            }
+            code = 'Todo Func code in assign'
         else:
             raise Exception, 'Unexpected node %s' % (node.children[1].label)
         print 'Assign', objs.keys()
+        return code
     def Call(node, objs, returns):
         print 'call returns ->', returns
         print 'Call', objs.keys()
@@ -81,27 +94,35 @@ def generate(root):
     objs = dict(prebuilt_funcs)
     r = Block(root, objs)
     print '---'
+    for x,y in functions.iteritems():
+        print x
+        print ' '*4, 'symbols'
+        for a,b in y['symbols'].iteritems():
+            print ' '*8, a, b
+        print ' '*4, 'code', y['code']
+    print '---'
     for x,y in objs.iteritems():
         print x, y
+    print '---'
     return r
 
 if __name__ == '__main__':
 
     root = Parser().parse('''
-        /*end = func(r1 int, r2 int) {
+        end = func(r1 int, r2 int) {
             print(r1)
             print(r2)
             exit()
             return
-        }*/
+        }
         add = func(d int, e int)(int) {
             x = __add(d, e)
             return x
         }
-        /*f = func(a int, b int, add func(int, int)(int), end func(int, int)) {
-            c = add(a,b)
-            continue end(c, b)
-        }*/
-        x, y, z = f(2,3, add, end)
+        f = func(plus func(int, int)(int), ret func(int, int)) {
+            c = plus(2,3)
+            continue ret(c, b)
+        }
+        f(add, end)
     ''', lexer=Lexer())
     print generate(root)
