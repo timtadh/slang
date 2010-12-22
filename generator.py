@@ -6,6 +6,7 @@
 
 
 from sl_parser import Parser, Lexer
+from table import SymbolTable
 import il
 
 prebuilt_funcs = dict()
@@ -42,7 +43,6 @@ def generate(root):
                         out.append(Type(t))
             return il.Func(inn, out)
     def Func(node, objs, inn, out):
-        objs = dict(objs)
         objs.update(inn)
         print
         print
@@ -68,9 +68,10 @@ def generate(root):
             inn, out = Params(func, objs)
             print name, label, inn, out
             objs[name] = il.Func(inn, out, label=label)
+            fobjs = objs.push()
             functions[label] = {
-                'code' : Func(func, dict(objs), inn, out),
-                'symbols' : objs
+                'code' : Func(func, fobjs, inn, out),
+                'symbols' : fobjs
             }
             code = 'Todo Func code in assign'
         else:
@@ -91,15 +92,19 @@ def generate(root):
                 raise Exception, 'Unexpected node %s' % (c.label)
         print 'Block', objs.keys()
         return code
-    objs = dict(prebuilt_funcs)
+    objs = SymbolTable(prebuilt_funcs)
     r = Block(root, objs)
     print '---'
+    parents = list()
     for x,y in functions.iteritems():
         print x
         print ' '*4, 'symbols'
+        parents.append(y['symbols'].parent)
         for a,b in y['symbols'].iteritems():
             print ' '*8, a, b
         print ' '*4, 'code', y['code']
+    for x in parents:
+        print repr(x)
     print '---'
     for x,y in objs.iteritems():
         print x, y
