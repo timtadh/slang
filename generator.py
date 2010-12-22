@@ -9,24 +9,31 @@ from sl_parser import Parser, Lexer
 from table import SymbolTable
 import il
 
-prebuilt_funcs = dict()
+prebuilt_funcs = {
+    'print':il.Func([{'type':il.Int(), 'name':None}], []),
+    '__add':il.Func(
+        [{'type':il.Int(), 'name':None}, {'type':il.Int(), 'name':None}],
+        [{'type':il.Int(), 'name':None}]
+    ),
+    'exit':il.Func([], [])
+}
 
 def generate(root):
     functions = dict()
     generate.fcount = 0
     def Params(node, objs):
-        inn = dict()
+        inn = list()
         out = list()
         for c in node.children:
             if c.label == 'Takes':
                 for d in c.children:
                     name = d.children[0].label
                     typ_ = Type(d.children[1])
-                    inn[name] = typ_
+                    inn.append({'name':name, 'type':typ_})
             elif c.label == 'Returns':
                 for d in c.children:
-                    typ_ = Type(d)
-                    out.append(typ_)
+                    out.append(Type(d))
+        print '----->', inn, out
         return inn, out
     def Type(node):
         if node.label == 'IntType':
@@ -35,22 +42,23 @@ def generate(root):
             inn = list()
             out = list()
             for c in node.children:
-                if c.label == 'Params':
-                    for t in c.children[0].children:
-                        inn.append(Type(t))
+                if c.label == 'Takes':
+                    for t in c.children:
+                        inn.append({'name':None, 'type':Type(t)})
                 elif c.label == 'Returns':
-                    for t in c.children[0].children:
+                    for t in c.children:
                         out.append(Type(t))
             return il.Func(inn, out)
     def Func(node, objs, inn, out):
-        objs.update(inn)
-        print
-        print
+        for obj in inn:
+            objs[obj['name']] = obj['type']
+        #print
+        #print
         #TODO: parameter logic
         block = Block(node.children[-2], objs)
         #TODO: Return logic / Continue logic
-        print inn, out
-        print 'Func', objs.keys()
+        #print inn, out
+        #print 'Func', objs.keys()
         return block
     def Assign(node, objs):
         #print node
@@ -66,8 +74,11 @@ def generate(root):
             name = node.children[0].label
             label = 'func_%d' % generate.fcount; generate.fcount += 1
             inn, out = Params(func, objs)
-            print name, label, inn, out
+            print 'assign -->', name
+            print ' '*4, inn
+            print ' '*4, out
             objs[name] = il.Func(inn, out, label=label)
+            print ' '*4, objs[name]
             fobjs = objs.push()
             functions[label] = {
                 'code' : Func(func, fobjs, inn, out),
@@ -76,11 +87,33 @@ def generate(root):
             code = 'Todo Func code in assign'
         else:
             raise Exception, 'Unexpected node %s' % (node.children[1].label)
-        print 'Assign', objs.keys()
+        #print 'Assign', objs.keys()
         return code
     def Call(node, objs, returns):
-        print 'call returns ->', returns
-        print 'Call', objs.keys()
+        name = node.children[0].label
+        params = (
+            node.children[1].children
+            if len(node.children) == 2
+            else list()
+        )
+        assert name in objs
+        typ_ = objs[name]
+        assert len(typ_.inn) == len(params)
+        assert len(typ_.out) == len(returns)
+        code = list()
+        print 'call -->', name
+        print ' '*4, typ_.inn
+        print ' '*4, typ_.out
+        print ' '*4, typ_
+        for i, p in enumerate(params):
+            if p.label == 'NAME':
+                pname = p.children[0].label
+                ptype = objs[pname]
+
+                print pname, ptype, typ_.inn[i]
+            #il.Inst(il.IPRM, )
+        print
+        #print 'Call', objs.keys()
     def Block(node, objs):
         codelist = list()
         for c in node.children:
@@ -90,7 +123,7 @@ def generate(root):
                 code = Call(c, objs, list())
             else:
                 raise Exception, 'Unexpected node %s' % (c.label)
-        print 'Block', objs.keys()
+        #print 'Block', objs.keys()
         return code
     objs = SymbolTable(prebuilt_funcs)
     r = Block(root, objs)
@@ -119,7 +152,7 @@ if __name__ == '__main__':
             print(r2)
             exit()
             return
-        }
+        }/*
         add = func(d int, e int)(int) {
             x = __add(d, e)
             return x
@@ -128,6 +161,6 @@ if __name__ == '__main__':
             c = plus(2,3)
             continue ret(c, b)
         }
-        f(add, end)
+        f(add, end)*/
     ''', lexer=Lexer())
     print generate(root)
