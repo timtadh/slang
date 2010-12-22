@@ -109,8 +109,8 @@ def generate(root):
             if p.label == 'NAME':
                 pname = p.children[0].label
                 ptype = objs[pname]
-
-                print pname, ptype, typ_.inn[i]
+                rtype = typ_.inn[i]['type']
+                print pname, ptype, rtype
             #il.Inst(il.IPRM, )
         print
         #print 'Call', objs.keys()

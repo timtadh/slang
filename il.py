@@ -35,6 +35,8 @@ class Func(object):
 
 class Int(object):
 
+    def __eq__(self, b): return isinstance(b, Int)
+    def __ne__(self, b): return not isinstance(b, Int)
     def __repr__(self): return str(self)
 
     def __str__(self):
