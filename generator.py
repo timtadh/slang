@@ -39,7 +39,7 @@ class generate(object):
         for x,y in self.objs.iteritems():
             print x, y
         print '---'
-        return r
+        return r, self.functions
 
     def __init__(self):
         self.functions = dict()
@@ -77,10 +77,15 @@ class generate(object):
         print ' '*4, typ_
         for i, p in enumerate(params):
             if p.label == 'NAME':
-                pname = p.children[0].label
-                ptype = self.objs[pname]
-                rtype = typ_.inn[i]['type']
-                print pname, ptype, rtype
+                lname = p.children[0].label
+                ltype = self.objs[lname]
+                print lname,
+            elif p.label == 'INT':
+                ltype = il.Const(p.children[0].label)
+                print ltype.value,
+            rtype = typ_.inn[i]['type']
+            new_type = il.coerce(ltype, rtype)
+            print ltype, rtype, new_type
             #il.Inst(il.IPRM, )
         print
         #print 'Call', objs.keys()
@@ -166,7 +171,7 @@ if __name__ == '__main__':
 
     root = Parser().parse('''
         end = func(r1 int, r2 int) {
-            print(r1)
+            print(1)
             print(r2)
             exit()
             return
