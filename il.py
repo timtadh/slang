@@ -8,7 +8,7 @@ import sys
 
 opsr = (
     'ADD', 'SUB', 'MUL', 'DIV', 'MV', 'CALL', 'IPRM', 'OPRM', 'EXIT', 'RTRN',
-    'CONT'
+    'CONT', 'IMM'
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
@@ -20,6 +20,12 @@ class Inst(object):
         self.a      = a
         self.b      = b
         self.result = result
+
+    def __repr__(self): return str(self)
+
+    def __str__(self):
+        return '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
+
 
 class Func(object):
 

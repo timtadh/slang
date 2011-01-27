@@ -32,57 +32,52 @@ class Parser(object):
         return c
 
     def p_Start(self, t):
-        'Start : Block Expr'
+        'Start : Arith'
         t[0] = t[1]
 
-    def p_Arith1(self, t):
-        'Block : Block Stmt'
-        t[0] = t[1].addkid(t[2])
+    def p_Arith(self, t):
+        'Arith : Div'
+        t[0] = Node('Arith').addkid(t[1])
 
-    def p_Block2(self, t):
-        'Block : Stmt'
-        t[0] = Node('Block').addkid(t[1])
+    def p_Div1(self, t):
+        'Div : Div SLASH Mul'
+        t[0] = Node('/').addkid(t[1]).addkid(t[3])
 
-    def p_Stmt(self, t):
-        'Stmt : NAME EQUAL Expr'
-        t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
+    def p_Div2(self, t):
+        'Div : Mul'
+        t[0] = t[1]
+
+    def p_Mul1(self, t):
+        'Mul : Mul STAR Sub'
+        t[0] = Node('*').addkid(t[1]).addkid(t[3])
+
+    def p_Mul2(self, t):
+        'Mul : Sub'
+        t[0] = t[1]
+
+    def p_Sub1(self, t):
+        'Sub : Sub DASH Add'
+        t[0] = Node('-').addkid(t[1]).addkid(t[3])
+
+    def p_Sub2(self, t):
+        'Sub : Add'
+        t[0] = t[1]
+
+    def p_Add1(self, t):
+        'Add : Add PLUS Expr'
+        t[0] = Node('+').addkid(t[1]).addkid(t[3])
+
+    def p_Add2(self, t):
+        'Add : Expr'
+        t[0] = t[1]
 
     def p_Expr1(self, t):
-        'Expr : L LPAREN NAME RPAREN LCURLY Block Expr RCURLY '
-        t[0] = (
-            Node('Func')
-                .addkid(Node(t[3]))
-                .addkid(t[6])
-                .addkid(t[7])
-        )
+        'Expr : INT_VAL'
+        t[0] = Node('INT').addkid(t[1])
 
     def p_Expr2(self, t):
-        'Expr : L LPAREN NAME RPAREN LCURLY Expr RCURLY '
-        t[0] = (
-            Node('Func')
-                .addkid(Node(t[3]))
-                .addkid(t[6])
-        )
-
-    def p_Expr3(self, t):
-        'Expr : Value'
-        t[0] = t[1]
-
-    def p_Call(self, t):
-        'Call : NAME LPAREN Value RPAREN'
-        t[0] = Node('Call').addkid(Node(t[1])).addkid(t[3])
-
-    def p_Value1(self, t):
-        'Value : NAME'
-        t[0] = Node('NAME').addkid(Node(t[1]))
-
-    def p_Value2(self, t):
-        'Value : INT_VAL'
-        t[0] = Node('INT').addkid(Node(t[1]))
-
-    def p_Value3(self, t):
-        'Value : Call'
-        t[0] = t[1]
+        'Expr : LPAREN Div RPAREN'
+        t[0] = t[2]
 
     def p_error(self, t):
         raise SyntaxError, "Syntax error at '%s', %s.%s" % (t,t.lineno,t.lexpos)
@@ -90,11 +85,7 @@ class Parser(object):
 
 if __name__ == '__main__':
     print Parser().parse('''
-        c0 = l(s) { 0 }
-        S  = l(n) {
-            }
-        c0S = c0(S)
-        c1 = c0S(c0)
+        2*3/(4-5*(12*32-15))
 
 
     ''', lexer=Lexer()).dotty()

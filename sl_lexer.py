@@ -16,7 +16,7 @@ reserved = dict(
 tokens = reserved.values() + [
     'NAME', 'INT_VAL', 'COMMA', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUAL',
     #'COLON',
-    'DOT',
+    'DOT', 'SLASH', 'STAR', 'DASH', 'PLUS',
 ]
 
 # Common Regex Parts
@@ -39,6 +39,11 @@ class Lexer(object):
 
     tokens = tokens
 
+    t_SLASH = r'\/'
+    t_STAR = r'\*'
+    t_DASH = r'\-'
+    t_PLUS = r'\+'
+
     t_DOT = r'\.'
     t_EQUAL = r'='
     t_COMMA = r','
@@ -55,14 +60,14 @@ class Lexer(object):
         else: token.type = 'NAME'
         return token
 
-    const_hex = '-?0[xX](' + H + ')+'
+    const_hex = '0[xX](' + H + ')+'
     @Token(const_hex)
     def t_CONST_HEX(self, token):
         token.type = 'INT_VAL'
         token.value = int(token.value, 16)
         return token
 
-    const_dec_oct = '-?(' + D + ')+'
+    const_dec_oct = '(' + D + ')+'
     @Token(const_dec_oct)
     def t_CONST_DEC_OCT(self, token):
         token.type = 'INT_VAL'
