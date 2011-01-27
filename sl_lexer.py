@@ -9,13 +9,14 @@ from ply.lex import Token
 
 reserved = dict(
     (word.lower(), word) for word in (
-        'RETURN', 'CONTINUE', 'FUNC', 'INT'
+        'RETURN', 'CONTINUE', 'L', 'INT'
     )
 )
 
 tokens = reserved.values() + [
     'NAME', 'INT_VAL', 'COMMA', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUAL',
     #'COLON',
+    'DOT',
 ]
 
 # Common Regex Parts
@@ -38,6 +39,7 @@ class Lexer(object):
 
     tokens = tokens
 
+    t_DOT = r'\.'
     t_EQUAL = r'='
     t_COMMA = r','
     #t_COLON = r':'
