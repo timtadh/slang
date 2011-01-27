@@ -24,6 +24,7 @@ class generate(object):
         self = super(generate, cls).__new__(cls)
         self.__init__()
         r = self.Arith(root)
+        r += [ il.Inst(il.PRNT, r[-1].result, 0, 0)]
         #print '---'
         #parents = list()
         #for x,y in self.functions.iteritems():
@@ -39,6 +40,7 @@ class generate(object):
         #for x,y in self.objs.iteritems():
             #print x, y
         #print '---'
+        print r
         return r
 
     def __init__(self):
@@ -83,5 +85,5 @@ class generate(object):
 
 if __name__ == '__main__':
 
-    print generate(Parser().parse(''' 2*3/(4-5*(12*32-15)) ''', lexer=Lexer()))
-    print generate(Parser().parse(''' 2 ''', lexer=Lexer()))
+    print il.run(generate(Parser().parse(''' 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
+    print il.run(generate(Parser().parse(''' 2 ''', lexer=Lexer())))

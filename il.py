@@ -8,10 +8,28 @@ import sys
 
 opsr = (
     'ADD', 'SUB', 'MUL', 'DIV', 'MV', 'CALL', 'IPRM', 'OPRM', 'EXIT', 'RTRN',
-    'CONT', 'IMM'
+    'CONT', 'IMM', 'PRNT'
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
+
+def run(il):
+    var = dict()
+    for i in il:
+        if i.op == IMM:
+            var[i.result] = i.a
+        elif i.op == DIV:
+            var[i.result] = var[i.a] / var[i.b]
+        elif i.op == MUL:
+            var[i.result] = var[i.a] * var[i.b]
+        elif i.op == SUB:
+            var[i.result] = var[i.a] - var[i.b]
+        elif i.op == ADD:
+            var[i.result] = var[i.a] + var[i.b]
+        elif i.op == PRNT:
+            print var[i.a]
+        else:
+            raise Exception
 
 class Inst(object):
 
@@ -88,3 +106,5 @@ def coerce(a, b):
                 "Type '%s' is unsupported as a the coerce to param" % (str(b))
             )
         )
+
+
