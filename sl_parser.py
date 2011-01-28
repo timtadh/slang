@@ -32,8 +32,22 @@ class Parser(object):
         return c
 
     def p_Start(self, t):
-        'Start : Arith'
+        'Start : Expr'
         t[0] = t[1]
+
+    def p_Expr1(self, t):
+        'Expr : Arith'
+        t[0] = t[1]
+
+    def p_Expr2(self, t):
+        'Expr : NAME EQUAL Arith'
+        t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
+
+    #def p_Expr3(self, t):
+        #'Expr : Call'
+
+    #def p_Expr4(self, t):
+        #'Expr : Name EQUAL Call'
 
     def p_Arith(self, t):
         'Arith : Div'
@@ -68,15 +82,15 @@ class Parser(object):
         t[0] = Node('+').addkid(t[1]).addkid(t[3])
 
     def p_Add2(self, t):
-        'Add : Expr'
+        'Add : Value'
         t[0] = t[1]
 
-    def p_Expr1(self, t):
-        'Expr : INT_VAL'
+    def p_Value1(self, t):
+        'Value : INT_VAL'
         t[0] = Node('INT').addkid(t[1])
 
-    def p_Expr2(self, t):
-        'Expr : LPAREN Div RPAREN'
+    def p_Value2(self, t):
+        'Value : LPAREN Arith RPAREN'
         t[0] = t[2]
 
     def p_error(self, t):
