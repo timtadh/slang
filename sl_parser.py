@@ -51,11 +51,13 @@ class Parser(object):
         'Expr : NAME EQUAL Arith'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
-    #def p_Expr3(self, t):
-        #'Expr : Call'
+    def p_Expr3(self, t):
+        'Expr : Call'
+        t[0] = t[1]
 
-    #def p_Expr4(self, t):
-        #'Expr : Name EQUAL Call'
+    def p_Expr4(self, t):
+        'Expr : NAME EQUAL Call'
+        t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
     def p_Arith(self, t):
         'Arith : Div'
@@ -90,8 +92,16 @@ class Parser(object):
         t[0] = Node('+').addkid(t[1]).addkid(t[3])
 
     def p_Add2(self, t):
-        'Add : Value'
+        'Add : Atomic'
         t[0] = t[1]
+
+    def p_Atomic1(self, t):
+        'Atomic : Value'
+        t[0] = t[1]
+
+    def p_Atomic2(self, t):
+        'Atomic : LPAREN Arith RPAREN'
+        t[0] = t[2]
 
     def p_Value1(self, t):
         'Value : INT_VAL'
@@ -101,13 +111,25 @@ class Parser(object):
         'Value : NAME'
         t[0] = Node('NAME').addkid(t[1])
 
-    #def p_Value3(self, t):
-        #'Value : Call'
-        #t[0] = t[1]
+    def p_Value3(self, t):
+        'Value : Call'
+        t[0] = t[1]
 
-    def p_Value4(self, t):
-        'Value : LPAREN Arith RPAREN'
-        t[0] = t[2]
+    def p_Call1(self, t):
+        'Call : NAME LPAREN RPAREN'
+        t[0] = Node('Call').addkid(t[1])
+
+    def p_Call2(self, t):
+        'Call : NAME LPAREN Params RPAREN'
+        t[0] = Node('Call').addkid(t[1]).addkid(t[3])
+
+    def p_Params1(self, t):
+        'Params : Params COMMA Arith'
+        t[0] = t[1].addkid(t[3])
+
+    def p_Params2(self, t):
+        'Params : Arith'
+        t[0] = Node('Params').addkid(t[1])
 
     def p_error(self, t):
         raise SyntaxError, "Syntax error at '%s', %s.%s" % (t,t.lineno,t.lexpos)
@@ -117,6 +139,7 @@ if __name__ == '__main__':
     print Parser().parse('''
         x = 2*3/(4-5*(12*32-15))
         y = x+3
+        z = f(x, y, 3+4)
 
 
     ''', lexer=Lexer()).dotty()
