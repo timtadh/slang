@@ -16,18 +16,25 @@ class generate(object):
         self.__init__()
         r = self.Stmts(root)
         r += [ il.Inst(il.PRNT, r[-1].result, 0, 0)]
+        print
         print r
-        return r
+        print self.functions
+        return r, self.functions
 
     def __init__(self):
         self.fcount = 0
         self.tcount = 0
-        self.functions = SymbolTable()
+        self.functions = dict()
         self.objs = SymbolTable()
 
     def tmp(self):
         self.tcount += 1
         return 't%i' % self.tcount
+
+    def fun(self):
+        self.fcount += 1
+        return 'f%i' % self.fcount
+
 
     def Stmts(self, node):
         assert node.label == 'Stmts'
@@ -37,6 +44,8 @@ class generate(object):
                 code += self.Assign(c)
             elif c.label == 'Expr':
                 code += self.Expr(c)
+            elif c.label == 'Call':
+                code += self.Call(c)
             else:
                 raise Exception, c.label
         return code
@@ -48,9 +57,9 @@ class generate(object):
         if c.label == 'Expr':
             code = self.Expr(c)
         elif c.label == 'Func':
-            self.functions[name] = None
-            func = self.Func(c)
-            self.functions[name] = func
+            fun = self.fun()
+            self.functions[fun] = self.Func(c)
+            self.objs[name] = fun
             code = list()
         else:
             raise Exception, c.label
@@ -60,7 +69,6 @@ class generate(object):
     def Func(self, node):
         assert node.label == 'Func'
         self.objs = self.objs.push()
-        self.functions = self.functions.push()
 
         code = list()
 
@@ -75,7 +83,6 @@ class generate(object):
                 raise Exception, c.label
 
         self.objs = self.objs.pop()
-        self.functions = self.functions.pop()
 
         return code
 
@@ -87,7 +94,7 @@ class generate(object):
                 code += self.Expr(node.children[0])
                 t = code[-1].result
                 if code[-1].op == 'USE': code = code[:-1]
-                code += [ il.Inst(il.OPRM, t, 0, 0) ]
+                code += [ il.Inst(il.OPRM, 0, t, 0) ]
             else:
                 raise Exception
         code += [ il.Inst(il.RTRN, 0, 0, 0) ]
@@ -115,6 +122,8 @@ class generate(object):
             return [ il.Inst('USE', 0, 0, self.objs[c.children[0]]) ]
         elif c.label == 'Expr':
             return self.Expr(c)
+        elif c.label == 'Call':
+            return self.Call(c)
         else:
             raise Exception, 'Unexpected Node %s' % str(c)
 
@@ -133,6 +142,28 @@ class generate(object):
             self.tmp())
         ]
 
+    def Call(self, node):
+        assert node.label == 'Call'
+        code = list()
+        fun = self.objs[node.children[0]]
+        if len(node.children) != 1:
+            code += self.Params(node.children[1])
+        code += [ il.Inst(il.CALL, fun, 0, 0) ]
+        code += [ il.Inst(il.GPRM, 0, 0, self.tmp()) ]
+        return code
+
+    def Params(self, node):
+        assert node.label == 'Params'
+        code = list()
+        params = list()
+        for c in node.children:
+            code += self.Expr(c)
+            params.append(code[-1].result)
+            if code[-1].op == 'USE': code = code[:-1]
+        for i, p in enumerate(params):
+            code += [ il.Inst(il.IPRM, i, p, 0) ]
+        return code
+
     def Int(self, node):
         return [ il.Inst(il.IMM, node, 0, self.tmp()) ]
 
@@ -142,15 +173,15 @@ class generate(object):
 
 if __name__ == '__main__':
 
-    print il.run(generate(Parser().parse(''' a = 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
-    print il.run(generate(Parser().parse(''' a= 1 + 2 - (3+4) ''', lexer=Lexer())))
-    print il.run(generate(Parser().parse(''' a=2 ''', lexer=Lexer())))
-    print il.run(generate(Parser().parse(''' x = (2*3/(4-5*(12*32-15)))
+    print il.run(*generate(Parser().parse(''' a = 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse(''' a= 1 + 2 - (3+4) ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse(''' a=2 ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse(''' x = (2*3/(4-5*(12*32-15)))
         y = 0
         z = 0
         w = x + y + z''', lexer=Lexer())))
-    print generate(Parser().parse('''
-        f = func(a, b) { c = a + b return c }
-        f(1,2)
-    ''', lexer=Lexer()))
+    print il.run(*generate(Parser().parse('''
+            add = func(a, b) { c = a + b return c }
+            add(1, 3)
+        ''', lexer=Lexer())))
 
