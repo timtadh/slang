@@ -23,23 +23,8 @@ class generate(object):
     def __new__(cls, root):
         self = super(generate, cls).__new__(cls)
         self.__init__()
-        r = self.Arith(root)
+        r = self.Exprs(root)
         r += [ il.Inst(il.PRNT, r[-1].result, 0, 0)]
-        #print '---'
-        #parents = list()
-        #for x,y in self.functions.iteritems():
-            #print x
-            #print ' '*4, 'symbols'
-            #parents.append(y['symbols'].parent)
-            #for a,b in y['symbols'].iteritems():
-                #print ' '*8, a, b
-            #print ' '*4, 'code', y['code']
-        #for x in parents:
-            #print repr(x)
-        #print '---'
-        #for x,y in self.objs.iteritems():
-            #print x, y
-        #print '---'
         print r
         return r
 
@@ -53,6 +38,29 @@ class generate(object):
         self.tcount += 1
         return 't%i' % self.tcount
 
+    def Exprs(self, node):
+        assert node.label == 'Exprs'
+        code = list()
+        for c in node.children:
+            if c.label == 'Assign':
+                code += self.Assign(c)
+            elif c.label == 'Arith':
+                code += self.Arith(c)
+            else:
+                raise Exception, c.label
+        return code
+
+    def Assign(self, node):
+        assert node.label == 'Assign'
+        name = node.children[0]
+        c = node.children[1]
+        if c.label == 'Arith':
+            code = self.Arith(c)
+        else:
+            raise Exception
+        self.objs[name] = code[-1].result
+        return code
+
     def Arith(self, node):
         if node.label == 'Arith':
             c = node.children[0]
@@ -62,6 +70,8 @@ class generate(object):
             return self.Int(c.children[0])
         elif c.label == '/' or c.label == '*' or c.label == '-' or c.label == '+':
             return self.Op(c)
+        elif c.label == 'NAME':
+            return [ il.Inst('USE', 0, 0, self.objs[c.children[0]]) ]
         else:
             raise Exception, 'Unexpected Node %s' % str(c)
 
@@ -69,10 +79,14 @@ class generate(object):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}
         A = self.Arith(node.children[0])
         B = self.Arith(node.children[1])
+        ar = A[-1].result
+        br = B[-1].result
+        if A[-1].op == 'USE': A = A[:-1]
+        if B[-1].op == 'USE': B = B[:-1]
         return A + B + [
             il.Inst(il.ops[ops[node.label]],
-            A[-1].result,
-            B[-1].result,
+            ar,
+            br,
             self.tmp())
         ]
 
@@ -87,3 +101,6 @@ if __name__ == '__main__':
 
     print il.run(generate(Parser().parse(''' 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
     print il.run(generate(Parser().parse(''' 2 ''', lexer=Lexer())))
+    print il.run(generate(Parser().parse(''' x = 2*3/(4-5*(12*32-15))
+        y = x+2 ''', lexer=Lexer())))
+

@@ -32,8 +32,16 @@ class Parser(object):
         return c
 
     def p_Start(self, t):
-        'Start : Expr'
+        'Start : Exprs'
         t[0] = t[1]
+
+    def p_Exprs1(self, t):
+        'Exprs : Exprs Expr'
+        t[0] = t[1].addkid(t[2])
+
+    def p_Exprs2(self, t):
+        'Exprs : Expr'
+        t[0] = Node('Exprs').addkid(t[1])
 
     def p_Expr1(self, t):
         'Expr : Arith'
@@ -90,6 +98,14 @@ class Parser(object):
         t[0] = Node('INT').addkid(t[1])
 
     def p_Value2(self, t):
+        'Value : NAME'
+        t[0] = Node('NAME').addkid(t[1])
+
+    #def p_Value3(self, t):
+        #'Value : Call'
+        #t[0] = t[1]
+
+    def p_Value4(self, t):
         'Value : LPAREN Arith RPAREN'
         t[0] = t[2]
 
@@ -99,7 +115,8 @@ class Parser(object):
 
 if __name__ == '__main__':
     print Parser().parse('''
-        2*3/(4-5*(12*32-15))
+        x = 2*3/(4-5*(12*32-15))
+        y = x+3
 
 
     ''', lexer=Lexer()).dotty()
