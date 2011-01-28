@@ -72,6 +72,8 @@ class generate(object):
             return self.Op(c)
         elif c.label == 'NAME':
             return [ il.Inst('USE', 0, 0, self.objs[c.children[0]]) ]
+        elif c.label == 'Arith':
+            return self.Arith(c)
         else:
             raise Exception, 'Unexpected Node %s' % str(c)
 
@@ -101,6 +103,6 @@ if __name__ == '__main__':
 
     print il.run(generate(Parser().parse(''' 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
     print il.run(generate(Parser().parse(''' 2 ''', lexer=Lexer())))
-    print il.run(generate(Parser().parse(''' x = 2*3/(4-5*(12*32-15))
+    print il.run(generate(Parser().parse(''' x = (2*3/(4-5*(12*32-15)))
         y = x+2 ''', lexer=Lexer())))
 
