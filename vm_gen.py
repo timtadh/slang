@@ -17,10 +17,14 @@ class generate(object):
         self.__init__()
         self.var = dict()
         self.bp_offset = 0
+        self.main = main
+        self.funcs = funcs
         code = list()
         code += self.InitCode()
-        code += self.Main(main, funcs)
+        code += self.Func(main)
         code += self.ExitCode()
+        for k, f in funcs.iteritems():
+            code += self.Func(f)
         return code
 
     def InitCode(self):
@@ -42,18 +46,37 @@ class generate(object):
             (vm.EXIT, 0,0)
         ]
 
-    def Main(self, main, funcs):
+    def Func(self, insts):
+        print '->', insts
         self.bp_offset = 3
         code = list()
-        for i in main:
+        for i in insts:
             if i.op == il.PRNT:
                 code += self.Print(i)
             elif i.op == il.IMM:
                 code += self.Imm(i)
+            elif i.op == il.GPRM:
+                code += self.Gprm(i)
             elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
                 code += self.Op(i)
             else:
                 raise Exception, il.opsr[i.op]
+        return code
+
+    def Gprm(self, i):
+        code = [
+            (vm.IMM, 3, 0),
+            (vm.ADD, 3, 0),
+            (vm.IMM, 4, i.a+1),
+            (vm.SUB, 3, 4),
+            (vm.LOAD, 4, 3),
+            (vm.IMM, 3, self.bp_offset),
+            (vm.ADD, 3, 0),
+            (vm.SAVE, 3, 4),
+        ]
+        self.var[i.result] = self.bp_offset
+        self.bp_offset += 1
+        print code
         return code
 
     def Imm(self, i):
@@ -102,7 +125,10 @@ if __name__ == '__main__':
 
     code = generate(
         *il_gen.generate(
-            Parser().parse(''' print 2*3/(4-5*(12*32-15))''', lexer=Lexer())
+            Parser().parse('''
+                add = func(a,b) { return a + b}
+                print 2*3/(4-5*(12*32-15))
+            ''', lexer=Lexer())
         )
     )
     print code

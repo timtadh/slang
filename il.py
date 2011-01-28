@@ -31,7 +31,7 @@ def run(il, funcs, params=None, var=None):
         elif i.op == PRNT:
             print var[i.a]
         elif i.op == IPRM:
-            nparams.append(var[i.b])
+            nparams.insert(0, var[i.b])
         elif i.op == OPRM:
             rparams.append(var[i.b])
         elif i.op == GPRM:

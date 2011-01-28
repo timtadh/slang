@@ -175,6 +175,7 @@ class generate(object):
             code += self.Expr(c)
             params.append(code[-1].result)
             if code[-1].op == 'USE': code = code[:-1]
+        params.reverse()
         for i, p in enumerate(params):
             code += [ il.Inst(il.IPRM, i, p, 0) ]
         return code
@@ -200,6 +201,8 @@ if __name__ == '__main__':
         print x + y + z''', lexer=Lexer())))
     print il.run(*generate(Parser().parse('''
             add = func(a, b) {
+                print a
+                print b
                 _add = func() {
                     return a + b
                 }
