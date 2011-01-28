@@ -50,9 +50,33 @@ class Parser(object):
         #'Stmt : Expr SEMI'
         #t[0] = t[1]
 
+    def p_Stmt1(self, t):
+        'Stmt : Call'
+        t[0] = t[1]
+
     def p_Stmt2(self, t):
         'Stmt : NAME EQUAL Expr'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
+
+    def p_Stmt3(self, t):
+        'Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Return RCURLY'
+
+    def p_Stmt4(self, t):
+        'Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Stmts Return RCURLY'
+
+    def p_Stmt5(self, t):
+        'Stmt : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Return RCURLY'
+
+    def p_Stmt6(self, t):
+        'Stmt : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Stmts Return RCURLY'
+
+    def p_Return1(self, t):
+        'Return : RETURN'
+        t[0] = Node('Expr').addkid(t[1])
+
+    def p_Return2(self, t):
+        'Return : RETURN Params'
+        t[0] = Node('Expr').addkid(t[1])
 
     def p_Expr(self, t):
         'Expr : Div'
@@ -125,6 +149,14 @@ class Parser(object):
     def p_Params2(self, t):
         'Params : Expr'
         t[0] = Node('Params').addkid(t[1])
+
+    def p_DParams1(self, t):
+        'DParams : Params COMMA NAME'
+        t[0] = t[1].addkid(t[3])
+
+    def p_DParams2(self, t):
+        'DParams : NAME'
+        t[0] = Node('DParams').addkid(t[1])
 
     def p_error(self, t):
         raise SyntaxError, "Syntax error at '%s', %s.%s" % (t,t.lineno,t.lexpos)
