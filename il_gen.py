@@ -9,15 +9,6 @@ from sl_parser import Parser, Lexer
 from table import SymbolTable
 import il
 
-prebuilt_funcs = {
-    'print':il.Func([{'type':il.Int(), 'name':None}], []),
-    '__add':il.Func(
-        [{'type':il.Int(), 'name':None}, {'type':il.Int(), 'name':None}],
-        [{'type':il.Int(), 'name':None}]
-    ),
-    'exit':il.Func([], [])
-}
-
 class generate(object):
 
     def __new__(cls, root):
@@ -29,10 +20,10 @@ class generate(object):
         return r
 
     def __init__(self):
-        self.functions = dict()
         self.fcount = 0
         self.tcount = 0
-        self.objs = SymbolTable(prebuilt_funcs)
+        self.functions = SymbolTable()
+        self.objs = SymbolTable()
 
     def tmp(self):
         self.tcount += 1
@@ -56,9 +47,59 @@ class generate(object):
         c = node.children[1]
         if c.label == 'Expr':
             code = self.Expr(c)
+        elif c.label == 'Func':
+            self.functions[name] = None
+            func = self.Func(c)
+            self.functions[name] = func
+            code = list()
         else:
-            raise Exception
-        self.objs[name] = code[-1].result
+            raise Exception, c.label
+        if code: self.objs[name] = code[-1].result
+        return code
+
+    def Func(self, node):
+        assert node.label == 'Func'
+        self.objs = self.objs.push()
+        self.functions = self.functions.push()
+
+        code = list()
+
+        for c in node.children:
+            if c.label == 'DParams':
+                code += self.DParams(node.children[0])
+            elif c.label == 'Stmts':
+                code += self.Stmts(c)
+            elif c.label == 'Return':
+                code += self.Return(c)
+            else:
+                raise Exception, c.label
+
+        self.objs = self.objs.pop()
+        self.functions = self.functions.pop()
+
+        return code
+
+    def Return(self, node):
+        assert node.label == 'Return'
+        code = list()
+        if node.children:
+            if node.children[0].label == 'Expr':
+                code += self.Expr(node.children[0])
+                t = code[-1].result
+                if code[-1].op == 'USE': code = code[:-1]
+                code += [ il.Inst(il.OPRM, t, 0, 0) ]
+            else:
+                raise Exception
+        code += [ il.Inst(il.RTRN, 0, 0, 0) ]
+        return code
+
+    def DParams(self, node):
+        assert node.label == 'DParams'
+        code = list()
+        for i, c in enumerate(node.children):
+            t = self.tmp()
+            self.objs[c] = t
+            code.append(il.Inst(il.GPRM, i, 0, t))
         return code
 
     def Expr(self, node):
@@ -102,7 +143,14 @@ class generate(object):
 if __name__ == '__main__':
 
     print il.run(generate(Parser().parse(''' a = 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
+    print il.run(generate(Parser().parse(''' a= 1 + 2 - (3+4) ''', lexer=Lexer())))
     print il.run(generate(Parser().parse(''' a=2 ''', lexer=Lexer())))
     print il.run(generate(Parser().parse(''' x = (2*3/(4-5*(12*32-15)))
-        y = x+2 ''', lexer=Lexer())))
+        y = 0
+        z = 0
+        w = x + y + z''', lexer=Lexer())))
+    print generate(Parser().parse('''
+        f = func(a, b) { c = a + b return c }
+        f(1,2)
+    ''', lexer=Lexer()))
 

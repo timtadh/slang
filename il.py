@@ -7,8 +7,8 @@
 import sys
 
 opsr = (
-    'ADD', 'SUB', 'MUL', 'DIV', 'MV', 'CALL', 'IPRM', 'OPRM', 'EXIT', 'RTRN',
-    'CONT', 'IMM', 'PRNT'
+    'ADD', 'SUB', 'MUL', 'DIV', 'MV', 'CALL', 'IPRM', 'OPRM', 'GPRM',
+    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT'
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
