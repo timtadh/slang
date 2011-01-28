@@ -101,8 +101,8 @@ class generate(object):
 
 if __name__ == '__main__':
 
-    print il.run(generate(Parser().parse(''' 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
-    print il.run(generate(Parser().parse(''' 2 ''', lexer=Lexer())))
+    print il.run(generate(Parser().parse(''' a = 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
+    print il.run(generate(Parser().parse(''' a=2 ''', lexer=Lexer())))
     print il.run(generate(Parser().parse(''' x = (2*3/(4-5*(12*32-15)))
         y = x+2 ''', lexer=Lexer())))
 

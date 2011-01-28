@@ -15,7 +15,8 @@ from ast import Node
 class Parser(object):
 
     tokens = tokens
-    precedence = (    )
+    precedence = (
+    )
 
     def __new__(cls, **kwargs):
         ## Does magic to allow PLY to do its thing.
@@ -43,20 +44,14 @@ class Parser(object):
         'Stmts : Stmt'
         t[0] = Node('Stmts').addkid(t[1])
 
-    def p_Stmt1(self, t):
-        'Stmt : Expr'
-        t[0] = t[1]
+    # If you want to add this back you have to add SEMI colons or line
+    # terminators to the language, yuck.
+    #def p_Stmt1(self, t):
+        #'Stmt : Expr SEMI'
+        #t[0] = t[1]
 
     def p_Stmt2(self, t):
         'Stmt : NAME EQUAL Expr'
-        t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
-
-    def p_Stmt3(self, t):
-        'Stmt : Call'
-        t[0] = t[1]
-
-    def p_Stmt4(self, t):
-        'Stmt : NAME EQUAL Call'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
     def p_Expr(self, t):
@@ -88,7 +83,7 @@ class Parser(object):
         t[0] = t[1]
 
     def p_Add1(self, t):
-        'Add : Add PLUS Stmt'
+        'Add : Add PLUS Atomic'
         t[0] = Node('+').addkid(t[1]).addkid(t[3])
 
     def p_Add2(self, t):
@@ -116,12 +111,12 @@ class Parser(object):
         t[0] = t[1]
 
     def p_Call1(self, t):
-        'Call : NAME LPAREN RPAREN'
-        t[0] = Node('Call').addkid(t[1])
-
-    def p_Call2(self, t):
         'Call : NAME LPAREN Params RPAREN'
         t[0] = Node('Call').addkid(t[1]).addkid(t[3])
+
+    def p_Call2(self, t):
+        'Call : NAME LPAREN RPAREN'
+        t[0] = Node('Call').addkid(t[1])
 
     def p_Params1(self, t):
         'Params : Params COMMA Expr'
@@ -136,7 +131,7 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    print Parser().parse('''
+    Parser().parse('''
         x = 2*3/(4-5*(12*32-15))
         y = x+3
         z = f(x, y, 3+4)
