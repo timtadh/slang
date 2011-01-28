@@ -13,8 +13,10 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-def run(il):
+def run(il, funcs, params=None):
     var = dict()
+    nparams = list()
+    rparams = list()
     for i in il:
         if i.op == IMM:
             var[i.result] = i.a
@@ -28,8 +30,19 @@ def run(il):
             var[i.result] = var[i.a] + var[i.b]
         elif i.op == PRNT:
             print var[i.a]
+        elif i.op == IPRM:
+            nparams.append(var[i.b])
+        elif i.op == OPRM:
+            rparams.append(var[i.b])
+        elif i.op == GPRM:
+            var[i.result] = params[i.a]
+        elif i.op == CALL:
+            params = run(funcs[i.a], funcs, nparams)
+            nparams = list()
+        elif i.op == RTRN:
+            return rparams
         else:
-            raise Exception
+            raise Exception, opsr[i.op]
 
 class Inst(object):
 
