@@ -48,10 +48,10 @@ class generate(object):
         for i in main:
             if i.op == il.PRNT:
                 code += self.Print(i)
-                print code
             elif i.op == il.IMM:
                 code += self.Imm(i)
-                print code
+            elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
+                code += self.Op(i)
             else:
                 raise Exception, il.opsr[i.op]
         return code
@@ -64,6 +64,24 @@ class generate(object):
             (vm.SAVE, 3, 4),
             (vm.IMM, 4, 1),
             (vm.ADD, 1, 4),
+        ]
+        self.var[i.result] = self.bp_offset
+        self.bp_offset += 1
+        return code
+
+    def Op(self, i):
+        ops = {il.ADD:vm.ADD, il.SUB:vm.SUB, il.MUL:vm.MUL, il.DIV:vm.DIV}
+        code = [
+            (vm.IMM, 3, self.var[i.b]),
+            (vm.ADD, 3, 0),
+            (vm.LOAD, 3, 3),
+            (vm.IMM, 4, self.var[i.a]),
+            (vm.ADD, 4, 0),
+            (vm.LOAD, 4, 4),
+            (ops[i.op], 4, 3),
+            (vm.IMM, 3, self.bp_offset),
+            (vm.ADD, 3, 0),
+            (vm.SAVE, 3, 4),
         ]
         self.var[i.result] = self.bp_offset
         self.bp_offset += 1
@@ -84,7 +102,7 @@ if __name__ == '__main__':
 
     code = generate(
         *il_gen.generate(
-            Parser().parse(''' print 2''', lexer=Lexer())
+            Parser().parse(''' print 2*3/(4-5*(12*32-15))''', lexer=Lexer())
         )
     )
     print code
