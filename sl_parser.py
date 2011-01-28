@@ -50,6 +50,10 @@ class Parser(object):
         #'Stmt : Expr SEMI'
         #t[0] = t[1]
 
+    def p_Stmt0(self, t):
+        'Stmt : PRINT Expr'
+        t[0] = Node('Print').addkid(t[2])
+
     def p_Stmt1(self, t):
         'Stmt : Call'
         t[0] = t[1]
@@ -203,5 +207,5 @@ if __name__ == '__main__':
         f = func(a, b, c) { return a + b + c }
         x = 2*3/(4-5*(12*32-15))
         y = x+3
-        z = f(x, y, 3+4)
+        print f(x, y, 3+4)
     ''', lexer=Lexer()).dotty()

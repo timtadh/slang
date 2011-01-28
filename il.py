@@ -13,8 +13,8 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-def run(il, funcs, params=None):
-    var = dict()
+def run(il, funcs, params=None, var=None):
+    if not var: var = dict()
     nparams = list()
     rparams = list()
     for i in il:
@@ -37,7 +37,7 @@ def run(il, funcs, params=None):
         elif i.op == GPRM:
             var[i.result] = params[i.a]
         elif i.op == CALL:
-            params = run(funcs[i.a], funcs, nparams)
+            params = run(funcs[i.a], funcs, nparams, var)
             nparams = list()
         elif i.op == RTRN:
             return rparams

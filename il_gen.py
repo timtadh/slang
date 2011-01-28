@@ -15,7 +15,6 @@ class generate(object):
         self = super(generate, cls).__new__(cls)
         self.__init__()
         r = self.Stmts(root)
-        r += [ il.Inst(il.PRNT, r[-1].result, 0, 0)]
         print
         print r
         print self.functions
@@ -46,9 +45,25 @@ class generate(object):
                 code += self.Expr(c)
             elif c.label == 'Call':
                 code += self.Call(c)
+            elif c.label == 'Print':
+                code += self.Print(c)
             else:
                 raise Exception, c.label
         return code
+
+    def Print(self, node):
+        assert node.label == 'Print'
+        c = node.children[0]
+        code = list()
+        if c.label == 'Expr':
+            code += self.Expr(c)
+            t = code[-1].result
+            if code[-1].op == 'USE': code = code[:-1]
+        else:
+            raise Exception, c.label
+        code += [ il.Inst(il.PRNT, t, 0, 0)]
+        return code
+
 
     def Assign(self, node):
         assert node.label == 'Assign'
@@ -173,15 +188,24 @@ class generate(object):
 
 if __name__ == '__main__':
 
-    print il.run(*generate(Parser().parse(''' a = 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
-    print il.run(*generate(Parser().parse(''' a= 1 + 2 - (3+4) ''', lexer=Lexer())))
-    print il.run(*generate(Parser().parse(''' a=2 ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse(''' print 2*3/(4-5*(12*32-15)) ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse(''' print 1 + 2 - (3+4) ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse(''' print 2 ''', lexer=Lexer())))
     print il.run(*generate(Parser().parse(''' x = (2*3/(4-5*(12*32-15)))
-        y = 0
-        z = 0
-        w = x + y + z''', lexer=Lexer())))
+        print x
+        y = x + 3
+        print y
+        z = y + 4
+        print z
+        print x + y + z''', lexer=Lexer())))
     print il.run(*generate(Parser().parse('''
-            add = func(a, b) { c = a + b return c }
-            add(1, 3)
+            add = func(a, b) {
+                _add = func() {
+                    return a + b
+                }
+                c = _add()
+                return c
+            }
+            print add(1, 3)
         ''', lexer=Lexer())))
 

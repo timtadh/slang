@@ -9,7 +9,7 @@ from ply.lex import Token
 
 reserved = dict(
     (word.lower(), word) for word in (
-        'RETURN', 'CONTINUE', 'FUNC', 'INT'
+        'RETURN', 'CONTINUE', 'FUNC', 'INT', 'PRINT'
     )
 )
 
@@ -105,6 +105,6 @@ if __name__ == '__main__':
             return c
         }
         r = f(2,3)
-        print(r)
+        print r
     ''')
     print [x for x in lexer]
