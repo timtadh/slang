@@ -16,10 +16,10 @@ SUB  = 0x6
 MUL  = 0x7
 DIV  = 0x8
 EXIT = 0x9
-PRIN = 0xa
+PRNT = 0xa
 
 A = [J, PC]
-B = [LOAD, IMM, ADD, SUB, MUL, DIV]
+B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT]
 C = [SAVE]
 
 def load(regs, stack, pc, r1, r2):
@@ -63,7 +63,7 @@ def prin(regs, stack, pc, r1, r2):
 
 INSTS = {
     LOAD:load, SAVE:save, IMM:imm, J:j, PC:pc, ADD:add, SUB:sub, MUL:mul,
-    DIV:div, PRIN:prin
+    DIV:div, PRNT:prin
 }
 
 def run(program):
@@ -125,14 +125,14 @@ if __name__ == '__main__':
         (IMM, 4, 2), # 22
         (SUB, 3, 4), # 23
         (LOAD, 3, 3), # 24
-        (PRIN, 3, 3), # 25
+        (PRNT, 3, 3), # 25
 
         (IMM, 3, 0), # 26
         (ADD, 3, 1), # 27
         (IMM, 4, 1), # 28
         (SUB, 3, 4), # 29
         (LOAD, 3, 3), # 30
-        (PRIN, 3, 3), # 31
+        (PRNT, 3, 3), # 31
     #exit
         (EXIT, 0, 0), # 32
 
