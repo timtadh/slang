@@ -32,36 +32,36 @@ class Parser(object):
         return c
 
     def p_Start(self, t):
-        'Start : Exprs'
+        'Start : Stmts'
         t[0] = t[1]
 
-    def p_Exprs1(self, t):
-        'Exprs : Exprs Expr'
+    def p_Stmts1(self, t):
+        'Stmts : Stmts Stmt'
         t[0] = t[1].addkid(t[2])
 
-    def p_Exprs2(self, t):
-        'Exprs : Expr'
-        t[0] = Node('Exprs').addkid(t[1])
+    def p_Stmts2(self, t):
+        'Stmts : Stmt'
+        t[0] = Node('Stmts').addkid(t[1])
 
-    def p_Expr1(self, t):
-        'Expr : Arith'
+    def p_Stmt1(self, t):
+        'Stmt : Expr'
         t[0] = t[1]
 
-    def p_Expr2(self, t):
-        'Expr : NAME EQUAL Arith'
+    def p_Stmt2(self, t):
+        'Stmt : NAME EQUAL Expr'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
-    def p_Expr3(self, t):
-        'Expr : Call'
+    def p_Stmt3(self, t):
+        'Stmt : Call'
         t[0] = t[1]
 
-    def p_Expr4(self, t):
-        'Expr : NAME EQUAL Call'
+    def p_Stmt4(self, t):
+        'Stmt : NAME EQUAL Call'
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
-    def p_Arith(self, t):
-        'Arith : Div'
-        t[0] = Node('Arith').addkid(t[1])
+    def p_Expr(self, t):
+        'Expr : Div'
+        t[0] = Node('Expr').addkid(t[1])
 
     def p_Div1(self, t):
         'Div : Div SLASH Mul'
@@ -88,7 +88,7 @@ class Parser(object):
         t[0] = t[1]
 
     def p_Add1(self, t):
-        'Add : Add PLUS Expr'
+        'Add : Add PLUS Stmt'
         t[0] = Node('+').addkid(t[1]).addkid(t[3])
 
     def p_Add2(self, t):
@@ -100,7 +100,7 @@ class Parser(object):
         t[0] = t[1]
 
     def p_Atomic2(self, t):
-        'Atomic : LPAREN Arith RPAREN'
+        'Atomic : LPAREN Expr RPAREN'
         t[0] = t[2]
 
     def p_Value1(self, t):
@@ -124,11 +124,11 @@ class Parser(object):
         t[0] = Node('Call').addkid(t[1]).addkid(t[3])
 
     def p_Params1(self, t):
-        'Params : Params COMMA Arith'
+        'Params : Params COMMA Expr'
         t[0] = t[1].addkid(t[3])
 
     def p_Params2(self, t):
-        'Params : Arith'
+        'Params : Expr'
         t[0] = Node('Params').addkid(t[1])
 
     def p_error(self, t):

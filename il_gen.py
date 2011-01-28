@@ -23,7 +23,7 @@ class generate(object):
     def __new__(cls, root):
         self = super(generate, cls).__new__(cls)
         self.__init__()
-        r = self.Exprs(root)
+        r = self.Stmts(root)
         r += [ il.Inst(il.PRNT, r[-1].result, 0, 0)]
         print r
         return r
@@ -38,14 +38,14 @@ class generate(object):
         self.tcount += 1
         return 't%i' % self.tcount
 
-    def Exprs(self, node):
-        assert node.label == 'Exprs'
+    def Stmts(self, node):
+        assert node.label == 'Stmts'
         code = list()
         for c in node.children:
             if c.label == 'Assign':
                 code += self.Assign(c)
-            elif c.label == 'Arith':
-                code += self.Arith(c)
+            elif c.label == 'Expr':
+                code += self.Expr(c)
             else:
                 raise Exception, c.label
         return code
@@ -54,15 +54,15 @@ class generate(object):
         assert node.label == 'Assign'
         name = node.children[0]
         c = node.children[1]
-        if c.label == 'Arith':
-            code = self.Arith(c)
+        if c.label == 'Expr':
+            code = self.Expr(c)
         else:
             raise Exception
         self.objs[name] = code[-1].result
         return code
 
-    def Arith(self, node):
-        if node.label == 'Arith':
+    def Expr(self, node):
+        if node.label == 'Expr':
             c = node.children[0]
         else:
             c = node
@@ -72,15 +72,15 @@ class generate(object):
             return self.Op(c)
         elif c.label == 'NAME':
             return [ il.Inst('USE', 0, 0, self.objs[c.children[0]]) ]
-        elif c.label == 'Arith':
-            return self.Arith(c)
+        elif c.label == 'Expr':
+            return self.Expr(c)
         else:
             raise Exception, 'Unexpected Node %s' % str(c)
 
     def Op(self, node):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}
-        A = self.Arith(node.children[0])
-        B = self.Arith(node.children[1])
+        A = self.Expr(node.children[0])
+        B = self.Expr(node.children[1])
         ar = A[-1].result
         br = B[-1].result
         if A[-1].op == 'USE': A = A[:-1]
