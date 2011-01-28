@@ -60,23 +60,59 @@ class Parser(object):
 
     def p_Stmt3(self, t):
         'Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Return RCURLY'
+        t[0] = (
+            Node('Assign')
+                .addkid(t[1])
+                .addkid(
+                    Node('Func')
+                        .addkid(t[7])
+                )
+        )
 
     def p_Stmt4(self, t):
         'Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Stmts Return RCURLY'
+        t[0] = (
+            Node('Assign')
+                .addkid(t[1])
+                .addkid(
+                    Node('Func')
+                        .addkid(t[7])
+                        .addkid(t[8])
+                )
+        )
 
     def p_Stmt5(self, t):
         'Stmt : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Return RCURLY'
+        t[0] = (
+            Node('Assign')
+                .addkid(t[1])
+                .addkid(
+                    Node('Func')
+                        .addkid(t[5])
+                        .addkid(t[8])
+                )
+        )
 
     def p_Stmt6(self, t):
         'Stmt : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Stmts Return RCURLY'
+        t[0] = (
+            Node('Assign')
+                .addkid(t[1])
+                .addkid(
+                    Node('Func')
+                        .addkid(t[5])
+                        .addkid(t[8])
+                        .addkid(t[9])
+                )
+        )
 
     def p_Return1(self, t):
         'Return : RETURN'
-        t[0] = Node('Expr').addkid(t[1])
+        t[0] = Node('Return')
 
     def p_Return2(self, t):
-        'Return : RETURN Params'
-        t[0] = Node('Expr').addkid(t[1])
+        'Return : RETURN Expr'
+        t[0] = Node('Return').addkid(t[2])
 
     def p_Expr(self, t):
         'Expr : Div'
@@ -151,7 +187,7 @@ class Parser(object):
         t[0] = Node('Params').addkid(t[1])
 
     def p_DParams1(self, t):
-        'DParams : Params COMMA NAME'
+        'DParams : DParams COMMA NAME'
         t[0] = t[1].addkid(t[3])
 
     def p_DParams2(self, t):
@@ -163,10 +199,9 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    Parser().parse('''
+    print Parser().parse('''
+        f = func(a, b, c) { return a + b + c }
         x = 2*3/(4-5*(12*32-15))
         y = x+3
         z = f(x, y, 3+4)
-
-
     ''', lexer=Lexer()).dotty()
