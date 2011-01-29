@@ -79,6 +79,53 @@ class generate(object):
         print code
         return code
 
+    def Oprm(self, i):
+        code = [
+        ]
+        return code
+
+
+    ## TODO: Hand verify and prove correct FramePush
+    def FramePush(self, i):
+        code = [
+            (IMM, 4, 0),  # START FUNC
+            (ADD, 4, 1),  # mv fp into reg[4]
+            (IMM, 3, 2),
+            (ADD, 4, 3),  # reg[4] += 2
+            (SAVE, 4, 0), # stack save: save bp
+            (IMM, 3, 1),
+            (ADD, 4, 3),  # reg[4] += 1
+            (SAVE, 4, 1), # stack save: save fp
+            (ADD, 4, 3),  # reg[4] += 1
+            (SAVE, 4, 2), # stack save: save ra
+            (ADD, 4, 3),  # reg[4] += 1
+            (IMM, 0, 0),
+            (ADD, 0, 1),  # mv fp to bp'
+            (IMM, 1, 0),
+            (ADD, 1, 4),  # mv $4 to fp
+        ]
+
+    ## TODO: Hand verify and prove correct FramePop
+    def FramePop(self, i):
+        # we need to do the frame pop before loading output Params
+        # but the frame pop and output params loading must by nature be tightly
+        # coupled.
+        code = [
+            (IMM, 4, 0),
+            (ADD, 4, 0),  # load bp into 4
+            (IMM, 3, 2),
+            (ADD, 4, 3),  # reg[4] += 2
+            (LOAD, 0, 4), # stack restore: bp
+            (ADD, 4, 3,), # reg[4] += 2
+            (LOAD, 2, 4), # stack restore: ra
+            (IMM, 3, 1),
+            (SUB, 4, 3),  # reg[4] -= 1
+            #(IMM, 3, 0),
+            #(ADD, 3, 1),  # mv the fp into register 3 (allowing us to put in the return)
+            (LOAD, 1, 4), # stack restore: fp
+        ]
+        return code
+
     def Imm(self, i):
         code = [
             (vm.IMM, 3, self.bp_offset),
@@ -127,7 +174,7 @@ if __name__ == '__main__':
         *il_gen.generate(
             Parser().parse('''
                 add = func(a,b) { return a + b}
-                print 2*3/(4-5*(12*32-15))
+                print add(2, 3)
             ''', lexer=Lexer())
         )
     )
