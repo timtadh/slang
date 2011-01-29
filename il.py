@@ -8,7 +8,7 @@ import sys
 
 opsr = (
     'ADD', 'SUB', 'MUL', 'DIV', 'MV', 'CALL', 'IPRM', 'OPRM', 'GPRM',
-    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT'
+    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT', 'RPRM'
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
@@ -31,13 +31,21 @@ def run(il, funcs, params=None, var=None):
         elif i.op == PRNT:
             print var[i.a]
         elif i.op == IPRM:
-            nparams.insert(0, var[i.b])
+            if i.b[0] == 'f':
+                nparams.insert(0, i.b)
+            else:
+                nparams.insert(0, var[i.b])
         elif i.op == OPRM:
             rparams.append(var[i.b])
         elif i.op == GPRM:
             var[i.result] = params[i.a]
+        elif i.op == RPRM:
+            var[i.result] = params[i.a]
         elif i.op == CALL:
-            params = run(funcs[i.a], funcs, nparams, var)
+            if i.a in funcs:
+                params = run(funcs[i.a], funcs, nparams, var)
+            else:
+                params = run(funcs[var[i.a]], funcs, nparams, var)
             nparams = list()
         elif i.op == RTRN:
             return rparams

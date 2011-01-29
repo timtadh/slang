@@ -164,7 +164,7 @@ class generate(object):
         if len(node.children) != 1:
             code += self.Params(node.children[1])
         code += [ il.Inst(il.CALL, fun, 0, 0) ]
-        code += [ il.Inst(il.GPRM, 0, 0, self.tmp()) ]
+        code += [ il.Inst(il.RPRM, 0, 0, self.tmp()) ]
         return code
 
     def Params(self, node):
@@ -177,7 +177,7 @@ class generate(object):
             if code[-1].op == 'USE': code = code[:-1]
         params.reverse()
         for i, p in enumerate(params):
-            code += [ il.Inst(il.IPRM, i, p, 0) ]
+            code += [ il.Inst(il.IPRM, len(params)-1-i, p, 0) ]
         return code
 
     def Int(self, node):
@@ -210,5 +210,14 @@ if __name__ == '__main__':
                 return c
             }
             print add(1, 3)
+        ''', lexer=Lexer())))
+    print il.run(*generate(Parser().parse('''
+                _add = func(a, b) {
+                    return a + b
+                }
+                add = func(f, a, b) {
+                    return f(a, b)
+                }
+                print add(_add, 2, 3)
         ''', lexer=Lexer())))
 

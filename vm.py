@@ -22,6 +22,10 @@ A = [J, PC]
 B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT]
 C = [SAVE]
 
+DEBUG = False
+
+prints = list()
+
 def load(regs, stack, pc, r1, r2):
     regs[r1] = stack[regs[r2]]
     return pc + 1
@@ -58,7 +62,7 @@ def div(regs, stack, pc, r1, r2):
     regs[r1] /= regs[r2]
     return pc + 1
 def prin(regs, stack, pc, r1, r2):
-    print '>>>>>', regs[r1]
+    prints.append(regs[r1])
     return pc + 1
 
 INSTS = {
@@ -76,6 +80,9 @@ def run(program):
         print 'inst =', inst
         print 'regs =', regs
         print 'stack =', stack
+        #if DEBUG == True or pc > 100:
+            #import pdb
+            #pdb.set_trace()
         op = inst[0]
         if op == EXIT: break
         if op in A:
@@ -90,6 +97,8 @@ def run(program):
         pc = INSTS[op](regs, stack, pc, reg, addr)
         inst = program[pc]
         print
+    for p in prints:
+        print '>>>>>', p
 
 
 if __name__ == '__main__':
