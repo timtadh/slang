@@ -136,39 +136,31 @@ class Parser(object):
         t[0] = Node('Return').addkid(t[2])
 
     def p_Expr(self, t):
-        'Expr : Sub'
+        'Expr : AddSub'
         t[0] = Node('Expr').addkid(t[1])
 
-    def p_Sub1(self, t):
-        'Sub : Sub DASH Add'
-        t[0] = Node('-').addkid(t[1]).addkid(t[3])
-
-    def p_Sub2(self, t):
-        'Sub : Add'
-        t[0] = t[1]
-
-    def p_Add1(self, t):
-        'Add : Add PLUS Div'
+    def p_AddSub1(self, t):
+        'AddSub : AddSub PLUS MulDiv'
         t[0] = Node('+').addkid(t[1]).addkid(t[3])
 
-    def p_Add2(self, t):
-        'Add : Div'
+    def p_AddSub2(self, t):
+        'AddSub : AddSub DASH MulDiv'
+        t[0] = Node('-').addkid(t[1]).addkid(t[3])
+
+    def p_AddSub3(self, t):
+        'AddSub : MulDiv'
         t[0] = t[1]
 
-    def p_Div1(self, t):
-        'Div : Div SLASH Mul'
-        t[0] = Node('/').addkid(t[1]).addkid(t[3])
-
-    def p_Div2(self, t):
-        'Div : Mul'
-        t[0] = t[1]
-
-    def p_Mul1(self, t):
-        'Mul : Mul STAR Atomic'
+    def p_MulDiv1(self, t):
+        'MulDiv : MulDiv STAR Atomic'
         t[0] = Node('*').addkid(t[1]).addkid(t[3])
 
-    def p_Mul2(self, t):
-        'Mul : Atomic'
+    def p_MulDiv2(self, t):
+        'MulDiv : MulDiv SLASH Atomic'
+        t[0] = Node('/').addkid(t[1]).addkid(t[3])
+
+    def p_MulDiv3(self, t):
+        'MulDiv : Atomic'
         t[0] = t[1]
 
     def p_Atomic1(self, t):
@@ -269,5 +261,5 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    print Parser().parse('''print ((9-3)+(5-3)) / 2 + 2
+    print Parser().parse('''print 4/2*3
     ''', lexer=Lexer()).dotty()

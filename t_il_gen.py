@@ -25,8 +25,9 @@ def t_expr_ops():
     assert '6' == run('print 12/2').rstrip('\n')
 
 def t_expr_compound():
-    assert '6' == run('print 4*3/2').rstrip('\n')
-    assert '6' == run('print (3+9)*4/8').rstrip('\n')
-    print run('print ((9-3)+(5-3))/2 + 2').rstrip('\n')
-    assert '6' == run('print 12/2').rstrip('\n')
+    assert str(4*3/2) == run('print 4*3/2').rstrip('\n')
+    assert str(4/2*3) == run('print 4/2*3').rstrip('\n')
+    assert str((3+9)*4/8) == run('print (3+9)*4/8').rstrip('\n')
+    assert str(((9-3)+(5-3))/2 + 2) == run('print ((9-3)+(5-3))/2 + 2').rstrip('\n')
+    assert str(5 * 4 / 2 - 10 + 5 - 2 + 3) == run('print 5 * 4 / 2 - 10 + 5 - 2 + 3').rstrip('\n')
 
