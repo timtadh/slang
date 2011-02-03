@@ -110,6 +110,23 @@ class Parser(object):
                 )
         )
 
+    def p_Stmt7(self, t):
+        'Stmt : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY'
+        t[0] = (
+            Node('If')
+                .addkid(t[3])
+                .addkid(t[6])
+        )
+
+    def p_Stmt8(self, t):
+        'Stmt : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY'
+        t[0] = (
+            Node('If')
+                .addkid(t[3])
+                .addkid(t[6])
+                .addkid(t[10])
+        )
+
     def p_Return1(self, t):
         'Return : RETURN'
         t[0] = Node('Return')
@@ -198,14 +215,76 @@ class Parser(object):
         'DParams : NAME'
         t[0] = Node('DParams').addkid(t[1])
 
+    def p_BooleanExpr(self, t):
+        'BooleanExpr : OrExpr'
+        t[0] = Node('BooleanExpr').addkid(t[1])
+
+    def p_OrExpr1(self, t):
+        'OrExpr : OrExpr OR AndExpr'
+        t[0] = Node('Or').addkid(t[1]).addkid(t[3])
+
+    def p_OrExpr2(self, t):
+        'OrExpr : AndExpr'
+        t[0] = t[1]
+
+    def p_AndExpr1(self, t):
+        'AndExpr : AndExpr AND NotExpr'
+        t[0] = Node('And').addkid(t[1]).addkid(t[3])
+
+    def p_AndExpr2(self, t):
+        'AndExpr : NotExpr'
+        t[0] = t[1]
+
+    def p_NotExpr1(self, t):
+        'NotExpr : NOT BooleanTerm'
+        t[0] = Node('Not').addkid(t[2])
+
+    def p_NotExpr2(self, t):
+        'NotExpr : BooleanTerm'
+        t[0] = t[1]
+
+    def p_BooleanTerm1(self, t):
+        'BooleanTerm : CmpExpr'
+        t[0] = t[1]
+
+    def p_BooleanTerm5(self, t):
+        'BooleanTerm : LPAREN BooleanExpr RPAREN'
+        t[0] = t[2]
+
+    def p_CmpExpr(self, t):
+        'CmpExpr : Expr CmpOp Expr'
+        t[0] = t[2].addkid(t[1]).addkid(t[3])
+
+    def p_CmpOp(self, t):
+        '''CmpOp : EQEQ
+                | NQ
+                | LT
+                | LE
+                | GT
+                | GE'''
+        t[0] = Node(t[1])
+
     def p_error(self, t):
         raise SyntaxError, "Syntax error at '%s', %s.%s" % (t,t.lineno,t.lexpos)
 
 
 if __name__ == '__main__':
     print Parser().parse('''
-        f = func(a, b, c) { return a + b + c }
-        x = 2*3/(4-5*(12*32-15))
-        y = x+3
-        print f(x, y, 3+4)
+                _add = func(a, b) {
+                    reflect = func(x) {
+                        print x
+                        y = x + 5
+                        return y - 5
+                    }
+                    if (a == b) {
+                        r = reflect(a) + reflect(b)
+                    } else {
+                        r = a - b
+                    }
+                    return r
+                }
+                add = func(f, a, b) {
+                    return f(a, b)
+                }
+                print add(_add, 18, 37)
     ''', lexer=Lexer()).dotty()

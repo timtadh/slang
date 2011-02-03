@@ -7,8 +7,9 @@
 import sys
 
 opsr = (
-    'ADD', 'SUB', 'MUL', 'DIV', 'MV', 'CALL', 'IPRM', 'OPRM', 'GPRM',
-    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT', 'RPRM'
+    'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
+    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT',
+    'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'BEQZ',
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
@@ -28,6 +29,18 @@ def run(il, funcs, params=None, var=None):
             var[i.result] = var[i.a] - var[i.b]
         elif i.op == ADD:
             var[i.result] = var[i.a] + var[i.b]
+        elif i.op == EQ:
+            var[i.result] = int(var[i.a] == var[i.b])
+        elif i.op == NE:
+            var[i.result] = int(var[i.a] != var[i.b])
+        elif i.op == LT:
+            var[i.result] = int(var[i.a] < var[i.b])
+        elif i.op == LE:
+            var[i.result] = int(var[i.a] <= var[i.b])
+        elif i.op == GT:
+            var[i.result] = int(var[i.a] > var[i.b])
+        elif i.op == GE:
+            var[i.result] = int(var[i.a] >= var[i.b])
         elif i.op == PRNT:
             print var[i.a]
         elif i.op == IPRM:
@@ -49,6 +62,9 @@ def run(il, funcs, params=None, var=None):
             nparams = list()
         elif i.op == RTRN:
             return rparams
+        elif i.op == BEQZ:
+            if i.a == 0:
+                Exception, "go to label %s" % (i.b)
         else:
             raise Exception, opsr[i.op]
 

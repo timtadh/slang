@@ -260,7 +260,7 @@ if __name__ == '__main__':
                 add = func(f, a, b) {
                     return f(a, b)
                 }
-                print add(_add, 2, 3)
+                print add(_add, 18, 37)
             ''', lexer=Lexer())
         )
     )
