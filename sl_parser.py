@@ -136,24 +136,8 @@ class Parser(object):
         t[0] = Node('Return').addkid(t[2])
 
     def p_Expr(self, t):
-        'Expr : Div'
+        'Expr : Sub'
         t[0] = Node('Expr').addkid(t[1])
-
-    def p_Div1(self, t):
-        'Div : Div SLASH Mul'
-        t[0] = Node('/').addkid(t[1]).addkid(t[3])
-
-    def p_Div2(self, t):
-        'Div : Mul'
-        t[0] = t[1]
-
-    def p_Mul1(self, t):
-        'Mul : Mul STAR Sub'
-        t[0] = Node('*').addkid(t[1]).addkid(t[3])
-
-    def p_Mul2(self, t):
-        'Mul : Sub'
-        t[0] = t[1]
 
     def p_Sub1(self, t):
         'Sub : Sub DASH Add'
@@ -164,11 +148,27 @@ class Parser(object):
         t[0] = t[1]
 
     def p_Add1(self, t):
-        'Add : Add PLUS Atomic'
+        'Add : Add PLUS Div'
         t[0] = Node('+').addkid(t[1]).addkid(t[3])
 
     def p_Add2(self, t):
-        'Add : Atomic'
+        'Add : Div'
+        t[0] = t[1]
+
+    def p_Div1(self, t):
+        'Div : Div SLASH Mul'
+        t[0] = Node('/').addkid(t[1]).addkid(t[3])
+
+    def p_Div2(self, t):
+        'Div : Mul'
+        t[0] = t[1]
+
+    def p_Mul1(self, t):
+        'Mul : Mul STAR Atomic'
+        t[0] = Node('*').addkid(t[1]).addkid(t[3])
+
+    def p_Mul2(self, t):
+        'Mul : Atomic'
         t[0] = t[1]
 
     def p_Atomic1(self, t):
@@ -269,22 +269,5 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    print Parser().parse('''
-                _add = func(a, b) {
-                    reflect = func(x) {
-                        print x
-                        y = x + 5
-                        return y - 5
-                    }
-                    if (a == b) {
-                        r = reflect(a) + reflect(b)
-                    } else {
-                        r = a - b
-                    }
-                    return r
-                }
-                add = func(f, a, b) {
-                    return f(a, b)
-                }
-                print add(_add, 18, 37)
+    print Parser().parse('''print ((9-3)+(5-3)) / 2 + 2
     ''', lexer=Lexer()).dotty()

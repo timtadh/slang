@@ -14,7 +14,8 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-def run(il, funcs, params=None, var=None):
+def run(il, funcs, params=None, var=None, stdout=None):
+    if stdout == None: stdout = sys.stdout
     if not var: var = dict()
     nparams = list()
     rparams = list()
@@ -42,7 +43,7 @@ def run(il, funcs, params=None, var=None):
         elif i.op == GE:
             var[i.result] = int(var[i.a] >= var[i.b])
         elif i.op == PRNT:
-            print var[i.a]
+            print >>stdout, var[i.a]
         elif i.op == IPRM:
             if i.b[0] == 'f':
                 nparams.insert(0, i.b)
