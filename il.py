@@ -71,11 +71,12 @@ def run(il, funcs, params=None, var=None, stdout=None):
 
 class Inst(object):
 
-    def __init__(self, op, a, b, result):
+    def __init__(self, op, a, b, result, label=None):
         self.op     = op
         self.a      = a
         self.b      = b
         self.result = result
+        self.label  = label
 
     def __repr__(self): return str(self)
 

@@ -14,11 +14,18 @@ class generate(object):
     def __new__(cls, root):
         self = super(generate, cls).__new__(cls)
         self.__init__()
-        r = self.Stmts(root)
-        print
-        print r
-        print self.functions
-        return r, self.functions
+        main = self.Stmts(root)
+        #print
+        print 'main'
+        for i in main:
+            print ' '*4, i
+        for f in self.functions:
+            print f
+            for i in self.functions[f]:
+                print ' '*4, i
+            print
+            print
+        return main, self.functions
 
     def __init__(self):
         self.fcount = 0
@@ -38,6 +45,9 @@ class generate(object):
     def Stmts(self, node):
         assert node.label == 'Stmts'
         code = list()
+        for c in node.children:
+            if c.label == 'Assign':
+                self.PreAssign(c)
         for c in node.children:
             if c.label == 'Assign':
                 code += self.Assign(c)
@@ -65,6 +75,14 @@ class generate(object):
         return code
 
 
+    def PreAssign(self, node):
+        assert node.label == 'Assign'
+        name = node.children[0]
+        c = node.children[1]
+        if c.label == 'Func':
+            c.fun = self.fun()
+            self.objs[name] = c.fun
+
     def Assign(self, node):
         assert node.label == 'Assign'
         name = node.children[0]
@@ -72,7 +90,7 @@ class generate(object):
         if c.label == 'Expr':
             code = self.Expr(c)
         elif c.label == 'Func':
-            fun = self.fun()
+            fun = c.fun
             self.functions[fun] = self.Func(c)
             self.objs[name] = fun
             code = list()
