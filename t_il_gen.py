@@ -51,3 +51,20 @@ def t_func_uppernames():
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print g()
         ''').rstrip('\n')
+
+
+def t_if():
+    assert str(2) == run('''
+        if (1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')

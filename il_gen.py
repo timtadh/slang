@@ -25,13 +25,23 @@ class generate(object):
                 print ' '*4, i
             print
             print
-        return main, self.functions
+        main = self.index_labels(main)
+        functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
+        return main, functions
 
     def __init__(self):
         self.fcount = 0
         self.tcount = 0
+        self.lcount = 0
         self.functions = dict()
         self.objs = SymbolTable()
+
+    def index_labels(self, insts):
+        labels = dict()
+        for i, inst in enumerate(insts):
+            if inst.label is not None:
+                labels[inst.label] = i
+        return insts, labels
 
     def tmp(self):
         self.tcount += 1
@@ -40,6 +50,10 @@ class generate(object):
     def fun(self):
         self.fcount += 1
         return 'f%i' % self.fcount
+
+    def label(self):
+        self.lcount += 1
+        return 'label_%i' % self.lcount
 
 
     def Stmts(self, node):
@@ -57,8 +71,37 @@ class generate(object):
                 code += self.Call(c)
             elif c.label == 'Print':
                 code += self.Print(c)
+            elif c.label == 'If':
+                code += self.If(c)
             else:
                 raise Exception, c.label
+        return code
+
+    def If(self, node):
+        assert node.label == 'If'
+        code = list()
+        cmpexpr = node.children[0].children[0]
+        endlabel = self.label()
+        thenstmts = self.Stmts(node.children[1])
+        thenstmts[0].label = self.label()
+        thenstmts += [ il.Inst(il.J, endlabel, 0, 0) ]
+        if len(node.children) == 3:
+            elsestmts = self.Stmts(node.children[2])
+            elsestmts[0].label = self.label()
+            elsestmts += [ il.Inst(il.J, endlabel, 0, 0) ]
+        else: elsestmts = None
+
+        cmpexpr = self.CmpOp(cmpexpr)
+        cmpr = cmpexpr[-1].result
+
+        code += cmpexpr
+        code += [ il.Inst(il.BEQZ, cmpr, thenstmts[0].label, 0) ]
+        if elsestmts:
+            code += [ il.Inst(il.J, elsestmts[0].label, 0, 0) ]
+        code += thenstmts
+        code += elsestmts
+        code += [ il.Inst(il.NOP, 0, 0, 0, endlabel) ]
+
         return code
 
     def Print(self, node):
@@ -159,6 +202,21 @@ class generate(object):
             return self.Call(c)
         else:
             raise Exception, 'Unexpected Node %s' % str(c)
+
+    def CmpOp(self, node):
+        ops = {'==':il.EQ, '=!':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
+        A = self.Expr(node.children[0])
+        B = self.Expr(node.children[1])
+        ar = A[-1].result
+        br = B[-1].result
+        if A[-1].op == 'USE': A = A[:-1]
+        if B[-1].op == 'USE': B = B[:-1]
+        return A + B + [
+            il.Inst(ops[node.label],
+            ar,
+            br,
+            self.tmp())
+        ]
 
     def Op(self, node):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}

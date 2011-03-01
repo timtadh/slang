@@ -9,17 +9,21 @@ import sys
 opsr = (
     'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
     'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT',
-    'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'BEQZ',
+    'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'BEQZ', 'NOP', 'J'
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
 def run(il, funcs, params=None, var=None, stdout=None):
+    labels = il[1]
+    il = il[0]
     if stdout == None: stdout = sys.stdout
     if not var: var = dict()
     nparams = list()
     rparams = list()
-    for i in il:
+    c = 0
+    while c < len(il):
+        i = il[c]
         if i.op == IMM:
             var[i.result] = i.a
         elif i.op == DIV:
@@ -31,17 +35,17 @@ def run(il, funcs, params=None, var=None, stdout=None):
         elif i.op == ADD:
             var[i.result] = var[i.a] + var[i.b]
         elif i.op == EQ:
-            var[i.result] = int(var[i.a] == var[i.b])
+            var[i.result] = 1 - int(var[i.a] == var[i.b])
         elif i.op == NE:
-            var[i.result] = int(var[i.a] != var[i.b])
+            var[i.result] = 1 - int(var[i.a] != var[i.b])
         elif i.op == LT:
-            var[i.result] = int(var[i.a] < var[i.b])
+            var[i.result] = 1 - int(var[i.a] < var[i.b])
         elif i.op == LE:
-            var[i.result] = int(var[i.a] <= var[i.b])
+            var[i.result] = 1 - int(var[i.a] <= var[i.b])
         elif i.op == GT:
-            var[i.result] = int(var[i.a] > var[i.b])
+            var[i.result] = 1 - int(var[i.a] > var[i.b])
         elif i.op == GE:
-            var[i.result] = int(var[i.a] >= var[i.b])
+            var[i.result] = 1 - int(var[i.a] >= var[i.b])
         elif i.op == PRNT:
             print >>stdout, var[i.a]
         elif i.op == IPRM:
@@ -64,10 +68,19 @@ def run(il, funcs, params=None, var=None, stdout=None):
         elif i.op == RTRN:
             return rparams
         elif i.op == BEQZ:
-            if i.a == 0:
-                Exception, "go to label %s" % (i.b)
+            print i.a
+            if var[i.a] == 0:
+                #raise Exception, "go to label %s" % (i.b)
+                c = labels[i.b]
+                continue;
+        elif i.op == J:
+            c = labels[i.a]
+            continue;
+        elif i.op == NOP:
+            pass
         else:
             raise Exception, opsr[i.op]
+        c += 1
 
 class Inst(object):
 
@@ -81,7 +94,11 @@ class Inst(object):
     def __repr__(self): return str(self)
 
     def __str__(self):
-        return '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
+        if self.label is None:
+            return '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
+        s = '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
+        s = '%-25s : %s' % (s, self.label)
+        return s
 
 
 class Func(object):

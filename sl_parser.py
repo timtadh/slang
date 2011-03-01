@@ -261,5 +261,10 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    print Parser().parse('''print 4/2*3
+    print Parser().parse('''
+        if (1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
     ''', lexer=Lexer()).dotty()
