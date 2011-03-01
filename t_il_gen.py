@@ -68,3 +68,23 @@ def t_if():
             print 2
         }
         ''').rstrip('\n')
+
+
+def t_if_set():
+    raise nose.SkipTest
+    assert str(2) == run('''
+        if (1 > 2) {
+            a = 1
+        } else {
+            a = 2
+        }
+        print a
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2) {
+            a = 1
+        } else {
+            a = 2
+        }
+        print a
+        ''').rstrip('\n')
