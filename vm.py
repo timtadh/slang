@@ -17,20 +17,19 @@ MUL  = 0x7
 DIV  = 0x8
 EXIT = 0x9
 PRNT = 0xa
-BEQZ = 0xb
-BNEZ = 0xc
-EQ = 0xd
-NE = 0xe
-LT = 0xf
-LE = 0x10
-GT = 0x11
-LE = 0x12
-AND = 0x13
-OR = 0x14
-NOT = 0x15
+BEQT = 0xb
+EQ = 0xc
+NE = 0xd
+LT = 0xe
+LE = 0xf
+GT = 0x10
+GE = 0x11
+AND = 0x12
+OR = 0x13
+NOT = 0x14
 
 A = [J, PC]
-B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT, BEQZ]
+B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT, BEQT, EQ, NE, LT, LE, GT, GE, AND, OR, NOT]
 C = [SAVE]
 
 DEBUG = False
@@ -41,8 +40,10 @@ def load(regs, stack, pc, r1, r2):
     regs[r1] = stack[regs[r2]]
     return pc + 1
 def save(regs, stack, pc, r1, r2):
+    print r1, '->', regs[r1]
+    print r2, '->', regs[r2]
     #print r1, r2, ':',  regs[r1], regs[r2]
-    #print len(stack), len(stack) == regs[r2]
+    print len(stack), len(stack) == regs[r2]
     if len(stack) == regs[r2]:
         stack.append(regs[r1])
         #print stack
@@ -75,10 +76,10 @@ def div(regs, stack, pc, r1, r2):
 def prin(regs, stack, pc, r1, r2):
     prints.append(regs[r1])
     return pc + 1
-def beqz(regs, stack, pc, r1, r2):
-    raise Exception, NotImplemented
-def bnez(regs, stack, pc, r1, r2):
-    raise Exception, NotImplemented
+def beqt(regs, stack, pc, r1, r2):
+    if regs[r1] == True:
+        return regs[r2]
+    return pc + 1
 def eq(regs, stack, pc, r1, r2):
     regs[r1] = regs[r1] == regs[r2]
     return pc + 1
@@ -109,7 +110,7 @@ def _not(regs, stack, pc, r1, r2):
 
 INSTS = {
     LOAD:load, SAVE:save, IMM:imm, J:j, PC:pc, ADD:add, SUB:sub, MUL:mul,
-    DIV:div, PRNT:prin, BEQZ:beqz, BNEZ:beqz,
+    DIV:div, PRNT:prin, BEQT:beqt,
     EQ:eq, NE:ne, LT:lt, LE:le, GT:gt, GE: ge,
     AND:_and, OR:_or, NOT:_not
 }
@@ -123,10 +124,10 @@ def run(program, stdout=None):
     pc = 0
     inst = program[pc]
     while True:
-        #print 'pc =', pc
-        #print 'inst =', inst
-        #print 'regs =', regs
-        #print 'stack =', stack
+        print 'pc =', pc
+        print 'inst =', inst
+        print 'regs =', regs
+        print 'stack =', stack
         #if DEBUG == True or pc > 100:
             #import pdb
             #pdb.set_trace()

@@ -22,6 +22,7 @@ class generate(object):
         ##self.main = main
         #self.funcs = funcs
         self.floc = dict()
+        self.labels = dict()
         code = list()
         code += self.InitCode()
         code += self.Func(main, True)
@@ -29,11 +30,19 @@ class generate(object):
         for k, f in funcs.iteritems():
             self.floc[k] = len(code)
             code += self.Func(f)
+        for c, i in enumerate(code):
+            if len(i) > 3 and i[3] in self.labels:
+                self.labels[i[3]] = c
+        print self.labels
         def transform(i):
             if i[0] == vm.IMM and i[2] in self.floc:
                 return (i[0], i[1], self.floc[i[2]])
+            if i[0] == vm.IMM and i[2] in self.labels:
+                return (i[0], i[1], self.labels[i[2]])
             return i
         code = [transform(i) for i in code]
+        for c, i in enumerate(code):
+            print c, i
         return code
 
     def InitCode(self):
@@ -63,6 +72,7 @@ class generate(object):
         code = list()
         if not main: code += self.FramePush()
         for i in insts:
+            l = len(code)
             if i.op == il.PRNT:
                 code += self.Print(i)
             elif i.op == il.IMM:
@@ -83,8 +93,17 @@ class generate(object):
                 code += self.Op(i)
             elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
                 code += self.CmpOp(i)
+            elif i.op == il.BEQZ:
+                code += self.Beqt(i)
+            elif i.op == il.J:
+                code += self.J(i)
+            elif i.op == il.NOP:
+                l -= 1
             else:
                 raise Exception, il.opsr[i.op]
+            if i.label is not None:
+                print code[l]
+                code[l] = (code[l][0], code[l][1], code[l][2], i.label)
         return code
 
     def Gprm(self, i):
@@ -96,7 +115,7 @@ class generate(object):
             (vm.LOAD, 4, 3),
             (vm.IMM,  3, self.bp_offset),
             (vm.ADD,  3, 0),
-            (vm.SAVE, 3, 4),
+            (vm.SAVE, 3, 4, 'save in GPRM'),
             (vm.IMM, 4, 1),
             (vm.ADD, 1, 4, 'end GPRM'),
         ]
@@ -108,12 +127,12 @@ class generate(object):
     def Oprm(self, i):
         code = self.FramePop()
         code += [
-            (vm.IMM,  4, i.a),            # offset for frame pointer (for saving)
+            (vm.IMM,  4, i.a, 'start Oprm'),            # offset for frame pointer (for saving)
             (vm.IMM,  3, self.var[i.b], 'Return Value offset'),  # offset for bp for loading return val
             (vm.ADD,  3, 1),              # $3 = offset($3) + $fp (which was the old bp)
             (vm.LOAD, 3, 3, 'Loading Return Value into $3'),              # $3 = *$3
             (vm.ADD,  4, 1),              # $4 = $4 + $fp
-            (vm.SAVE, 4, 3),              # *$4 = $3
+            (vm.SAVE, 4, 3, 'end Oprm'),              # *$4 = $3
         ]
         return code
 
@@ -122,7 +141,7 @@ class generate(object):
             # this is a function param not a value
             code = [
                 (vm.IMM,  3, i.b, 'start put func as arg'),  # offset for bp for loading param val
-                (vm.SAVE, 1, 3),              # *$fp = $3
+                (vm.SAVE, 1, 3, 'save in Iprm 1'),              # *$fp = $3
                 (vm.IMM,  4, 1),              # $4 = 1
                 (vm.ADD,  1, 4, 'end put func as arg'),              # $fp += $4
             ]
@@ -131,7 +150,7 @@ class generate(object):
                 (vm.IMM,  3, self.var[i.b]),  # offset for bp for loading param val
                 (vm.ADD,  3, 0),              # $3 = offset($3) + $bp
                 (vm.LOAD, 3, 3),              # $3 = *$3
-                (vm.SAVE, 1, 3),              # *$fp = $3
+                (vm.SAVE, 1, 3, 'save in Iprm 2'),              # *$fp = $3
                 (vm.IMM,  4, 1),              # $4 = 1
                 (vm.ADD,  1, 4),              # $fp += $4
             ]
@@ -144,7 +163,7 @@ class generate(object):
             (vm.LOAD, 4, 4),              # $4 = *$4
             (vm.IMM,  3, self.bp_offset),
             (vm.ADD,  3, 0),
-            (vm.SAVE, 3, 4),              # *$3 = $4
+            (vm.SAVE, 3, 4, 'save in Rprm'),              # *$3 = $4
             (vm.IMM,  1, 1),              # $fp = 1
             (vm.ADD,  1, 3, 'End RPRM'),              # $fp += $3
         ]
@@ -208,12 +227,33 @@ class generate(object):
         ]
         return code
 
+    def Beqt(self, i):
+        self.labels[i.b] = None
+        code = [
+            (vm.IMM, 3, self.var[i.a], 'start beqt'),
+            (vm.ADD, 3, 0),
+            (vm.LOAD, 3, 3),
+            (vm.IMM, 4, i.b),
+            (vm.BEQT, 3, 4, 'end beqt'),
+        ]
+        #for i in code:
+            #print i
+        return code
+
+    def J(self, i):
+        self.labels[i.a] = None
+        code = [
+            (vm.IMM, 4, i.a),
+            (vm.J, 4, 0),
+        ]
+        return code
+
     def Imm(self, i):
         code = [
             (vm.IMM, 3, self.bp_offset),
             (vm.ADD, 3, 0),
             (vm.IMM, 4, i.a),
-            (vm.SAVE, 3, 4),
+            (vm.SAVE, 3, 4, 'Save in IMM'),
             (vm.IMM, 4, 1),
             (vm.ADD, 1, 4),
         ]
@@ -233,7 +273,7 @@ class generate(object):
             (ops[i.op], 4, 3),
             (vm.IMM, 3, self.bp_offset),
             (vm.ADD, 3, 0),
-            (vm.SAVE, 3, 4),
+            (vm.SAVE, 3, 4, 'Save in Op'),
             (vm.IMM, 4, 1),
             (vm.ADD, 1, 4),
         ]
@@ -242,9 +282,10 @@ class generate(object):
         return code
 
     def CmpOp(self, i):
-        ops = {il.LT:vm.LT}
+        ops = {il.EQ:vm.EQ, il.NE:vm.NE, il.LT:vm.LT, il.LE:vm.LE,
+               il.GT:vm.GT, il.GE:vm.GE}
         code = [
-            (vm.IMM, 3, self.var[i.b]),
+            (vm.IMM, 3, self.var[i.b], 'start comparison'),
             (vm.ADD, 3, 0),
             (vm.LOAD, 3, 3),
             (vm.IMM, 4, self.var[i.a]),
@@ -253,9 +294,9 @@ class generate(object):
             (ops[i.op], 4, 3),
             (vm.IMM, 3, self.bp_offset),
             (vm.ADD, 3, 0),
-            (vm.SAVE, 3, 4),
+            (vm.SAVE, 3, 4, 'save result'),
             (vm.IMM, 4, 1),
-            (vm.ADD, 1, 4),
+            (vm.ADD, 1, 4, 'end comparison'),
         ]
         self.var[i.result] = self.bp_offset
         self.bp_offset += 1
