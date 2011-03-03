@@ -4,7 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import functools
+import functools, sys
 
 LOAD = 0x0
 SAVE = 0x1
@@ -17,9 +17,20 @@ MUL  = 0x7
 DIV  = 0x8
 EXIT = 0x9
 PRNT = 0xa
+BEQZ = 0xb
+BNEZ = 0xc
+EQ = 0xd
+NE = 0xe
+LT = 0xf
+LE = 0x10
+GT = 0x11
+LE = 0x12
+AND = 0x13
+OR = 0x14
+NOT = 0x15
 
 A = [J, PC]
-B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT]
+B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT, BEQZ]
 C = [SAVE]
 
 DEBUG = False
@@ -30,11 +41,11 @@ def load(regs, stack, pc, r1, r2):
     regs[r1] = stack[regs[r2]]
     return pc + 1
 def save(regs, stack, pc, r1, r2):
-    print r1, r2, ':',  regs[r1], regs[r2]
-    print len(stack), len(stack) == regs[r2]
+    #print r1, r2, ':',  regs[r1], regs[r2]
+    #print len(stack), len(stack) == regs[r2]
     if len(stack) == regs[r2]:
         stack.append(regs[r1])
-        print stack
+        #print stack
     elif len(stack) < regs[r2]:
         raise Exception, "Address out of range"
     else:
@@ -49,7 +60,7 @@ def pc(regs, stack, pc, reg, addr):
     regs[reg] = pc + 2
     return pc + 1
 def add(regs, stack, pc, r1, r2):
-    print '->', regs[r1], regs[r2], regs[r1] + regs[r2]
+    #print '->', regs[r1], regs[r2], regs[r1] + regs[r2]
     regs[r1] += regs[r2]
     return pc + 1
 def sub(regs, stack, pc, r1, r2):
@@ -64,22 +75,58 @@ def div(regs, stack, pc, r1, r2):
 def prin(regs, stack, pc, r1, r2):
     prints.append(regs[r1])
     return pc + 1
+def beqz(regs, stack, pc, r1, r2):
+    raise Exception, NotImplemented
+def bnez(regs, stack, pc, r1, r2):
+    raise Exception, NotImplemented
+def eq(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] == regs[r2]
+    return pc + 1
+def ne(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] != regs[r2]
+    return pc + 1
+def lt(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] < regs[r2]
+    return pc + 1
+def le(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] <= regs[r2]
+    return pc + 1
+def gt(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] > regs[r2]
+    return pc + 1
+def ge(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] >= regs[r2]
+    return pc + 1
+def _and(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] and regs[r2]
+    return pc + 1
+def _or(regs, stack, pc, r1, r2):
+    regs[r1] = regs[r1] or regs[r2]
+    return pc + 1
+def _not(regs, stack, pc, r1, r2):
+    regs[r1] = not regs[r1]
+    return pc + 1
 
 INSTS = {
     LOAD:load, SAVE:save, IMM:imm, J:j, PC:pc, ADD:add, SUB:sub, MUL:mul,
-    DIV:div, PRNT:prin
+    DIV:div, PRNT:prin, BEQZ:beqz, BNEZ:beqz,
+    EQ:eq, NE:ne, LT:lt, LE:le, GT:gt, GE: ge,
+    AND:_and, OR:_or, NOT:_not
 }
 
-def run(program):
+def run(program, stdout=None):
+    if stdout == None: stdout = sys.stdout
+    global prints
+    prints = list()
     regs = [0, 0, 0, 0, 0]
     stack = list()
     pc = 0
     inst = program[pc]
     while True:
-        print 'pc =', pc
-        print 'inst =', inst
-        print 'regs =', regs
-        print 'stack =', stack
+        #print 'pc =', pc
+        #print 'inst =', inst
+        #print 'regs =', regs
+        #print 'stack =', stack
         #if DEBUG == True or pc > 100:
             #import pdb
             #pdb.set_trace()
@@ -96,9 +143,9 @@ def run(program):
             addr = inst[1]
         pc = INSTS[op](regs, stack, pc, reg, addr)
         inst = program[pc]
-        print
+        #print
     for p in prints:
-        print '>>>>>', p
+        print >>stdout, p
 
 
 if __name__ == '__main__':

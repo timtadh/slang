@@ -19,8 +19,8 @@ class generate(object):
         self.__init__()
         self.var = dict()
         self.bp_offset = 0
-        self.main = main
-        self.funcs = funcs
+        ##self.main = main
+        #self.funcs = funcs
         self.floc = dict()
         code = list()
         code += self.InitCode()
@@ -56,7 +56,9 @@ class generate(object):
         ]
 
     def Func(self, insts, main=False):
-        print '->', insts
+        labels = insts[1]
+        insts = insts[0]
+        #print '->', insts
         self.bp_offset = 3
         code = list()
         if not main: code += self.FramePush()
@@ -79,6 +81,8 @@ class generate(object):
                 code += self.Return(i)
             elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
                 code += self.Op(i)
+            elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
+                code += self.CmpOp(i)
             else:
                 raise Exception, il.opsr[i.op]
         return code
@@ -98,7 +102,7 @@ class generate(object):
         ]
         self.var[i.result] = self.bp_offset
         self.bp_offset += 1
-        print code
+        #print code
         return code
 
     def Oprm(self, i):
@@ -237,6 +241,26 @@ class generate(object):
         self.bp_offset += 1
         return code
 
+    def CmpOp(self, i):
+        ops = {il.LT:vm.LT}
+        code = [
+            (vm.IMM, 3, self.var[i.b]),
+            (vm.ADD, 3, 0),
+            (vm.LOAD, 3, 3),
+            (vm.IMM, 4, self.var[i.a]),
+            (vm.ADD, 4, 0),
+            (vm.LOAD, 4, 4),
+            (ops[i.op], 4, 3),
+            (vm.IMM, 3, self.bp_offset),
+            (vm.ADD, 3, 0),
+            (vm.SAVE, 3, 4),
+            (vm.IMM, 4, 1),
+            (vm.ADD, 1, 4),
+        ]
+        self.var[i.result] = self.bp_offset
+        self.bp_offset += 1
+        return code
+
     def Print(self, i):
         code = [
             (vm.IMM, 3, self.var[i.a]),
@@ -266,6 +290,6 @@ if __name__ == '__main__':
             ''', lexer=Lexer())
         )
     )
-    print code
-    print vm.run(code)
+    #print code
+    vm.run(code)
 

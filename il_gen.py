@@ -16,6 +16,7 @@ class generate(object):
         self.__init__()
         main = self.Stmts(root)
         #print
+        print
         print 'main'
         for i in main:
             print ' '*4, i
