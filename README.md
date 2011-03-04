@@ -18,8 +18,8 @@ basics of interpretation and complilation.
 1. Simple Code Generation for x86 [Not Started]
 1. Complex Code Generation for x86 [Not Started]
 
-[*] SRVM : Simple Register based Viritual Machine
- a virutual machine of my own devising to demonstrate the basics of a VM.
+[*] SRVM : Simple Register based Viritual Machine <br/>
+a virutual machine of my own devising to demonstrate the basics of a VM.
 
 Table of Contents
 -----------------
