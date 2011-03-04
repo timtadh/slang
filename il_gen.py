@@ -6,7 +6,7 @@
 
 
 from sl_parser import Parser, Lexer
-from table import SymbolTable
+from table import Symbol, SymbolTable
 import il
 
 class generate(object):
@@ -124,8 +124,9 @@ class generate(object):
         name = node.children[0]
         c = node.children[1]
         if c.label == 'Func':
-            c.fun = self.fun()
-            self.objs[name] = c.fun
+            s = Symbol(name, 'func')
+            c.fun = self.id
+            self.objs.add()
 
     def Assign(self, node):
         assert node.label == 'Assign'
