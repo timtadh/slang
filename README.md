@@ -6,48 +6,54 @@ basics of interpretation and complilation.
 
 ### Current status:
 
-1. Intermediate Language [DONE]
-1. Lexer [DONE]
-1. Grammar [DONE]
-1. Parser [DONE]
-1. AST Definition [DONE]
-1. Symbol Table
-1. IL Generation (subtasks need to be defined here...)
-1. ...
+1. Documentation [In Progress]
+1. Lexer [Done]
+1. Simple Grammar [Done]
+1. Parser [Done]
+1. AST Definition [Done]
+1. Symbol Table [Functional]
+1. IL Generation [Functional]
+1. Simple Code Generation for the SRVM* [Functional]
+1. Complex Code Generation for the SRVM [Not Started]
+1. Simple Code Generation for x86 [Not Started]
+1. Complex Code Generation for x86 [Not Started]
+
+[*] SRVM : Simple Register based Viritual Machine
+    a virutual machine of my own devising to demonstrate the basics of a VM.
 
 Table of Contents
 -----------------
 
 1. Quick Example Program
-1. Intermediate Language
+1. The SRVM
 2. Slang Langauge Spec
 
 
 Quick Example Program
 ---------------------
 
-Here is the type of language I am aiming for, note you will be able to define
-functions on the stack.
+Here is the language as it currently stands. It has more syntax than this, but
+this syntax is pretty stable. It does not currently support closures.
 
-    f = func(a, b) {
-        c = add(a,b)
-        return c
+    g = func() {
+        g1 = func() { return g2() }
+        g2 = func() { return g3() }
+        g3 = func() { return h() }
+        return g1()
     }
-    r = f(2,3)
-    print(r)
-    exit()
+    h = func() { return f() }
+    f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
+    print g()
 
 
-Intermediate Language
-----------------------
-The "Intermediate Language" will be used to test the compiler before conversion
-to x86. Technically this isn't in anyway nessary. However, I have not done much
-x86 assembly programming, so this is an easier way for me to just get started.
-I made it as simple as possible. It doesn't even currently have a branch
-instruction. However, based on my understanding of lambda calculus (which is
-very vague actually) I shouldn't need a branch instruction. If it turns out I do
-I can always add it in later. This instruction set is viable for doing basic
-operations.
+SRVM Language
+-------------
+The SRVM (Simple Register based Viritual Machine) is a simple virtual machine
+built for 2 purposes. 1) I want to demonstrate code generation without having
+to explain x86. 2) I want to demonstrate what a VM could look like and how to
+implement one. I made it as simple as possible. It doesn't even currently have a
+branch instruction. If it turns out I do I can always add it in later. This
+instruction set is viable for doing basic operations.
 
 Here is the langauge spec, note all operands go CMD to <- from
 
@@ -71,37 +77,101 @@ There are 5 registers for the VM:
     $3 = t1 = temp 1
     $4 = t2 = temp 2
 
+There is currently no assembler for the language. I generate the instructions
+as Python tuples.
+
+#### Example
+This gets 2 variables from the stack and adds them together
+
+    code = [
+        (IMM, 3, 0), # load args
+        (ADD, 3, 0),
+        (IMM, 4, 1),
+        (ADD, 4, 0),
+        (LOAD, 3, 3),
+        (LOAD, 4, 4),
+        (ADD, 4, 3), # do addition
+    ]
+
 
 Slang Langauge Spec
 -------------------
 
 Tokens:
 
-    NAME   : '([a-zA-Z_])(([a-zA-Z_])|([0-9]))*'
-    INT    : '(-?0[xX]([a-fA-F0-9])+)|(-?([0-9])+)'
-    COMMA  : ','
-    LPAREN : '('
-    RPAREN : ')'
-    LCURLY : '{'
-    RCURLY : '}'
-    EQUAL  : '='
+    NAME     : '([a-zA-Z_])(([a-zA-Z_])|([0-9]))*'
+    INT      : '(-?0[xX]([a-fA-F0-9])+)|(-?([0-9])+)'
+    RETURN   : 'return'
+    FUNC     : 'func'
+    PRINT    : 'print'
+    IF       : 'if'
+    else     : 'else'
+    COMMA    : ','
+    LPAREN   : '('
+    RPAREN   : ')'
+    LCURLY   : '{'
+    RCURLY   : '}'
+    EQUAL    : '='
+    EQEQ     : '=='
+    NQ       : '!='
+    LT       : '<'
+    LE       : '<='
+    GT       : '>'
+    SLASH    : '\/'
+    STAR     : '\*'
+    DASH     : '\-'
+    PLUS     : '\+'
 
 Productions:
 
-    Start : Block
-    Block : Block Stmt
-    Block : Stmt
-    Stmt : NAME EQUAL FUNC LPAREN Dparams RPAREN LCURLY Block Return RCURLY
-    Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Block Return RCURLY
-    Stmt : NAME EQUAL Call
-    Stmt : Call
-    Return : RETURN Params
-    Return : CONTINUE Call
-    Call : NAME LPAREN Params RPAREN
-    Call : NAME LPAREN RPAREN
-    Dparams : Dparams COMMA NAME
-    Dparams : NAME
-    Params : Params COMMA Value
-    Params : Value
-    Value : NAME
-    Value : INT
+
+    Start       : Stmts
+    Stmts       : Stmts Stmt
+    Stmts       : Stmt
+    Stmt        : PRINT Expr
+    Stmt        : Call
+    Stmt        : NAME EQUAL Expr
+    Stmt        : NAME EQUAL FUNC LPAREN RPAREN LCURLY Return RCURLY
+    Stmt        : NAME EQUAL FUNC LPAREN RPAREN LCURLY Stmts Return RCURLY
+    Stmt        : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Return RCURLY
+    Stmt        : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Stmts Return RCURLY
+    Stmt        : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY
+    Stmt        : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY
+                                                        ELSE LCURLY Stmts RCURLY
+    Return      : RETURN
+    Return      : RETURN Expr
+    Expr        : AddSub
+    AddSub      : AddSub PLUS MulDiv
+    AddSub      : AddSub DASH MulDiv
+    AddSub      : MulDiv
+    MulDiv      : MulDiv STAR Atomic
+    MulDiv      : MulDiv SLASH Atomic
+    MulDiv      : Atomic
+    Atomic      : Value
+    Atomic      : LPAREN Expr RPAREN
+    Value       : INT_VAL
+    Value       : NAME
+    Value       : Call
+    Call        : NAME LPAREN Params RPAREN
+    Call        : NAME LPAREN RPAREN
+    Params      : Params COMMA Expr
+    Params      : Expr
+    DParams     : DParams COMMA NAME
+    DParams     : NAME
+    BooleanExpr : OrExpr
+    OrExpr      : OrExpr OR AndExpr
+    OrExpr      : AndExpr
+    AndExpr     : AndExpr AND NotExpr
+    AndExpr     : NotExpr
+    NotExpr     : NOT BooleanTerm
+    NotExpr     : BooleanTerm
+    BooleanTerm : CmpExpr
+    BooleanTerm : LPAREN BooleanExpr RPAREN
+    CmpExpr     : Expr CmpOp Expr
+    CmpOp       : EQEQ
+    CmpOp       : NQ
+    CmpOp       : LT
+    CmpOp       : LE
+    CmpOp       : GT
+    CmpOp       : GE
+
