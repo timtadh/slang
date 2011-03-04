@@ -68,13 +68,13 @@ def t_if():
             print 2
         }
         ''').rstrip('\n')
-    assert str(1) == run('''
-        if (1 < 2) {
-            print 1
-        } else {
-            print 2
-        }
-        ''').rstrip('\n')
+    #assert str(1) == run('''
+        #if (1 < 2) {
+            #print 1
+        #} else {
+            #print 2
+        #}
+        #''').rstrip('\n')
 
 
 def t_if_set():

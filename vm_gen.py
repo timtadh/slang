@@ -43,6 +43,7 @@ class generate(object):
         code = [transform(i) for i in code]
         for c, i in enumerate(code):
             print c, i
+        #raise Exception
         return code
 
     def InitCode(self):
@@ -98,12 +99,18 @@ class generate(object):
             elif i.op == il.J:
                 code += self.J(i)
             elif i.op == il.NOP:
-                l -= 1
+                code += self.Nop(i)
             else:
                 raise Exception, il.opsr[i.op]
             if i.label is not None:
                 print code[l]
                 code[l] = (code[l][0], code[l][1], code[l][2], i.label)
+        return code
+
+    def Nop(self, i):
+        code = [
+            (vm.NOP, 0, 0)
+        ]
         return code
 
     def Gprm(self, i):

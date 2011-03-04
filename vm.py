@@ -27,6 +27,7 @@ GE = 0x11
 AND = 0x12
 OR = 0x13
 NOT = 0x14
+NOP = 0x15
 
 A = [J, PC]
 B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT, BEQT, EQ, NE, LT, LE, GT, GE, AND, OR, NOT]
@@ -48,7 +49,10 @@ def save(regs, stack, pc, r1, r2):
         stack.append(regs[r1])
         #print stack
     elif len(stack) < regs[r2]:
-        raise Exception, "Address out of range"
+        while len(stack) < regs[r2]:
+            stack.append(0)
+        stack.append(regs[r1])
+        #raise Exception, "Address out of range"
     else:
         stack[regs[r2]] = regs[r1]
     return pc + 1
@@ -107,12 +111,14 @@ def _or(regs, stack, pc, r1, r2):
 def _not(regs, stack, pc, r1, r2):
     regs[r1] = not regs[r1]
     return pc + 1
+def nop(regs, stack, pc, r1, r2):
+    return pc + 1
 
 INSTS = {
     LOAD:load, SAVE:save, IMM:imm, J:j, PC:pc, ADD:add, SUB:sub, MUL:mul,
     DIV:div, PRNT:prin, BEQT:beqt,
     EQ:eq, NE:ne, LT:lt, LE:le, GT:gt, GE: ge,
-    AND:_and, OR:_or, NOT:_not
+    AND:_and, OR:_or, NOT:_not, NOP:nop
 }
 
 def run(program, stdout=None):
