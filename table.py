@@ -6,10 +6,32 @@
 
 from collections import MutableMapping
 
+class Symbol(object):
+
+    IDC = 0
+
+    def __init__(self, name, type):
+        self._id = self.IDC
+        self.IDC += 1
+        self.name = name
+        self.type = type
+
+    @property
+    def id(self):
+        return '%s%d' % (self.type, self._id)
+
+    def __repr__(self):
+        if self.base is None:
+            return '<sym %s - %s(%s)>' % (self.id, self.name, self.type)
+        return '<sym %s - %s(%s) %s(%d)>' % (self.id, self.name, self.type, self.base, self.offset)
+
+    def __str__(self): return self.name
+
 class SymbolTable(MutableMapping):
 
     def __init__(self, *args, **kwargs):
         self.table = dict()
+        self.idindex = dict()
         self.parent = kwargs.pop('parent') if 'parent' in kwargs else dict()
         self.update(*args, **kwargs)
 
@@ -25,6 +47,14 @@ class SymbolTable(MutableMapping):
         keys = set(self.table.keys()) | set(self.parent.keys())
         return keys
 
+    def ids(self):
+        if self.parent:
+            return set(self.idindex.keys()) | self.parent.ids()
+        return set(self.idindex.keys())
+
+    def add(self, value):
+        self[value.name] = value
+
     def __len__(self): return len(self.keys())
     def __contains__(self, name): return name in self.keys()
 
@@ -33,17 +63,21 @@ class SymbolTable(MutableMapping):
 
     def __setitem__(self, name, value):
         self.table[name] = value
+        self.idindex[value.id] = value
 
-    def __getitem__(self, name):
-        if name in self.table:
-            return self.table[name]
-        return self.parent[name]
+    def __getitem__(self, key):
+        if isinstance(key, int) or isinstance(key, long): d = self.idindex
+        else: d = self.table
+        if key in d:
+            return d[key]
+        return self.parent[key]
 
     def __delitem__(self, name):
-        if name not in self.keys():
-            raise KeyError, 'Name "%s" not in SymbolTable' % (name)
-        if name in self.table:
-            del self.table[name]
+        item = self[name]
+        if item.name in self.table:
+            del self.table[item.name]
+        if item.id in self.idindex:
+            del self.idindex[item.id]
 
     def __str__(self):
         return str(dict((k,v) for k,v in self.iteritems()))
