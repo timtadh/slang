@@ -58,6 +58,12 @@ def t_func_uppernames():
         print g()
         ''').rstrip('\n')
 
+def t_func_pointers():
+    assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
+        f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
+        g = func(h) { return h() }
+        print g(f)
+        ''').rstrip('\n')
 
 def t_if():
     #raise nose.SkipTest
