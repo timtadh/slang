@@ -58,7 +58,7 @@ def run(il, labels, params=None, var=None, stdout=None):
             var[i.result.name] = params[i.a]
             print i.result, var[i.result.name]
         elif i.op == RPRM:
-            var[i.result.name] = params[i.a.name]
+            var[i.result.name] = params[i.a]
         elif i.op == CALL:
             print i.a
             if isinstance(i.a.type, Func):
