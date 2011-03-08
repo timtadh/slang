@@ -6,34 +6,18 @@
 
 import functools, sys
 
-LOAD = 0x0
-SAVE = 0x1
-IMM  = 0x2
-J    = 0x3
-PC   = 0x4
-ADD  = 0x5
-SUB  = 0x6
-MUL  = 0x7
-DIV  = 0x8
-EXIT = 0x9
-PRNT = 0xa
-BEQT = 0xb
-EQ = 0xc
-NE = 0xd
-LT = 0xe
-LE = 0xf
-GT = 0x10
-GE = 0x11
-AND = 0x12
-OR = 0x13
-NOT = 0x14
-NOP = 0x15
+opsr = (
+    'LOAD', 'SAVE', 'IMM', 'J', 'PC', 'ADD', 'SUB', 'MUL', 'DIV', 'EXIT', 'PRNT',
+    'BEQT', 'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'AND', 'OR', 'NOT', 'NOP'
+)
+ops = dict((k, i) for i, k in enumerate(opsr))
+sys.modules[__name__].__dict__.update(ops)
 
 A = [J, PC]
 B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT, BEQT, EQ, NE, LT, LE, GT, GE, AND, OR, NOT]
 C = [SAVE]
 
-DEBUG = False
+DEBUG = True
 
 prints = list()
 
@@ -41,10 +25,10 @@ def load(regs, stack, pc, r1, r2):
     regs[r1] = stack[regs[r2]]
     return pc + 1
 def save(regs, stack, pc, r1, r2):
-    print r1, '->', regs[r1]
-    print r2, '->', regs[r2]
+    if DEBUG: print r1, '->', regs[r1]
+    if DEBUG: print r2, '->', regs[r2]
     #print r1, r2, ':',  regs[r1], regs[r2]
-    print len(stack), len(stack) == regs[r2]
+    if DEBUG: print len(stack), len(stack) == regs[r2]
     if len(stack) == regs[r2]:
         stack.append(regs[r1])
         #print stack
@@ -130,10 +114,11 @@ def run(program, stdout=None):
     pc = 0
     inst = program[pc]
     while True:
-        print 'pc =', pc
-        print 'inst =', inst
-        print 'regs =', regs
-        print 'stack =', stack
+        if DEBUG:
+            print 'pc =', pc
+            print 'inst =', inst
+            print 'regs =', regs
+            print 'stack =', stack
         #if DEBUG == True or pc > 100:
             #import pdb
             #pdb.set_trace()
@@ -152,6 +137,7 @@ def run(program, stdout=None):
         inst = program[pc]
         #print
     for p in prints:
+        print '>>>>>>', p
         print >>stdout, p
 
 

@@ -6,7 +6,7 @@
 
 
 from sl_parser import Parser, Lexer
-from table import SymbolTable
+from table import Symbol, SymbolTable
 import il_gen, il
 import vm
 
@@ -17,7 +17,7 @@ class generate(object):
     def __new__(cls, main, mlabels):
         self = super(generate, cls).__new__(cls)
         self.__init__()
-        self.var = dict()
+        #self.var = dict()
         self.bp_offset = 0
         ##self.main = main
         #self.funcs = funcs
@@ -33,7 +33,7 @@ class generate(object):
         for c, i in enumerate(code):
             if len(i) > 3 and i[3] in self.labels:
                 self.labels[i[3]] = c
-        print self.labels
+        #print self.labels
         def transform(i):
             if i[0] == vm.IMM and i[2] in self.floc:
                 return (i[0], i[1], self.floc[i[2]])
@@ -42,13 +42,13 @@ class generate(object):
             return i
         code = [transform(i) for i in code]
         for c, i in enumerate(code):
-            print c, i
+            print '%3d : %-5s %s' % (c, vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
         #raise Exception
         return code
 
     def InitCode(self):
         return [
-            (vm.IMM, 4, 0),
+            (vm.IMM, 4, 0, 'start init code'),
             (vm.IMM, 3, 0),
             (vm.SAVE, 3, 4),
             (vm.IMM, 3, 1),
@@ -57,7 +57,7 @@ class generate(object):
             (vm.SAVE, 3, 4),
             (vm.IMM, 1, 3),
             (vm.IMM, 0, 0),
-            (vm.IMM, 2, 0),
+            (vm.IMM, 2, 0, 'end init code'),
         ]
 
     def ExitCode(self):
@@ -65,11 +65,38 @@ class generate(object):
             (vm.EXIT, 0,0)
         ]
 
+    def gather_syms(self, insts):
+        syms = set()
+        for i in insts:
+            if isinstance(i.a, Symbol): syms.add(i.a)
+            if isinstance(i.b, Symbol): syms.add(i.b)
+            if isinstance(i.result, Symbol): syms.add(i.result)
+        return syms
+
+    def place_symbols(self, syms):
+        i = 1
+        for sym in syms:
+            print sym, sym.type
+            if issubclass(sym.type.__class__, il.Int):
+                print 'is subclass int'
+                sym.type.basereg = 1 # set the base reg to the frame pointer
+                sym.type.offset = -1 * i # set the offset
+                i += 1
+        return i-1
+
     def Func(self, insts, labels, main=False):
         #print '->', insts
         self.bp_offset = 3
         code = list()
         if not main: code += self.FramePush()
+        syms = self.gather_syms(insts)
+        print syms
+        fp_offset = self.place_symbols(syms)
+        print syms
+        code += [
+            (vm.IMM, 4, fp_offset, 'fp offset adjustment'),
+            (vm.ADD, 1, 4, 'fp offset add inst'),
+        ]
         for i in insts:
             l = len(code)
             if i.op == il.PRNT:
@@ -255,35 +282,29 @@ class generate(object):
 
     def Imm(self, i):
         code = [
-            (vm.IMM, 3, self.bp_offset),
-            (vm.ADD, 3, 0),
+            (vm.IMM, 3, i.result.type.offset),
+            (vm.ADD, 3, i.result.type.basereg),
             (vm.IMM, 4, i.a),
             (vm.SAVE, 3, 4, 'Save in IMM'),
-            (vm.IMM, 4, 1),
-            (vm.ADD, 1, 4),
         ]
-        self.var[i.result] = self.bp_offset
-        self.bp_offset += 1
+        #self.var[i.result] = self.bp_offset
+        #self.bp_offset += 1
         return code
 
     def Op(self, i):
         ops = {il.ADD:vm.ADD, il.SUB:vm.SUB, il.MUL:vm.MUL, il.DIV:vm.DIV}
         code = [
-            (vm.IMM, 3, self.var[i.b]),
-            (vm.ADD, 3, 0),
+            (vm.IMM, 3, i.b.type.offset),
+            (vm.ADD, 3, i.b.type.basereg),
             (vm.LOAD, 3, 3),
-            (vm.IMM, 4, self.var[i.a]),
-            (vm.ADD, 4, 0),
+            (vm.IMM, 4, i.a.type.offset),
+            (vm.ADD, 4, i.a.type.basereg),
             (vm.LOAD, 4, 4),
             (ops[i.op], 4, 3),
-            (vm.IMM, 3, self.bp_offset),
-            (vm.ADD, 3, 0),
+            (vm.IMM, 3, i.result.type.offset),
+            (vm.ADD, 3, i.result.type.basereg),
             (vm.SAVE, 3, 4, 'Save in Op'),
-            (vm.IMM, 4, 1),
-            (vm.ADD, 1, 4),
         ]
-        self.var[i.result] = self.bp_offset
-        self.bp_offset += 1
         return code
 
     def CmpOp(self, i):
@@ -308,9 +329,10 @@ class generate(object):
         return code
 
     def Print(self, i):
+        print i
         code = [
-            (vm.IMM, 3, self.var[i.a]),
-            (vm.ADD, 3, 0),
+            (vm.IMM, 3, i.a.type.offset),
+            (vm.ADD, 3, i.a.type.basereg),
             (vm.LOAD, 4, 3),
             (vm.PRNT, 4, 0)
         ]
