@@ -14,7 +14,7 @@ import vm
 
 class generate(object):
 
-    def __new__(cls, main, funcs):
+    def __new__(cls, main, mlabels):
         self = super(generate, cls).__new__(cls)
         self.__init__()
         self.var = dict()
@@ -25,11 +25,11 @@ class generate(object):
         self.labels = dict()
         code = list()
         code += self.InitCode()
-        code += self.Func(main, True)
+        code += self.Func(main, mlabels, True)
         code += self.ExitCode()
-        for k, f in funcs.iteritems():
-            self.floc[k] = len(code)
-            code += self.Func(f)
+        #for k, f in funcs.iteritems():
+            #self.floc[k] = len(code)
+            #code += self.Func(f)
         for c, i in enumerate(code):
             if len(i) > 3 and i[3] in self.labels:
                 self.labels[i[3]] = c
@@ -65,9 +65,7 @@ class generate(object):
             (vm.EXIT, 0,0)
         ]
 
-    def Func(self, insts, main=False):
-        labels = insts[1]
-        insts = insts[0]
+    def Func(self, insts, labels, main=False):
         #print '->', insts
         self.bp_offset = 3
         code = list()
