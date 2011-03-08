@@ -6,16 +6,17 @@
 
 from nose.tools import assert_raises
 from table import Symbol, SymbolTable
+from il import Int, Func, FuncPointer
 
 def test_pushpop():
     table = SymbolTable()
-    t1 = Symbol('t1', 'int', 0, 1)
-    t2_1 = Symbol('t2', 'int', 0, 2)
-    t3 = Symbol('t3', 'int', 0, 3)
-    t2_2 = Symbol('t2', 'int', 0, 4)
-    t4_1 = Symbol('t4', 'int', 0, 5)
-    t4_2 = Symbol('t4', 'int', 0, 6)
-    t5 = Symbol('t5', 'int', 0, 7)
+    t1 = Symbol('t1', Int(0, 1))
+    t2_1 = Symbol('t2', Int(0, 2))
+    t3 = Symbol('t3', Int(0, 3))
+    t2_2 = Symbol('t2', Int(0, 4))
+    t4_1 = Symbol('t4', FuncPointer(0, 5))
+    t4_2 = Symbol('t4', FuncPointer(0, 6))
+    t5 = Symbol('t5', FuncPointer(0, 7))
     table.add(t1)
     table.add(t2_1)
     assert table == {'t1':t1, 't2':t2_1}

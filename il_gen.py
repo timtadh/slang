@@ -20,21 +20,26 @@ class generate(object):
         print 'main'
         for i in main:
             print ' '*4, i
-        for f in self.functions:
-            print f
-            for i in self.functions[f]:
-                print ' '*4, i
+        for sym in self.objs.itervalues():
+            print sym
+            if isinstance(sym.type, il.Func):
+                for i in sym.type.code:
+                    print ' '*4, i
             print
             print
-        main = self.index_labels(main)
-        functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
-        return main, functions
+        main = (main, self.index_labels(main))
+        #functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
+        #for sym in self.objs.itervalues():
+            #if isinstance(sym.type, il.Func):
+                #_, labels = self.index_labels(sym.type.code)
+                #sym.type.labels = labels
+        return main
 
     def __init__(self):
         self.fcount = 0
         self.tcount = 0
         self.lcount = 0
-        self.functions = dict()
+        #self.functions = dict()
         self.objs = SymbolTable()
 
     def index_labels(self, insts):
@@ -42,15 +47,15 @@ class generate(object):
         for i, inst in enumerate(insts):
             if inst.label is not None:
                 labels[inst.label] = i
-        return insts, labels
+        return labels
 
     def tmp(self):
         self.tcount += 1
         return 't%i' % self.tcount
 
-    def fun(self):
-        self.fcount += 1
-        return 'f%i' % self.fcount
+    #def fun(self):
+        #self.fcount += 1
+        #return 'f%i' % self.fcount
 
     def label(self):
         self.lcount += 1
@@ -124,9 +129,8 @@ class generate(object):
         name = node.children[0]
         c = node.children[1]
         if c.label == 'Func':
-            s = Symbol(name, 'func')
-            c.fun = self.id
-            self.objs.add()
+            s = Symbol(name, il.Func(None))
+            self.objs.add(s)
 
     def Assign(self, node):
         assert node.label == 'Assign'
@@ -135,9 +139,8 @@ class generate(object):
         if c.label == 'Expr':
             code = self.Expr(c)
         elif c.label == 'Func':
-            fun = c.fun
-            self.functions[fun] = self.Func(c)
-            self.objs[name] = fun
+            self.objs[name].type.code = self.Func(c)
+            self.objs[name].type.labels = self.index_labels(self.objs[name].type.code)
             code = list()
         else:
             raise Exception, c.label
@@ -182,7 +185,7 @@ class generate(object):
         assert node.label == 'DParams'
         code = list()
         for i, c in enumerate(node.children):
-            t = self.tmp()
+            t = Symbol(self.tmp(), il.Int())
             self.objs[c] = t
             code.append(il.Inst(il.GPRM, i, 0, t))
         return code
@@ -217,7 +220,7 @@ class generate(object):
             il.Inst(ops[node.label],
             ar,
             br,
-            self.tmp())
+            Symbol(self.tmp(), il.Int()))
         ]
 
     def Op(self, node):
@@ -232,17 +235,22 @@ class generate(object):
             il.Inst(il.ops[ops[node.label]],
             ar,
             br,
-            self.tmp())
+            Symbol(self.tmp(), il.Int()))
         ]
 
     def Call(self, node):
         assert node.label == 'Call'
         code = list()
         fun = self.objs[node.children[0]]
+        #print self.objs, fun, node.children[0], self.objs['f']
+        if isinstance(fun.type, il.Int):
+            fun.type = fun.type.cast(il.FuncPointer)
+        print fun
+        print repr(fun)
         if len(node.children) != 1:
             code += self.Params(node.children[1])
         code += [ il.Inst(il.CALL, fun, 0, 0) ]
-        code += [ il.Inst(il.RPRM, 0, 0, self.tmp()) ]
+        code += [ il.Inst(il.RPRM, 0, 0, Symbol(self.tmp(), il.Int()))]
         return code
 
     def Params(self, node):
@@ -259,7 +267,7 @@ class generate(object):
         return code
 
     def Int(self, node):
-        return [ il.Inst(il.IMM, node, 0, self.tmp()) ]
+        return [ il.Inst(il.IMM, node, 0, Symbol(self.tmp(), il.Int())) ]
 
 
     # ------------------------------------------------------------------------ #

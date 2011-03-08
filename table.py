@@ -11,21 +11,19 @@ class Symbol(object):
     IDC = 0
 
     def __init__(self, name, type):
-        self._id = self.IDC
-        self.IDC += 1
+        self._id = Symbol.IDC
+        Symbol.IDC += 1
         self.name = name
         self.type = type
 
     @property
     def id(self):
-        return '%s%d' % (self.type, self._id)
+        return '%s%d' % (self.type.__class__.__name__, self._id)
 
     def __repr__(self):
-        if self.base is None:
-            return '<sym %s - %s(%s)>' % (self.id, self.name, self.type)
-        return '<sym %s - %s(%s) %s(%d)>' % (self.id, self.name, self.type, self.base, self.offset)
+        return '<sym %s - %s%s>' % (self.id, self.name, self.type)
 
-    def __str__(self): return self.name
+    def __str__(self): return '<sym %s%s>' % (self.name, self.type)
 
 class SymbolTable(MutableMapping):
 
