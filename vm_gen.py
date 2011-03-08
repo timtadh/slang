@@ -5,6 +5,8 @@
 #For licensing see the LICENSE file in the top level directory.
 
 
+from collections import deque
+
 from sl_parser import Parser, Lexer
 from table import Symbol, SymbolTable
 import il_gen, il
@@ -20,13 +22,14 @@ class generate(object):
         #self.var = dict()
         self.bp_offset = 0
         ##self.main = main
-        #self.funcs = funcs
+        self.funcs = deque()
         self.floc = dict()
         self.labels = dict()
         code = list()
         code += self.InitCode()
         code += self.Func(main, mlabels, True)
         code += self.ExitCode()
+        print funcs
         #for k, f in funcs.iteritems():
             #self.floc[k] = len(code)
             #code += self.Func(f)
