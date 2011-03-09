@@ -65,6 +65,25 @@ def t_func_pointers():
         print g(f)
         ''').rstrip('\n')
 
+def t_func_params_simple():
+    raise nose.SkipTest
+    assert str(4) == run('''
+        sub = func(a, b) { return a - b }
+        print sub(5+7, 8)
+        ''').rstrip('\n')
+
+def t_func_params_stack():
+    raise nose.SkipTest
+    assert str(4) == run('''
+        sub = func(a, b) {
+            _sub = func() {
+                return a - b
+            }
+            return _sub()
+        }
+        print sub(5+7, 8)
+        ''').rstrip('\n')
+
 def t_if():
     #raise nose.SkipTest
     assert str(2) == run('''
@@ -74,17 +93,17 @@ def t_if():
             print 2
         }
         ''').rstrip('\n')
-    #assert str(1) == run('''
-        #if (1 < 2) {
-            #print 1
-        #} else {
-            #print 2
-        #}
-        #''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
 
 
 def t_if_set():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(2) == run('''
         if (1 > 2) {
             a = 1

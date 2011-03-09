@@ -20,13 +20,12 @@ class generate(object):
         print 'main'
         for i in main:
             print ' '*4, i
-        for sym in self.objs.itervalues():
-            #print sym
-            if isinstance(sym.type, il.Func):
-                for i in sym.type.code:
-                    print ' '*4, i
+        for fun in self.funcs:
+            print fun
+            for i in fun.type.code:
+                print ' '*4, i
             print
-            print
+        print
         main = (main, self.index_labels(main))
         #functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
         #for sym in self.objs.itervalues():
