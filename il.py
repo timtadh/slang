@@ -19,7 +19,7 @@ def run(il, labels, params=None, var=None, stdout=None):
     if not var: var = dict()
     nparams = list()
     rparams = list()
-    print params
+    #print params
     c = 0
     while c < len(il):
         i = il[c]
@@ -56,11 +56,11 @@ def run(il, labels, params=None, var=None, stdout=None):
             rparams.append(var[i.b.name])
         elif i.op == GPRM:
             var[i.result.name] = params[i.a]
-            print i.result, var[i.result.name]
+            #print i.result, var[i.result.name]
         elif i.op == RPRM:
             var[i.result.name] = params[i.a]
         elif i.op == CALL:
-            print i.a
+            #print i.a
             if isinstance(i.a.type, Func):
                 params = run(i.a.type.code, i.a.type.labels, nparams, var)
             else:
@@ -69,7 +69,7 @@ def run(il, labels, params=None, var=None, stdout=None):
         elif i.op == RTRN:
             return rparams
         elif i.op == BEQZ:
-            print i.a
+            #print i.a
             if var[i.a.name] == 0:
                 #raise Exception, "go to label %s" % (i.b)
                 c = labels[i.b]
@@ -103,14 +103,25 @@ class Inst(object):
 
 class Type(object):
 
+    IDC = 0
+
+    def __init__(self):
+        self._id = Type.IDC
+        Type.IDC += 1
+
+    @property
+    def id(self):
+        return self._id
+
     def cast(self, cls):
         raise TypeError, "invalid cast"
 
-class Int(object):
+class Int(Type):
 
     def __init__(self, basereg=None, offset=None):
         self.basereg = basereg
         self.offset = offset
+        super(Int, self).__init__()
 
     def cast(self, cls):
         if cls is FuncPointer:
@@ -119,14 +130,15 @@ class Int(object):
 
     def __repr__(self):
         if self.basereg is None:
-            return '{Int}'
-        return '{Int %s %s}' % (self.basereg, self.offset)
+            return '{Int%d}' % (self.id)
+        return '{Int%d %s %s}' % (self.id, self.basereg, self.offset)
 
-class Func(object):
+class Func(Type):
 
     def __init__(self, code):
         self._code = code
         self._labels = None
+        super(Func, self).__init__()
 
     @property
     def code(self):
@@ -149,11 +161,11 @@ class Func(object):
 
     def __repr__(self):
         if self.code is None:
-            return '{Func}'
-        return '{Func %d}' % (len(self.code))
+            return '{Func%d}' % (self.id)
+        return '{Func%d %d}' % (self.id, len(self.code))
 
 class FuncPointer(Int):
     def __repr__(self):
         if self.basereg is None:
-            return '{FuncPointer}'
-        return '{FuncPointer %s %s}' % (self.basereg, self.offset)
+            return '{FuncPointer%d}' % (self.id)
+        return '{FuncPointer%d %s %s}' % (self.id, self.basereg, self.offset)

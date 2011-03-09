@@ -15,13 +15,13 @@ class generate(object):
         self = super(generate, cls).__new__(cls)
         self.__init__()
         main = self.Stmts(root)
-        #print
+
         print
         print 'main'
         for i in main:
             print ' '*4, i
         for sym in self.objs.itervalues():
-            print sym
+            #print sym
             if isinstance(sym.type, il.Func):
                 for i in sym.type.code:
                     print ' '*4, i
@@ -36,6 +36,7 @@ class generate(object):
         return main
 
     def __init__(self):
+        self.funcs = set()
         self.fcount = 0
         self.tcount = 0
         self.lcount = 0
@@ -115,12 +116,11 @@ class generate(object):
         c = node.children[0]
         code = list()
         if c.label == 'Expr':
-            code += self.Expr(c)
-            t = code[-1].result
-            if code[-1].op == 'USE': code = code[:-1]
+            result = Symbol('r'+self.tmp(), il.Int())
+            code += self.Expr(c, result)
         else:
             raise Exception, c.label
-        code += [ il.Inst(il.PRNT, t, 0, 0)]
+        code += [ il.Inst(il.PRNT, result, 0, 0)]
         return code
 
 
@@ -136,11 +136,16 @@ class generate(object):
         assert node.label == 'Assign'
         name = node.children[0]
         c = node.children[1]
+        if name in self.objs:
+            result = self.objs[name]
+        else:
+            result = Symbol('r'+self.tmp(), il.Int())
         if c.label == 'Expr':
-            code = self.Expr(c)
+            code = self.Expr(c, result)
         elif c.label == 'Func':
             self.objs[name].type.code = self.Func(c)
             self.objs[name].type.labels = self.index_labels(self.objs[name].type.code)
+            self.funcs.add(self.objs[name])
             code = list()
         else:
             raise Exception, c.label
@@ -172,10 +177,9 @@ class generate(object):
         code = list()
         if node.children:
             if node.children[0].label == 'Expr':
-                code += self.Expr(node.children[0])
-                t = code[-1].result
-                if code[-1].op == 'USE': code = code[:-1]
-                code += [ il.Inst(il.OPRM, 0, t, 0) ]
+                result = Symbol('r'+self.tmp(), il.Int())
+                code += self.Expr(node.children[0], result)
+                code += [ il.Inst(il.OPRM, 0, result, 0) ]
             else:
                 raise Exception
         code += [ il.Inst(il.RTRN, 0, 0, 0) ]
@@ -190,67 +194,70 @@ class generate(object):
             code.append(il.Inst(il.GPRM, i, 0, t))
         return code
 
-    def Expr(self, node):
+    def Expr(self, node, result):
         if node.label == 'Expr':
             c = node.children[0]
         else:
             c = node
         if c.label == 'INT':
-            return self.Int(c.children[0])
+            return self.Int(c.children[0], result)
         elif c.label == '/' or c.label == '*' or c.label == '-' or c.label == '+':
-            return self.Op(c)
+            return self.Op(c, result)
         elif c.label == 'NAME':
-            return [ il.Inst('USE', 0, 0, self.objs[c.children[0]]) ]
+            result.type = self.objs[c.children[0]].type
+            result.name = self.objs[c.children[0]].name
+            #raise Exception, NotImplemented
+            return [ ]
         elif c.label == 'Expr':
-            return self.Expr(c)
+            return self.Expr(c, result)
         elif c.label == 'Call':
-            return self.Call(c)
+            return self.Call(c, result)
         else:
             raise Exception, 'Unexpected Node %s' % str(c)
 
     def CmpOp(self, node):
         ops = {'==':il.EQ, '=!':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
-        A = self.Expr(node.children[0])
-        B = self.Expr(node.children[1])
-        ar = A[-1].result
-        br = B[-1].result
-        if A[-1].op == 'USE': A = A[:-1]
-        if B[-1].op == 'USE': B = B[:-1]
+        Ar = Symbol('r'+self.tmp(), il.Int())
+        Br = Symbol('r'+self.tmp(), il.Int())
+        A = self.Expr(node.children[0], Ar)
+        B = self.Expr(node.children[1], Br)
         return A + B + [
             il.Inst(ops[node.label],
-            ar,
-            br,
+            Ar,
+            Br,
             Symbol(self.tmp(), il.Int()))
         ]
 
-    def Op(self, node):
+    def Op(self, node, result):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}
-        A = self.Expr(node.children[0])
-        B = self.Expr(node.children[1])
-        ar = A[-1].result
-        br = B[-1].result
-        if A[-1].op == 'USE': A = A[:-1]
-        if B[-1].op == 'USE': B = B[:-1]
+        Ar = Symbol('r'+self.tmp(), il.Int())
+        Br = Symbol('r'+self.tmp(), il.Int())
+        A = self.Expr(node.children[0], Ar)
+        B = self.Expr(node.children[1], Br)
+        #ar = A[-1].result
+        #br = B[-1].result
+        #if A[-1].op == 'USE': A = A[:-1]
+        #if B[-1].op == 'USE': B = B[:-1]
         return A + B + [
             il.Inst(il.ops[ops[node.label]],
-            ar,
-            br,
-            Symbol(self.tmp(), il.Int()))
+            Ar,
+            Br,
+            result)
         ]
 
-    def Call(self, node):
+    def Call(self, node, result):
         assert node.label == 'Call'
         code = list()
         fun = self.objs[node.children[0]]
         #print self.objs, fun, node.children[0], self.objs['f']
         if isinstance(fun.type, il.Int):
             fun.type = fun.type.cast(il.FuncPointer)
-        print fun
-        print repr(fun)
+        #print fun
+        #print repr(fun)
         if len(node.children) != 1:
             code += self.Params(node.children[1])
         code += [ il.Inst(il.CALL, fun, 0, 0) ]
-        code += [ il.Inst(il.RPRM, 0, 0, Symbol(self.tmp(), il.Int()))]
+        code += [ il.Inst(il.RPRM, 0, 0, result)]
         return code
 
     def Params(self, node):
@@ -258,16 +265,16 @@ class generate(object):
         code = list()
         params = list()
         for c in node.children:
-            code += self.Expr(c)
-            params.append(code[-1].result)
-            if code[-1].op == 'USE': code = code[:-1]
+            result = Symbol('r'+self.tmp(), il.Int())
+            code += self.Expr(c, result)
+            params.append(result)
         params.reverse()
         for i, p in enumerate(params):
             code += [ il.Inst(il.IPRM, len(params)-1-i, p, 0) ]
         return code
 
-    def Int(self, node):
-        return [ il.Inst(il.IMM, node, 0, Symbol(self.tmp(), il.Int())) ]
+    def Int(self, node, result):
+        return [ il.Inst(il.IMM, node, 0, result) ]
 
 
     # ------------------------------------------------------------------------ #

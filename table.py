@@ -18,10 +18,10 @@ class Symbol(object):
 
     @property
     def id(self):
-        return '%s%d' % (self.type.__class__.__name__, self._id)
+        return self._id
 
     def __repr__(self):
-        return '<sym %s - %s%s>' % (self.id, self.name, self.type)
+        return '<sym %d - %s%s>' % (self.id, self.name, self.type)
 
     def __str__(self): return '<sym %s%s>' % (self.name, self.type)
 
