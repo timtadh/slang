@@ -12,8 +12,6 @@ from table import Symbol, SymbolTable
 import il_gen, il
 import vm
 
-## TODO: This module is broken by changes to IL
-
 class generate(object):
 
     def __new__(cls, main, mlabels):
