@@ -136,8 +136,7 @@ Productions:
     Stmt        : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Return RCURLY
     Stmt        : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Stmts Return RCURLY
     Stmt        : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY
-    Stmt        : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY
-                                                        ELSE LCURLY Stmts RCURLY
+    Stmt        : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY
     Return      : RETURN
     Return      : RETURN Expr
     Expr        : AddSub

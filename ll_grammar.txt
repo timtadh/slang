@@ -1,0 +1,59 @@
+Start       : Stmts
+
+Stmts       : Stmt Stmts'
+Stmts'      : Stmt Stmts'
+Stmts'      : e
+
+Stmt        : PRINT Expr
+Stmt        : Call
+Stmt        : AssignStmt
+
+AssignStmt  : NAME EQUAL Assignable
+Assignable  : Expr
+Assignable  : Function
+
+Function    : FUNC LPAREN ParamDecl LCURLY
+              FuncBody RCURLY
+ParamDecl   : RPAREN
+ParamDecl   : DParams RPAREN
+FuncBody    : Return
+FuncBody    : Stmts Return
+
+Return      : RETURN RetExpr
+RetExpr     : Expr
+RetExpr     : e
+
+Expr        : AddSub
+
+AddSub      : MulDiv AddSub'
+AddSub'     : PLUS MulDiv AddSub'
+AddSub'     : DASH MulDiv AddSub'
+AddSub'     : e
+
+MulDiv      : Atomic MulDiv'
+MulDiv'     : STAR Atomic MulDiv'
+MulDiv'     : SLASH Atomic MulDiv'
+MulDiv'     : e
+
+Atomic      : Value
+Atomic      : LPAREN Expr RPAREN
+
+Value       : INT_VAL
+Value       : NameOrCall
+
+NameOrCall  : NAME NameOrCall'
+NameOrCall' : Call'
+NameOrCall' : e
+
+Call        : NAME Call'
+Call'       : LPAREN Call''
+Call''      : RPAREN
+Call''      : Params RPAREN
+
+Params      : Expr Params'
+Params'     : COMMA Expr Params'
+Params'     : e
+
+DParams     : NAME DParams'
+DParams'    : COMMA NAME DParams'
+
