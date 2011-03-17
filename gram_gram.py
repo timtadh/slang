@@ -8,6 +8,17 @@ from ply import lex, yacc
 from ply.lex import Token
 from ast import Node
 
+class Symbol(object):
+
+    def __init__(self, sym):
+        self.sym = sym
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, self.sym)
+
+class Terminal(Symbol): pass
+class NonTerminal(Symbol): pass
+
 reserved = dict(
     (word.lower(), word) for word in (
         'E',
@@ -84,39 +95,41 @@ class Parser(object):
     precedence = (
     )
 
-    def __new__(cls, **kwargs):
-        ## Does magic to allow PLY to do its thing.
+    def __new__(cls, tokens, **kwargs):
+        ## Does magic to allow PLY to do its thing.-
         self = super(Parser, cls).__new__(cls, **kwargs)
-        self.table = dict()
-        self.loc = list()
         self.yacc = yacc.yacc(module=self, **kwargs)
+        self.__init__(tokens)
         return self.yacc
 
-    def get_table(self):
-        c = self.table
-        for s in self.loc:
-            c = self.table[c]
-        return c
+    def __init__(self, tokens):
+        self.order = list()
+        self.symbols = set()
+        self.non_terminals = set()
+        self.tokens = set(tokens)
+        self.productions = dict()
+
+    def addproduction(self, nt, p):
+        if nt not in self.productions:
+            self.productions[nt] = list()
+            self.order.append(NonTerminal(nt))
+        self.productions[nt].append(tuple(p))
 
     def p_Start(self, t):
         'Start : Productions'
-        t[0] = Node('Productions', t[1])
+        tokens = self.symbols - self.non_terminals
+        if self.tokens != tokens:
+            raise Exception, "Non-terminals %s not defined" % str(list(tokens - self.tokens))
+        t[0] = tuple(self.order), tuple(self.symbols), self.productions
 
-    def p_Productions1(self, t):
-        'Productions : Productions Production'
-        t[0] = t[1] + [ t[2] ]
-
-    def p_Productions2(self, t):
-        'Productions : Production'
-        t[0] = [ t[1] ]
+    def p_Productions1(self, t): 'Productions : Productions Production'
+    def p_Productions2(self, t): 'Productions : Production'
 
     def p_Production(self, t):
         'Production : NAME COLON Symbols NL'
-        t[0] = (
-            Node('Production')
-                .addkid(Node(t[1]))
-                .addkid(Node('Rule', t[3]))
-        )
+        self.non_terminals.add(t[1])
+        self.symbols.add(t[1])
+        self.addproduction(t[1], t[3])
 
     def p_Symbols1(self, t):
         'Symbols : Symbols Symbol'
@@ -128,15 +141,23 @@ class Parser(object):
 
     def p_Symbol1(self, t):
         'Symbol : NAME'
-        t[0] = Node('Symbol').addkid(t[1])
+        self.symbols.add(t[1])
+        if t[1] in self.tokens:
+            t[0] = Terminal(t[1])
+        else:
+            t[0] = NonTerminal(t[1])
+        #t[0] = t[1]
 
     def p_Symbol2(self, t):
         'Symbol : E'
-        t[0] = Node('Symbol')
+        t[0] = Terminal('e')
 
     def p_error(self, t):
         raise Exception, "Error %s" % t
 
+
+def parse(tokens, grammar):
+    return Parser(tokens).parse(grammar, lexer=Lexer())
 
 if __name__ == '__main__':
     lexer = Lexer()
@@ -148,9 +169,13 @@ if __name__ == '__main__':
     #print [x for x in lexer]
 
 
-    print Parser().parse('''
+    order, syms, p = parse(['NAME', 'LPAREN', 'RPAREN'], '''
 Call        : NAME Call'
 Call'       : LPAREN Call''
 Call''      : RPAREN
-Call''      : Params RPAREN
-    ''', lexer=Lexer()).dotty()
+Call''      : NAME RPAREN
+    ''')
+    print order
+    print syms
+    print p
+
