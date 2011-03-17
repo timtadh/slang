@@ -12,8 +12,7 @@ AssignStmt  : NAME EQUAL Assignable
 Assignable  : Expr
 Assignable  : Function
 
-Function    : FUNC LPAREN ParamDecl LCURLY
-              FuncBody RCURLY
+Function    : FUNC LPAREN ParamDecl LCURLY FuncBody RCURLY
 ParamDecl   : RPAREN
 ParamDecl   : DParams RPAREN
 FuncBody    : Return
@@ -56,4 +55,3 @@ Params'     : e
 
 DParams     : NAME DParams'
 DParams'    : COMMA NAME DParams'
-

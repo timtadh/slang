@@ -62,6 +62,7 @@ class Node(object):
             if isinstance(s, Node): return str(s.label)
             return str(s)
         node = '%(name)s [shape=rect, label="%(label)s"];'
+        leaf = '%(name)s [shape=rect, label="%(label)s" style="filled" fillcolor="#dddddd"];'
         edge = '%s -> %s;'
         nodes = list()
         edges = list()
@@ -74,7 +75,9 @@ class Node(object):
             c, n = queue.popleft()
             name = 'n%d' % c
             label = string(n)
-            nodes.append(node % locals())
+            if not hasattr(n, 'children'): nodes.append(leaf % locals())
+            elif not n.children: nodes.append(leaf % locals())
+            else: nodes.append(node % locals())
             if not hasattr(n, 'children'): continue
             for c in n.children:
                 edges.append(edge % (name, ('n%d' % i)))
