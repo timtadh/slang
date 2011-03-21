@@ -56,6 +56,7 @@ class follow(object):
 
 
 def LL1(productions):
+    ret = True
     for nt, nt_productions in productions.iteritems():
         follow_nt = follow(productions, nt)
         for a,b in itertools.product(nt_productions, nt_productions):
@@ -64,12 +65,26 @@ def LL1(productions):
             first_b = first(productions, b)
 
             if (first_a & first_b) != set():
-                return False
+                print
+                print 'Error 1 @%s' % nt.sym
+                print ' '*4, a
+                print ' '*8, first_a
+                print ' '*4, b
+                print ' '*8, first_b
+                ret = False
             if (EmptyString() in first_a) and ((first_a & follow_nt) != set()):
-                return False
+                print
+                print 'Error 2 @%s' % nt.sym
+                print ' '*4, a
+                print ' '*4, b
+                ret = False
             if (EmptyString() in first_b) and ((first_b & follow_nt) != set()):
-                return False
-    return True
+                print
+                print 'Error 3 @%s' % nt.sym
+                print ' '*4, a
+                print ' '*4, b
+                ret = False
+    return ret
 
 def build_table(productions):
     pass

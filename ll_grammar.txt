@@ -5,10 +5,13 @@ Stmts'      : Stmt Stmts'
 Stmts'      : e
 
 Stmt        : PRINT Expr
-Stmt        : Call
-Stmt        : AssignStmt
+Stmt        : NameStmt
 
-AssignStmt  : NAME EQUAL Assignable
+NameStmt    : NAME NameStmt'
+NameStmt'   : Call'
+NameStmt'   : AssignStmt
+
+AssignStmt  : EQUAL Assignable
 Assignable  : Expr
 Assignable  : Function
 
@@ -44,7 +47,6 @@ NameOrCall  : NAME NameOrCall'
 NameOrCall' : Call'
 NameOrCall' : e
 
-Call        : NAME Call'
 Call'       : LPAREN Call''
 Call''      : RPAREN
 Call''      : Params RPAREN
