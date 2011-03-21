@@ -130,6 +130,6 @@ def t_build():
 
 def t_parser():
     lexer = Lexer()
-    lexer.input('6+7*4+3*2')
+    lexer.input('6+7*4+3*2*(4+3)')
     for c, v in list(parser.parse((t for t in lexer), productions)):
         print "%s:%s" % (c, v)

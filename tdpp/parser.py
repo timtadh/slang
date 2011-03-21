@@ -16,15 +16,15 @@ def parse(tokens, productions):
             tok.value = t.value
             return tok
         except: return EoS()
-    M = build_table(productions, True)
-    print
-    print
+    M = build_table(productions)
+    #print
+    #print
 
     stack = [ EoS(), productions[0] ]
     X = stack[-1]
     a = next()
     while X != EoS():
-        print X.sym, a.sym, stack
+        #print X.sym, a.sym, stack
         if X == a:
             yield 0, a
             stack.pop()
