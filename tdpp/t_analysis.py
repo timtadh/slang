@@ -128,8 +128,13 @@ def t_check():
 def t_build():
     print analysis.build_table(productions, True)
 
-def t_parser():
+def t_parse_print():
     lexer = Lexer()
     lexer.input('6+7*4+3*2*(4+3)')
     for c, v in list(parser.parse((t for t in lexer), productions)):
         print "%s:%s" % (c, v)
+
+def t_processor():
+    lexer = Lexer()
+    lexer.input('6+7*4+3*2*(4+3)')
+    print parser.processor(parser.parse((t for t in lexer), productions))

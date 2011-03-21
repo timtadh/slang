@@ -6,6 +6,23 @@
 
 import collections
 
+def build_tree(gen):
+    stack = list()
+    root = None
+    for children, sym in gen:
+        if not sym.value: node = Node(sym.sym)
+        else: node = Node(sym.value)
+        if not root: root = node
+
+        if stack:
+            stack[-1]['node'].addkid(node)
+            stack[-1]['children'] -= 1
+            if stack[-1]['children'] <= 0:
+                stack.pop()
+        if children:
+            stack.append({'node':node, 'children':children})
+    return root
+
 class Node(object):
 
     def __init__(self, label, children=None):

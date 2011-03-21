@@ -23,23 +23,10 @@ def t_build():
 def t_parse_simple_gram():
     from tdpp.t_analysis import productions, Lexer
     from tdpp.parser import parse
-    from ast import Node
+    from ast import build_tree
     lexer = Lexer()
     lexer.input('6+7*4+3*2*(4+3)')
-    stack = list()
-    root = None
-    for children, sym in parse((t for t in lexer), productions):
-        if not sym.value: node = Node(sym.sym)
-        else: node = Node(sym.value)
-        if not root: root = node
-
-        if stack:
-            stack[-1]['node'].addkid(node)
-            stack[-1]['children'] -= 1
-            if stack[-1]['children'] <= 0:
-                stack.pop()
-        if children:
-            stack.append({'node':node, 'children':children})
+    root = build_tree(parse((t for t in lexer), productions))
     print root.dotty()
 
 if __name__ == '__main__':

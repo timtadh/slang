@@ -17,8 +17,6 @@ def parse(tokens, productions):
             return tok
         except: return EoS()
     M = build_table(productions)
-    #print
-    #print
 
     stack = [ EoS(), productions[0] ]
     X = stack[-1]
@@ -43,3 +41,33 @@ def parse(tokens, productions):
             for sym in (production[i] for i in range(len(production)-1, -1, -1)):
                 stack.append(sym)
         X = stack[-1]
+
+def default(X, *args):
+    print X, args
+    if hasattr(X, 'value'): return X.value
+    return [arg for arg in args if arg is not None]
+
+def processor(gen):
+    def call(frame):
+        return default(frame['me'].sym, *frame['args'])
+    def collapse(stack):
+        ret = None
+        acc = list()
+        while stack and stack[-1]['limit'] == len(stack[-1]['args']):
+            acc.append(stack.pop())
+        for frame in acc:
+            ret = call(frame)
+            if stack:
+                stack[-1]['args'].append(ret)
+        if stack and stack[-1]['limit'] == len(stack[-1]['args']):
+            ret = collapse(stack)
+        return ret
+    stack = list()
+    ret = None
+    for children, sym in gen:
+        if sym.terminal:
+            stack[-1]['args'].append(sym.value)
+        else:
+            stack.append({'me':sym, 'args':list(), 'limit':children})
+        ret = collapse(stack)
+    return ret
