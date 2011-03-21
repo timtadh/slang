@@ -6,6 +6,7 @@
 
 from gram_parser import parse, EmptyString, EoS,  NonTerminal, Terminal
 import analysis
+import parser
 
 import functools
 from ply import lex
@@ -18,7 +19,8 @@ reserved = dict(
 )
 
 tokens = reserved.values() + [
-    'SLASH', 'STAR', 'DASH', 'PLUS', 'LPAREN', 'RPAREN'
+    'SLASH', 'DASH',
+    'STAR', 'PLUS', 'LPAREN', 'RPAREN'
 ]
 
 # Common Regex Parts
@@ -71,20 +73,18 @@ class Lexer(object):
         raise Exception, t
 
 grammar = '''
-    E : T E'
-    E' : PLUS T E'
-    E' : DASH T E'
-    E' : e
-    T : F T'
-    T' : STAR F T'
-    T' : SLASH F T'
-    T' : e
-    F : NUMBER
-    F : LPAREN E RPAREN
+    Expr : Term Expr'
+    Expr' : PLUS Term Expr'
+    Expr' : DASH Term Expr'
+    Expr' : e
+    Term : Factor Term'
+    Term' : STAR Factor Term'
+    Term' : SLASH Factor Term'
+    Term' : e
+    Factor : NUMBER
+    Factor : LPAREN Expr RPAREN
 '''
 
-lexer = Lexer()
-lexer.input('6+7')
 
 productions = parse(tokens, grammar)
 
@@ -123,3 +123,13 @@ def t_follow():
 def t_check():
     assert analysis.LL1(productions)
     assert not analysis.LL1(parse(tokens, grammar + '\n F : LPAREN NUMBER RPAREN\n'))
+
+
+def t_build():
+    print analysis.build_table(productions, True)
+
+def t_parser():
+    lexer = Lexer()
+    lexer.input('6+7*4+3*2')
+    for c, v in list(parser.parse((t for t in lexer), productions)):
+        print "%s:%s" % (c, v)

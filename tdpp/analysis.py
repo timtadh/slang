@@ -4,8 +4,8 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import itertools
-from gram_parser import parse, EmptyString, EoS,  NonTerminal
+import functools, itertools
+from gram_parser import parse, EmptyString, EoS,  NonTerminal, Terminal
 
 def first(productions, sym):
     if isinstance(sym, tuple):
@@ -89,5 +89,50 @@ def LL1(productions, DEBUG=False):
                 ret = False
     return ret
 
-def build_table(productions):
-    pass
+def build_table(productions, DEBUG=False):
+    M = dict()
+    def s(key, value):
+        if M[key] is not None:
+            raise Exception
+        M[key] = value
+
+    assert LL1(productions)
+    FIRST = functools.partial(first, productions)
+    FOLLOW = functools.partial(follow, productions)
+
+    tokens = [Terminal(t) for t in productions.tokens] + [EmptyString(), EoS()]
+
+    for nt in productions.keys():
+        for t in tokens:
+            M[(nt, t)] = None
+        #M[(nt, EoS())] = set()
+
+    for nt, nt_productions in productions.iteritems():
+        follow_nt = FOLLOW(nt)
+        for p in nt_productions:
+            first_p = FIRST(p)
+            for sym in first_p:
+                if sym.terminal and not sym.empty and not sym.eos:
+                    s((nt, sym), (nt, p))
+            if EmptyString() in first_p:
+                for sym in follow_nt:
+                    s((nt, sym), (nt, p))
+            if EmptyString() in first_p and EoS in follow_nt:
+                s((nt, EoS()), (nt, p))
+    if DEBUG:
+        print
+        for nt in productions.keys():
+            for t in tokens:
+                if M[(nt, t)] is None:
+                    print '<%s, %s>' % (nt.sym, t.sym)
+                else:
+                    p = M[(nt, t)]
+                    print (
+                        '%-25s %s' % (
+                            '<%s, %s>' % (nt.sym, t.sym),
+                            '%s : %s' % (p[0].sym, ' '.join(str(x.sym) for x in p[1]))
+                        )
+                    )
+            print
+                    #(nt.sym, t.sym), p[0].sym, ':=', ' '.join(str(x.sym) for x in p[1])
+    return M

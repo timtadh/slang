@@ -15,6 +15,7 @@ class Symbol(object):
         self.terminal = terminal
         self.empty = empty
         self.eos = eos
+        self.value = None
 
     def __tuple__(self):
         return (self.sym, self.terminal, self.empty, self.eos)
@@ -34,6 +35,7 @@ class Symbol(object):
     def __repr__(self):
         if self.eos: return '<EoS>'
         if self.empty: return '<EmptyString>'
+        if self.terminal and self.value: return '<Terminal %s %s>' % (self.sym, self.value)
         if self.terminal: return '<Terminal %s>' % self.sym
         return '<NonTerminal %s>' % self.sym
 
@@ -42,7 +44,7 @@ def Terminal(sym):
 def EmptyString():
     return Symbol('e', True, True, False)
 def EoS():
-    return Symbol('e', True, False, True)
+    return Symbol('$', True, False, True)
 def NonTerminal(sym):
     return Symbol(sym, False, False, False)
 
