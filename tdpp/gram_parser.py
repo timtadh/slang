@@ -54,19 +54,33 @@ class Productions(MutableMapping):
         self.productions = dict()
         self.order = list()
         self.tokens = tokens
+        self.index = dict()
+
+    def containing(self, sym):
+        if sym not in self.index: return
+        for p in self.index[sym]:
+            yield p
 
     def __setitem__(self, key, value):
         if key.sym not in self.productions:
             self.productions[key.sym] = list()
             self.order.append(key)
         self.productions[key.sym].append(tuple(value))
+        for sym in value:
+            if sym not in self.index:
+                self.index[sym] = list()
+            self.index[sym].append((key, value))
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            return self.productions[self.order[key].sym]
+            return self.order[key]
         return self.productions[key.sym]
 
     def __delitem__(self, key):
+        for p in self.productions[key.sym]:
+            for sym in p:
+                if sym in self.index:
+                    self.index[sym].remove((key, p))
         del self.productions[key.sym]
         self.order.remove(key)
 
