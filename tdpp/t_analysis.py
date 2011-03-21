@@ -119,3 +119,7 @@ def t_follow():
     assert FOLLOW("F") == set([
         Terminal('STAR'), Terminal('SLASH'), Terminal("DASH"), Terminal("PLUS"), Terminal("RPAREN"), EoS()
     ])
+
+def t_check():
+    assert analysis.LL1(productions)
+    assert not analysis.LL1(parse(tokens, grammar + '\n F : LPAREN NUMBER RPAREN\n'))
