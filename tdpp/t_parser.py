@@ -85,38 +85,46 @@ class Parser(BaseParser):
 
     tokens = tokens
 
+    def evalop(self, op, a, b):
+        print op, a, b
+        if op == '+': return a + b
+        if op == '-': return a - b
+        if op == '*': return a * b
+        if op == '/': return a / b
+        raise Exception
+
     @BaseParser.production("Start : Expr")
-    def Start(self, *args): pass
-
-    @BaseParser.production("Expr : Term Expr'")
-    def Expr(self, *args): pass
-
-    @BaseParser.production("Expr' : PLUS Term Expr'")
-    def Expr_1(self, *args): pass
-
-    @BaseParser.production("Expr' : DASH Term Expr'")
-    def Expr_2(self, *args): pass
-
-    @BaseParser.production("Expr' : e")
-    def Expr_3(self, *args): pass
+    def Start(self, start, expr):
+        return expr
 
     @BaseParser.production("Term : Factor Term'")
-    def Term(self, *args): pass
+    @BaseParser.production("Expr : Term Expr'")
+    def ExprTerm(self, expr_, b, extra):
+        if extra is not None:
+            b = self.evalop(extra[0], b, extra[1])
+        return b
 
-    @BaseParser.production("Term' : STAR Factor Term'")
-    def Term_1(self, *args): pass
-
+    @BaseParser.production("Expr' : DASH Term Expr'")
+    @BaseParser.production("Expr' : PLUS Term Expr'")
     @BaseParser.production("Term' : SLASH Factor Term'")
-    def Term_2(self, *args): pass
+    @BaseParser.production("Term' : STAR Factor Term'")
+    def Op(self, nt, op, b, extra):
+        if extra is not None:
+            b = self.evalop(extra[0], b, extra[1])
+        return op, b
 
     @BaseParser.production("Term' : e")
-    def Term_3(self, *args): pass
+    @BaseParser.production("Expr' : e")
+    def Empty(self, *args): pass
 
     @BaseParser.production("Factor : NUMBER")
-    def Factor1(self, *args): pass
+    def Factor1(self, factor, number):
+        return number
 
     @BaseParser.production("Factor : LPAREN Expr RPAREN")
-    def Factor2(self, *args): pass
+    def Factor2(self, factor, lparen, expr, rparen):
+        return expr
+
 
 lexer = Lexer()
 def Lex(string):
@@ -128,3 +136,5 @@ parser = Parser(Lex)
 
 for nt in parser.productions.order:
     print nt
+
+print parser.parse('7*4*3')

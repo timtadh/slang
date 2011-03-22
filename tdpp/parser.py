@@ -15,16 +15,15 @@ class BaseParser(object):
     # Set this in you subclass to your list of tokens (as strings)
     tokens = None
 
-    PRODUCTION = '__production__'
+    PRODUCTIONS = '__productions__'
 
     @classmethod
     def production(cls, production):
         def dec(f, *args, **kwargs):
-            @functools.wraps(f)
-            def wrap(*args, **kwargs):
-                return f(*args, **kwargs)
-            wrap.__setattr__(cls.PRODUCTION, production)
-            return wrap
+            if not hasattr(f, cls.PRODUCTIONS):
+                setattr(f, cls.PRODUCTIONS, list())
+            getattr(f, cls.PRODUCTIONS).append(production)
+            return f
         return dec
 
     def __new__(cls, lexer, *args, **kwargs):
@@ -35,12 +34,14 @@ class BaseParser(object):
         productions = None
         for attrname in dir(self):
             attr = getattr(self, attrname)
-            if type(attr) == types.MethodType and hasattr(attr, cls.PRODUCTION):
-                p = PARSE(attr.__production__+';')
-                p.addfunc(p[0], 0, attr)
-                if productions is not None: productions |= p
-                else: productions = p
-        print productions, productions.functions
+            if type(attr) == types.MethodType and hasattr(attr, cls.PRODUCTIONS):
+                for prod in getattr(attr, cls.PRODUCTIONS):
+                    p = PARSE(prod+';')
+                    p.addfunc(p[0], 0, attr)
+                    if productions is not None: productions |= p
+                    else: productions = p
+        print productions
+        print productions.functions
         if Start in productions.order:
             productions.order.remove(Start)
             productions.order.insert(0, Start)
@@ -48,29 +49,31 @@ class BaseParser(object):
         return self
 
     def parse(self, text):
-        return self.__parse__(self.lexer(text), self.productions)
+        g = self.__parse__(self.lexer(text), self.productions)
+        return self.__process__(g)
 
     def __process__(self, gen):
         def top(stack): return stack[-1]
-        def call(frame): return frame['me'].sym.function(*frame['args'])
+        def call(frame): return frame['f'](frame['me'], *frame['args'])
         def collapse(stack):
             ret = None
             if stack and top(stack)['limit'] == len(top(stack)['args']):
                 arg = call(stack.pop())
                 if stack: top(stack)['args'].append(arg)
+                print arg
                 ret = collapse(stack)
                 if ret is None: ret = arg
+            print ret
             return ret
 
         ret = None
         stack = list()
-        for children, sym in gen:
+        for children, sym, f in gen:
             if sym.terminal:
                 top(stack)['args'].append(sym.value)
             else:
-                stack.append({'me':sym, 'args':list(), 'limit':children})
+                stack.append({'me':sym, 'args':list(), 'limit':children, 'f':f})
             ret = collapse(stack)
-            print ret
         return ret
 
     def __parse__(self, tokens, productions):
@@ -91,11 +94,11 @@ class BaseParser(object):
         while X != EoS():
             #print X.sym, a.sym, stack
             if X == a:
-                yield 0, a
+                yield 0, a, None
                 stack.pop()
                 a = next()
             elif X.empty:
-                yield 0, X
+                yield 0, X, None
                 stack.pop()
             elif X.terminal:
                 raise Exception
@@ -104,7 +107,7 @@ class BaseParser(object):
             elif M[(X, a)]:
                 nt = M[(X, a)][0]
                 production = productions[nt][M[(X, a)][1]]
-                function = productions.getfunc(nt, [M[(X, a)][1]])
+                function = productions.getfunc(nt, M[(X, a)][1])
                 yield len(production), X, function
                 stack.pop()
                 for sym in (production[i] for i in range(len(production)-1, -1, -1)):
