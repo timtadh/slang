@@ -18,48 +18,6 @@ class Parser(BaseParser):
 
     tokens = tokens
 
-    @BaseParser.productions('''
-
-    Stmt        : NameStmt;
-
-    NameStmt    : NAME NameStmt';
-    NameStmt'   : Call';
-    NameStmt'   : AssignStmt;
-
-    AssignStmt  : EQUAL Assignable;
-    Assignable  : Expr;
-    Assignable  : Function;
-
-    Function    : FUNC LPAREN ParamDecl LCURLY FuncBody RCURLY;
-    ParamDecl   : RPAREN;
-    ParamDecl   : DParams RPAREN;
-    FuncBody    : Return;
-    FuncBody    : Stmts Return;
-
-    Return      : RETURN RetExpr;
-    RetExpr     : Expr;
-    RetExpr     : e;
-
-
-    NameOrCall  : NAME NameOrCall';
-    NameOrCall' : Call';
-    NameOrCall' : e;
-
-    Call'       : LPAREN Call'';
-    Call''      : RPAREN;
-    Call''      : Params RPAREN;
-
-    Params      : Expr Params';
-    Params'     : COMMA Expr Params';
-    Params'     : e;
-
-    DParams     : NAME DParams';
-    DParams'    : COMMA NAME DParams';
-    DParams'    : e;
-    ''')
-    def FullGrammar(self, nt, *production):
-        print nt, production
-
     @BaseParser.production(" Start : Stmts;")
     def Start(self, nt, stmts):
         return stmts
@@ -67,15 +25,92 @@ class Parser(BaseParser):
     @BaseParser.production("Stmts : Stmt Stmts';")
     @BaseParser.production("Stmts' : Stmt Stmts';")
     def Stmts(self, nt, stmt, stmts):
-        return stmts.addkid(stmt, True)
+        return stmts.addkid(stmt, before=True)
 
     @BaseParser.production("Stmts' : e;")
     def Stmts_2(self, nt, e):
         return Node('Stmts')
 
     @BaseParser.production("Stmt : PRINT Expr;")
-    def PrintStmt(self, nt, prin, expr):
+    def Stmt1(self, nt, prin, expr):
         return Node('Print').addkid(expr)
+
+    @BaseParser.production("Stmt : NameStmt;")
+    def Stmt2(self, nt, stmt):
+        return stmt
+
+    @BaseParser.production("NameStmt : NAME NameStmt';")
+    def NameStmt(self, nt, name, stmt):
+        name = name.value
+        stmt.addkid(name, before=True)
+        #print 'NAME STATEMENT', nt, name, stmt
+        return stmt
+
+    @BaseParser.production("NameStmt'   : Call';")
+    def NameStmt_1(self, nt, call):
+        #print nt, call
+        return call
+
+    @BaseParser.production("NameStmt'   : AssignStmt;")
+    def NameStmt_2(self, nt, assign):
+        #print nt, assign
+        return Node('Assign').addkid(assign)
+
+    @BaseParser.production("AssignStmt  : EQUAL Assignable;")
+    def AssignStmt(self, nt, equal, assignable):
+        return assignable
+
+    @BaseParser.production("Assignable  : Expr;")
+    @BaseParser.production("Assignable  : Function;")
+    def Assignable1(self, nt, expr):
+        return expr
+
+
+    @BaseParser.production("Function    : FUNC LPAREN ParamDecl LCURLY FuncBody RCURLY;")
+    def Function(self, nt, func, lparen, dparams, lcurly, body, rcurly):
+        n = Node('Func')
+        stmts, ret = body
+        if dparams: n.addkid(dparams)
+        if stmts: n.addkid(stmts)
+        n.addkid(ret)
+        #print 'function', n
+        return n
+
+    @BaseParser.production("ParamDecl   : RPAREN;")
+    def ParamDecl1(self, nt, rparen):
+        pass
+    @BaseParser.production("ParamDecl   : DParams RPAREN;")
+    def ParamDecl2(self, nt, dparams, rparen):
+        return dparams
+    @BaseParser.production("FuncBody    : Return;")
+    def FuncBody1(self, nt, ret):
+        return None, ret
+    @BaseParser.production("FuncBody    : Stmts Return;")
+    def FuncBody2(self, nt, stmts, ret):
+        return stmts, ret
+
+
+    @BaseParser.production("Return : RETURN RetExpr;")
+    def Return(self, nt, ret, expr):
+        return expr
+    @BaseParser.production("RetExpr : Expr;")
+    def RetExpr_1(self, nt, expr):
+        return Node('Return').addkid(expr)
+    @BaseParser.production("RetExpr     : e;")
+    def RetExpr_2(self, nt, e):
+        return Node('Return')
+
+
+    @BaseParser.production("Call'       : LPAREN Call'';")
+    def Call_(self, nt, lparen, call):
+        return call
+    @BaseParser.production("Call''      : RPAREN;")
+    def Call__1(self, nt, rparen):
+        return Node('Call')
+    @BaseParser.production("Call''      : Params RPAREN;")
+    def Call__2(self, nt, params, rparen):
+        return Node('Call').addkid(params)
+
 
     @BaseParser.production("Expr : AddSub;")
     def Expr(self, nt, expr):
@@ -129,17 +164,52 @@ class Parser(BaseParser):
 
     @BaseParser.production('Value : NameOrCall')
     def Value2(self, nt, val):
-        print nt, val
+        #print nt, val
         return val
+
+    @BaseParser.production("NameOrCall : NAME NameOrCall';")
+    def NameOrCall(self, nt, name, val):
+        if val is None: return Node('NAME').addkid(name.value)
+        return val.addkid(name.value, before=True)
+
+    @BaseParser.production("NameOrCall' : Call'")
+    def NameOrCall_1(self, nt, call):
+        return call
+
+    @BaseParser.production("NameOrCall' : e")
+    def NameOrCall_2(self, nt, e): pass
+
+    @BaseParser.production("Params : Expr Params';")
+    def Params(self, nt, expr, params):
+        return params.addkid(expr, before=True)
+
+    @BaseParser.production("Params' : COMMA Expr Params';")
+    def Params_1(self, nt, comma, expr, params):
+        return params.addkid(expr, before=True)
+
+    @BaseParser.production("Params' : e;")
+    def Params_2(self, nt, e):
+        return Node('Params')
+
+    @BaseParser.production("DParams : NAME DParams';")
+    def DParams(self, nt, name, dparams):
+        return dparams.addkid(name.value, before=True)
+
+    @BaseParser.production("DParams' : COMMA NAME DParams';")
+    def DParams_1(self, nt, comma, name, dparams):
+        return dparams.addkid(name.value, before=True)
+
+    @BaseParser.production("DParams' : e;")
+    def DParams_2(self, nt, e):
+        return Node('DParams')
 
 
 if __name__ == '__main__':
     import il, il_gen
     parser = Parser(Lex, debug=False)
     ast = parser.parse('''
-        print 1
-        print 2
-        print 3+3*5+5
+        f = func(a, b) { return a + b }
+        print f(5, 10)
     ''')
 
     print
