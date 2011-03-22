@@ -22,7 +22,22 @@ class BaseParser(object):
         def dec(f, *args, **kwargs):
             if not hasattr(f, cls.PRODUCTIONS):
                 setattr(f, cls.PRODUCTIONS, list())
-            getattr(f, cls.PRODUCTIONS).append(production)
+            if production.rstrip()[-1] != ';':
+                getattr(f, cls.PRODUCTIONS).append(production + ';')
+            else:
+                getattr(f, cls.PRODUCTIONS).append(production)
+            return f
+        return dec
+
+    @classmethod
+    def productions(cls, productions):
+        def dec(f, *args, **kwargs):
+            if not hasattr(f, cls.PRODUCTIONS):
+                setattr(f, cls.PRODUCTIONS, list())
+            for p in productions.split(';'):
+                p = p.strip()
+                if not p: continue
+                getattr(f, cls.PRODUCTIONS).append(p + ';')
             return f
         return dec
 
@@ -38,7 +53,7 @@ class BaseParser(object):
             attr = getattr(self, attrname)
             if type(attr) == types.MethodType and hasattr(attr, cls.PRODUCTIONS):
                 for prod in getattr(attr, cls.PRODUCTIONS):
-                    p = PARSE(prod+';')
+                    p = PARSE(prod)
                     p.addfunc(p[0], 0, attr)
                     if productions is not None: productions |= p
                     else: productions = p

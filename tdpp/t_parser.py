@@ -62,10 +62,12 @@ class Parser(BaseParser):
                 return self.ExprTerm(None, b, extra[2])
         return b
 
-    @BaseParser.production("Expr' : DASH Term Expr'")
-    @BaseParser.production("Expr' : PLUS Term Expr'")
-    @BaseParser.production("Term' : SLASH Factor Term'")
-    @BaseParser.production("Term' : STAR Factor Term'")
+    @BaseParser.productions('''
+        Expr' : DASH Term Expr';
+        Expr' : PLUS Term Expr';
+        Term' : SLASH Factor Term';
+        Term' : STAR Factor Term';
+    ''')
     def Op(self, nt, op, b, extra):
         print 'op>', op, b, extra
         if extra is not None:
