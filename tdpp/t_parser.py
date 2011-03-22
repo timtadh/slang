@@ -5,88 +5,41 @@
 #For licensing see the LICENSE file in the top level directory.
 
 from parser import BaseParser
-from ply import lex, yacc
-from ply.lex import Token
 
-reserved = dict(
-    (word.lower(), word) for word in (
-        'NUMBER',
-    )
-)
+class token(object):
+    def __init__(self, type, value):
+        self.type = type
+        self.value = value
+    def __repr__(self):
+        return str(self.value)
 
-tokens = reserved.values() + [
-    'SLASH', 'DASH',
-    'STAR', 'PLUS', 'LPAREN', 'RPAREN'
-]
+def Lex(inpt):
+    digits = list()
+    for x in inpt:
+        if x.isdigit():
+            digits.append(x)
+        elif digits:
+            yield token('NUMBER', int(''.join(digits)))
+            digits = list()
 
-# Common Regex Parts
-
-D = r'[0-9]'
-L = r'[a-zA-Z_]'
-H = r'[a-fA-F0-9]'
-E = r'[Ee][+-]?(' + D + ')+'
-
-
-## Normally PLY works at the module level. I perfer having it encapsulated as
-## a class. Thus the strange construction of this class in the new method allows
-## PLY to do its magic.
-class Lexer(object):
-
-    def __new__(cls, **kwargs):
-        self = super(Lexer, cls).__new__(cls, **kwargs)
-        self.lexer = lex.lex(object=self, **kwargs)
-        return self.lexer
-
-    tokens = tokens
-
-    t_LPAREN = r'\('
-    t_RPAREN = r'\)'
-    t_SLASH = r'\/'
-    t_STAR = r'\*'
-    t_DASH = r'\-'
-    t_PLUS = r'\+'
-
-
-    const_hex = '0[xX](' + H + ')+'
-    @Token(const_hex)
-    def t_CONST_HEX(self, token):
-        token.type = 'NUMBER'
-        token.value = int(token.value, 16)
-        return token
-
-    const_dec_oct = '(' + D + ')+'
-    @Token(const_dec_oct)
-    def t_CONST_DEC_OCT(self, token):
-        token.type = 'NUMBER'
-        if (len(token.value) > 1 and token.value[0] == '0'
-            or (token.value[0] == '-' and token.value[1] == '0')):
-            token.value = int(token.value, 8)
-        else:
-            token.value = int(token.value, 10)
-        return token
-
-    def t_error(self, t):
-        raise Exception, t
-
-grammar = '''
-    Expr : Term Expr';
-    Expr' : PLUS Term Expr';
-    Expr' : DASH Term Expr';
-    Expr' : e;
-    Term : Factor Term';
-    Term' : STAR Factor Term';
-    Term' : SLASH Factor Term';
-    Term' : e;
-    Factor : NUMBER;
-    Factor : LPAREN Expr RPAREN;
-'''
+        if x == ' ': continue
+        elif x == '+': yield token('PLUS', x)
+        elif x == '-': yield token('DASH', x)
+        elif x == '*': yield token('STAR', x)
+        elif x == '/': yield token('SLASH', x)
+        elif x == '(': yield token('LPAREN', x)
+        elif x == ')': yield token('RPAREN', x)
+        elif not x.isdigit():
+            raise Exception, 'Unknown character! %s' % (x)
+    if digits:
+        yield token('NUMBER', int(''.join(digits)))
 
 class Parser(BaseParser):
 
-    tokens = tokens
+    tokens = [ 'NUMBER', 'SLASH', 'DASH', 'STAR', 'PLUS', 'LPAREN', 'RPAREN' ]
 
     def evalop(self, op, a, b):
-        print op, a, b
+        #return op, a, b
         if op == '+': return a + b
         if op == '-': return a - b
         if op == '*': return a * b
@@ -100,8 +53,13 @@ class Parser(BaseParser):
     @BaseParser.production("Term : Factor Term'")
     @BaseParser.production("Expr : Term Expr'")
     def ExprTerm(self, expr_, b, extra):
+        print 'et>', b, extra
         if extra is not None:
             b = self.evalop(extra[0], b, extra[1])
+            #print ' '*4, b
+            if len(extra) == 3:
+                #print ' '*4, extra[2]
+                return self.ExprTerm(None, b, extra[2])
         return b
 
     @BaseParser.production("Expr' : DASH Term Expr'")
@@ -109,9 +67,12 @@ class Parser(BaseParser):
     @BaseParser.production("Term' : SLASH Factor Term'")
     @BaseParser.production("Term' : STAR Factor Term'")
     def Op(self, nt, op, b, extra):
+        print 'op>', op, b, extra
         if extra is not None:
-            b = self.evalop(extra[0], b, extra[1])
-        return op, b
+            if len(extra) == 2:
+                return op.value, b, (extra[0], extra[1])
+            return op.value, b, (extra[0], extra[1], extra[2])
+        return op.value, b
 
     @BaseParser.production("Term' : e")
     @BaseParser.production("Expr' : e")
@@ -119,22 +80,16 @@ class Parser(BaseParser):
 
     @BaseParser.production("Factor : NUMBER")
     def Factor1(self, factor, number):
-        return number
+        return number.value
 
     @BaseParser.production("Factor : LPAREN Expr RPAREN")
     def Factor2(self, factor, lparen, expr, rparen):
         return expr
 
-
-lexer = Lexer()
-def Lex(string):
-    lexer.input(string)
-    for t in lexer:
-        yield t
-
-parser = Parser(Lex)
-
-for nt in parser.productions.order:
-    print nt
-
-print parser.parse('7*4*3')
+parser = Parser(Lex, debug=True)
+def test(expr):
+    p = parser.parse(expr)
+    assert eval(expr) == p
+    print p
+#print parser.parse('7*4*3')
+test('9*4/(4*2+4)*6/8')
