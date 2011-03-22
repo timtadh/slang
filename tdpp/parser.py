@@ -13,6 +13,7 @@ def parse(tokens, productions):
         try:
             t = tokens.next()
             tok = Terminal(t.type)
+            tok.original = t
             tok.value = t.value
             return tok
         except: return EoS()
@@ -48,25 +49,22 @@ def default(X, *args):
     return [arg for arg in args if arg is not None]
 
 def processor(gen):
-    def call(frame):
-        return default(frame['me'].sym, *frame['args'])
+    def top(stack): return stack[-1]
+    def call(frame): return default(frame['me'].sym, *frame['args'])
     def collapse(stack):
         ret = None
-        acc = list()
-        while stack and stack[-1]['limit'] == len(stack[-1]['args']):
-            acc.append(stack.pop())
-        for frame in acc:
-            ret = call(frame)
-            if stack:
-                stack[-1]['args'].append(ret)
-        if stack and stack[-1]['limit'] == len(stack[-1]['args']):
+        if stack and top(stack)['limit'] == len(top(stack)['args']):
+            arg = call(stack.pop())
+            if stack: top(stack)['args'].append(arg)
             ret = collapse(stack)
+            if ret is None: ret = arg
         return ret
-    stack = list()
+
     ret = None
+    stack = list()
     for children, sym in gen:
         if sym.terminal:
-            stack[-1]['args'].append(sym.value)
+            top(stack)['args'].append(sym.value)
         else:
             stack.append({'me':sym, 'args':list(), 'limit':children})
         ret = collapse(stack)
