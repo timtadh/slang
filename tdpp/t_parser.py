@@ -88,10 +88,11 @@ class Parser(BaseParser):
     def Factor2(self, factor, lparen, expr, rparen):
         return expr
 
-parser = Parser(Lex, debug=True)
-def test(expr):
-    p = parser.parse(expr)
-    assert eval(expr) == p
-    print p
-#print parser.parse('7*4*3')
-test('9*4/(4*2+4)*6/8')
+if __name__ == '__main__':
+    parser = Parser(Lex, debug=True)
+    def test(expr):
+        p = parser.parse(expr)
+        assert eval(expr) == p
+        print p
+    #print parser.parse('7*4*3')
+    test('9*4/(4*2+4)*6/8')
