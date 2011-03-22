@@ -22,11 +22,13 @@ def t_build():
 
 def t_parse_simple_gram():
     from tdpp.t_analysis import productions, Lexer
-    from tdpp.parser import parse
+    from tdpp.tdpp import parse as tdpp_parse
     from ast import build_tree
     lexer = Lexer()
     lexer.input('6+7*4+3*2*(4+3)')
-    root = build_tree(parse((t for t in lexer), productions))
+    lexer = list(t for t in lexer)
+    g = tdpp_parse(iter(lexer), productions)
+    root = build_tree(g)
     print root.dotty()
 
 if __name__ == '__main__':
