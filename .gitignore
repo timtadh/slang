@@ -2,4 +2,6 @@
 parser.out
 parsetab.py
 *.png
+sl_parser_tab.py
+gram_parser_tab.py
 

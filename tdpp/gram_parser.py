@@ -4,6 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
+import functools
 from ply import lex, yacc
 from gram_lexer import Lexer, tokens
 from collections import MutableMapping
@@ -54,6 +55,7 @@ class Productions(MutableMapping):
     def __init__(self, tokens, *args, **kwargs):
         super(Productions, self).__init__(*args, **kwargs)
         self.productions = dict()
+        self.functions = dict()
         self.order = list()
         self.tokens = tokens
         self.index = dict()
@@ -63,11 +65,35 @@ class Productions(MutableMapping):
         for p in self.index[sym]:
             yield p
 
+    def __ior__(self, b):
+        for k,v in b.iteritems():
+            for p in v:
+                self[k] = p
+            if k not in b.functions: continue
+            if k in self.functions: offset = len(self.functions[k])
+            else: offset = 0
+            for i, f in enumerate(b.functions[k]):
+                self.addfunc(k, offset+i, f)
+
+        return self
+
+    def addfunc(self, key, i, func):
+        assert len(self[key])-1 == i
+        if key not in self.functions:
+            self.functions[key] = list()
+        assert len(self.functions[key]) == i
+        self.functions[key].append(func)
+
+    def getfunc(self, key, i):
+        return self.functions[key][i]
+
     def __setitem__(self, key, value):
         if key.sym not in self.productions:
             self.productions[key.sym] = list()
             self.order.append(key)
-        self.productions[key.sym].append(tuple(value))
+        if not isinstance(value, tuple): value = tuple(value)
+        if value in self.productions[key.sym]: return
+        self.productions[key.sym].append(value)
         for sym in value:
             if sym not in self.index:
                 self.index[sym] = list()
@@ -108,7 +134,7 @@ class Parser(object):
     def __new__(cls, tokens, **kwargs):
         ## Does magic to allow PLY to do its thing.-
         self = super(Parser, cls).__new__(cls, **kwargs)
-        self.yacc = yacc.yacc(module=self, **kwargs)
+        self.yacc = yacc.yacc(module=self, tabmodule="gram_parser_tab", debug=0, **kwargs)
         self.__init__(tokens)
         return self.yacc
 
@@ -124,15 +150,15 @@ class Parser(object):
     def p_Start(self, t):
         'Start : Productions'
         tokens = self.symbols - self.non_terminals
-        if not (tokens <= self.tokens):
-            raise Exception, "Non-terminals %s not defined" % str(list(tokens - self.tokens))
+        #if not (tokens <= self.tokens):
+            #raise Exception, "Non-terminals %s not defined" % str(list(tokens - self.tokens))
         t[0] = self.productions
 
     def p_Productions1(self, t): 'Productions : Productions Production'
     def p_Productions2(self, t): 'Productions : Production'
 
     def p_Production(self, t):
-        'Production : NAME COLON Symbols NL'
+        'Production : NAME COLON Symbols END'
         self.non_terminals.add(t[1])
         self.symbols.add(t[1])
         self.addproduction(t[1], t[3])
@@ -162,6 +188,9 @@ class Parser(object):
 
 
 def parse(tokens, grammar):
+
+    #import pdb
+    #pdb.set_trace()
     return Parser(tokens).parse(grammar, lexer=Lexer())
 
 if __name__ == '__main__':
@@ -173,14 +202,18 @@ if __name__ == '__main__':
     ''')
     #print [x for x in lexer]
 
+    tokens = ['PLUS', 'LPAREN', 'RPAREN']
+    PARSE = functools.partial(parse, tokens)
 
-    p = parse(['NAME', 'LPAREN', 'RPAREN'], '''
-Call        : NAME Call'
-Call'       : LPAREN Call''
-Call''      : e
-Call''      : RPAREN
-Call''      : NAME RPAREN
-    ''')
+    p = PARSE("Expr' : PLUS Factor Expr';")
+    p.addfunc(p[0], 0, 1)
+    print p[0], p[p[0]][0], p.functions[p[0]]
+    p2 = PARSE("Expr' : DASH Factor Expr';")
+    p2.addfunc(p[0], 0, 2)
+    p |= p2
     print p
+    print p[0], p[p[0]][0], p.functions[p[0]]
+    print p.getfunc(p[0], 0)
+    print p.getfunc(p[0], 1)
     print p.order
 

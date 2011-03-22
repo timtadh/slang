@@ -14,7 +14,7 @@ reserved = dict(
 )
 
 tokens = reserved.values() + [
-    'COLON', 'NAME', 'NL'
+    'COLON', 'NAME', 'END'
 ]
 
 # Common Regex Parts
@@ -38,6 +38,8 @@ class Lexer(object):
 
     tokens = tokens
 
+    t_END = "\;"
+
     name = '(' + L + ')((' + L + ')|(' + D + '))*(\')*'
     @Token(name)
     def t_NAME(self, token):
@@ -48,11 +50,11 @@ class Lexer(object):
     @Token(r'\n+')
     def t_NL(self, token):
         token.lexer.lineno += token.value.count("\n")
-        token.type = 'NL'
+        #token.type = 'END'
         r = None
         if self.col: r = token
         self.col = False
-        return r
+        return None
 
     @Token(r':')
     def t_COLON(self, token):

@@ -23,7 +23,7 @@ class Parser(object):
         self = super(Parser, cls).__new__(cls, **kwargs)
         self.table = dict()
         self.loc = list()
-        self.yacc = yacc.yacc(module=self, **kwargs)
+        self.yacc = yacc.yacc(module=self,  tabmodule="sl_parser_tab", debug=0, **kwargs)
         return self.yacc
 
     def get_table(self):
