@@ -6,9 +6,9 @@
 
 from gram_parser import parse, EmptyString, EoS,  NonTerminal, Terminal
 import analysis
-import parser
+import tdpp
 
-import functools
+import functools, nose
 from ply import lex
 from ply.lex import Token
 
@@ -73,16 +73,16 @@ class Lexer(object):
         raise Exception, t
 
 grammar = '''
-    Expr : Term Expr'
-    Expr' : PLUS Term Expr'
-    Expr' : DASH Term Expr'
-    Expr' : e
-    Term : Factor Term'
-    Term' : STAR Factor Term'
-    Term' : SLASH Factor Term'
-    Term' : e
-    Factor : NUMBER
-    Factor : LPAREN Expr RPAREN
+    Expr : Term Expr';
+    Expr' : PLUS Term Expr';
+    Expr' : DASH Term Expr';
+    Expr' : e;
+    Term : Factor Term';
+    Term' : STAR Factor Term';
+    Term' : SLASH Factor Term';
+    Term' : e;
+    Factor : NUMBER;
+    Factor : LPAREN Expr RPAREN;
 '''
 
 
@@ -107,22 +107,22 @@ def t_print():
 
 
 def t_first():
-    assert FIRST("E") == FIRST("T") == FIRST("F")
-    assert FIRST('E') == set([Terminal('LPAREN'), Terminal('NUMBER')])
-    assert FIRST("E'") == set([Terminal('PLUS'), Terminal('DASH'), EmptyString()])
-    assert FIRST("T'") == set([Terminal('STAR'), Terminal('SLASH'), EmptyString()])
+    assert FIRST("Expr") == FIRST("Term") == FIRST("Factor")
+    assert FIRST('Expr') == set([Terminal('LPAREN'), Terminal('NUMBER')])
+    assert FIRST("Expr'") == set([Terminal('PLUS'), Terminal('DASH'), EmptyString()])
+    assert FIRST("Term'") == set([Terminal('STAR'), Terminal('SLASH'), EmptyString()])
 
 def t_follow():
-    assert FOLLOW("E") == FOLLOW("E'") == set([Terminal("RPAREN"), EoS()])
-    assert FOLLOW("T") == FOLLOW("T'")
-    assert FOLLOW("T") == set([Terminal("DASH"), Terminal("PLUS"), Terminal("RPAREN"), EoS()])
-    assert FOLLOW("F") == set([
+    assert FOLLOW("Expr") == FOLLOW("Expr'") == set([Terminal("RPAREN"), EoS()])
+    assert FOLLOW("Term") == FOLLOW("Term'")
+    assert FOLLOW("Term") == set([Terminal("DASH"), Terminal("PLUS"), Terminal("RPAREN"), EoS()])
+    assert FOLLOW("Factor") == set([
         Terminal('STAR'), Terminal('SLASH'), Terminal("DASH"), Terminal("PLUS"), Terminal("RPAREN"), EoS()
     ])
 
 def t_check():
     assert analysis.LL1(productions)
-    assert not analysis.LL1(parse(tokens, grammar + '\n F : LPAREN NUMBER RPAREN\n'))
+    assert not analysis.LL1(parse(tokens, grammar + '\n Factor : LPAREN NUMBER RPAREN;'))
 
 
 def t_build():
@@ -131,10 +131,11 @@ def t_build():
 def t_parse_print():
     lexer = Lexer()
     lexer.input('6+7*4+3*2*(4+3)')
-    for c, v in list(parser.parse((t for t in lexer), productions)):
+    for c, v in list(tdpp.parse((t for t in lexer), productions)):
         print "%s:%s" % (c, v)
 
 def t_processor():
+    raise nose.SkipTest
     lexer = Lexer()
     lexer.input('6+7*4+3*2*(4+3)')
-    print parser.processor(parser.parse((t for t in lexer), productions))
+    print tdpp.processor(tdpp.parse((t for t in lexer), productions))

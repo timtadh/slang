@@ -36,7 +36,8 @@ def parse(tokens, productions):
         elif not M[(X, a)]:
             raise Exception
         elif M[(X, a)]:
-            production = list(M[(X, a)][1])
+            nt = M[(X, a)][0]
+            production = productions[nt][M[(X, a)][1]]
             yield len(production), X
             stack.pop()
             for sym in (production[i] for i in range(len(production)-1, -1, -1)):
@@ -44,13 +45,13 @@ def parse(tokens, productions):
         X = stack[-1]
 
 def default(X, *args):
-    print X, args
+    #print X, args
     if hasattr(X, 'value'): return X.value
     return [arg for arg in args if arg is not None]
 
 def processor(gen):
     def top(stack): return stack[-1]
-    def call(frame): return default(frame['me'].sym, *frame['args'])
+    def call(frame): return frame['me'].sym.function(*frame['args'])
     def collapse(stack):
         ret = None
         if stack and top(stack)['limit'] == len(top(stack)['args']):
@@ -68,4 +69,5 @@ def processor(gen):
         else:
             stack.append({'me':sym, 'args':list(), 'limit':children})
         ret = collapse(stack)
+        print ret
     return ret

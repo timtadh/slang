@@ -109,16 +109,16 @@ def build_table(productions, DEBUG=False):
 
     for nt, nt_productions in productions.iteritems():
         follow_nt = FOLLOW(nt)
-        for p in nt_productions:
+        for i, p in enumerate(nt_productions):
             first_p = FIRST(p)
             for sym in first_p:
                 if sym.terminal and not sym.empty and not sym.eos:
-                    s((nt, sym), (nt, p))
+                    s((nt, sym), (nt, i))
             if EmptyString() in first_p:
                 for sym in follow_nt:
-                    s((nt, sym), (nt, p))
+                    s((nt, sym), (nt, i))
             if EmptyString() in first_p and EoS in follow_nt:
-                s((nt, EoS()), (nt, p))
+                s((nt, EoS()), (nt, i))
     if DEBUG:
         print
         for nt in productions.keys():
@@ -130,7 +130,7 @@ def build_table(productions, DEBUG=False):
                     print (
                         '%-25s %s' % (
                             '<%s, %s>' % (nt.sym, t.sym),
-                            '%s : %s' % (p[0].sym, ' '.join(str(x.sym) for x in p[1]))
+                            '%s : %s' % (p[0].sym, ' '.join(str(x.sym) for x in productions[p[0]][p[1]]))
                         )
                     )
             print
