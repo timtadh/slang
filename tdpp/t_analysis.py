@@ -105,6 +105,10 @@ def t_print():
         print ' '*4, 'first', tuple(FIRST(k))
         print ' '*4, 'follow', tuple(FOLLOW(k))
 
+def t_runall():
+    for k,v in productions.iteritems():
+        FIRST(k)
+        FOLLOW(k)
 
 def t_first():
     assert FIRST("Expr") == FIRST("Term") == FIRST("Factor")

@@ -50,6 +50,7 @@ class BaseParser(object):
         self.lexer = lexer
         self.functions = dict()
         self._init(Start)
+        print self.productions
         return self
 
     def _init(self, Start):
@@ -128,30 +129,40 @@ class BaseParser(object):
         while X != EoS():
             #print X.sym, a.sym, stack
             if X == a:
-                if self.debug: print 'token', X, a
+                if self.debug:
+                    print 'token'
+                    print ' '*4, X.sym, a.sym
                 yield 0, a, None
                 stack.pop()
                 a = next()
             elif X.empty:
-                if self.debug: print 'empty', X, a
+                if self.debug:
+                    print 'empty'
+                    print ' '*4, X.sym, a.sym
                 yield 0, X, None
                 stack.pop()
             elif X.terminal:
                 raise Exception
             elif M[(X, a)] is None:
-                print X, a, M[(X, a)]
-                raise Exception
+                raise SyntaxError, "Unexpected Symbol %s, expected %s" % (a.value.type,
+                    [t for t in self.tokens if M[(X, Terminal(t))]]
+                )
             elif M[(X, a)]:
                 nt = M[(X, a)][0]
                 production_number = M[(X, a)][1]
                 production = productions[nt][production_number]
                 function = self._getfunc(nt, production_number)
-                if self.debug: print 'reduce', X, a, production
+                if self.debug:
+                    print 'reduce'
+                    print ' '*4, X.sym, a.sym
+                    print ' '*4, '{', ' '.join(s.sym for s in production), '}'
                 yield len(production), X, function
                 stack.pop()
                 for sym in (production[i] for i in range(len(production)-1, -1, -1)):
                     stack.append(sym)
             X = stack[-1]
+        if next() != EoS():
+            raise Exception, "Unconsumed input"
 
 class TestParser(BaseParser):
 

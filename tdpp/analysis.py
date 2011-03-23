@@ -8,6 +8,8 @@ import functools, itertools
 from gram_parser import parse, EmptyString, EoS,  NonTerminal, Terminal
 
 def first(productions, sym):
+    if not hasattr(productions, '__first_cache'):
+        productions.__first_cache = dict()
     if isinstance(sym, tuple):
         symbols = set()
         for s in sym:
@@ -17,6 +19,7 @@ def first(productions, sym):
                 break
         return symbols
     if sym.terminal: return set([sym])
+    if sym in productions.__first_cache: return productions.__first_cache[sym]
     symbols = set()
     for p in productions[sym]:
         all_e = True
@@ -28,31 +31,30 @@ def first(productions, sym):
                break
         if all_e:
             symbols.add(EmptyString())
+    productions.__first_cache[sym] = symbols
     return symbols
 
-class follow(object):
-
-    cache = dict()
-
-    def __new__(cls, productions, sym):
-        if sym in cls.cache: return cls.cache[sym]
-        if sym.terminal: raise Exception, "Follow does not accept terminal symbols."
-        symbols = set()
-        if sym == productions[0]:
-            symbols |= set([EoS()])
-        for nt, p in productions.containing(sym):
-            if sym not in p: raise Exception, "Symbol not in production"
-            i = p.index(sym)
-            if i+1 < len(p):
-                f = first(productions, p[i+1])
-                if EmptyString() in f:
-                    f.remove(EmptyString())
-                    symbols |= follow(productions, nt)
-                symbols |= f
-            elif i+1 == len(p) and sym != nt:
+def follow(productions, sym):
+    if not hasattr(productions, '__follow_cache'):
+        productions.__follow_cache = dict()
+    if sym in productions.__follow_cache: return productions.__follow_cache[sym]
+    if sym.terminal: raise Exception, "Follow does not accept terminal symbols."
+    symbols = set()
+    if sym == productions[0]:
+        symbols |= set([EoS()])
+    for nt, p in productions.containing(sym):
+        if sym not in p: raise Exception, "Symbol not in production"
+        i = p.index(sym)
+        if i+1 < len(p):
+            f = set(first(productions, p[i+1]))
+            if EmptyString() in f:
+                f.remove(EmptyString())
                 symbols |= follow(productions, nt)
-        cls.cache[sym] = symbols
-        return symbols
+            symbols |= f
+        elif i+1 == len(p) and sym != nt:
+            symbols |= follow(productions, nt)
+    productions.__follow_cache[sym] = symbols
+    return symbols
 
 
 def LL1(productions, DEBUG=False):
