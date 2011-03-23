@@ -22,44 +22,40 @@ class Parser(BaseParser):
     def Start(self, nt, stmts):
         return stmts
 
+
     @BaseParser.production("Stmts : Stmt Stmts';")
     @BaseParser.production("Stmts' : Stmt Stmts';")
     def Stmts(self, nt, stmt, stmts):
         return stmts.addkid(stmt, before=True)
-
     @BaseParser.production("Stmts' : e;")
     def Stmts_2(self, nt, e):
         return Node('Stmts')
 
+
     @BaseParser.production("Stmt : PRINT Expr;")
     def Stmt1(self, nt, prin, expr):
         return Node('Print').addkid(expr)
-
     @BaseParser.production("Stmt : NameStmt;")
     def Stmt2(self, nt, stmt):
         return stmt
+
 
     @BaseParser.production("NameStmt : NAME NameStmt';")
     def NameStmt(self, nt, name, stmt):
         name = name.value
         stmt.addkid(name, before=True)
-        #print 'NAME STATEMENT', nt, name, stmt
         return stmt
-
     @BaseParser.production("NameStmt'   : Call';")
     def NameStmt_1(self, nt, call):
-        #print nt, call
         return call
-
     @BaseParser.production("NameStmt'   : AssignStmt;")
     def NameStmt_2(self, nt, assign):
-        #print nt, assign
         return Node('Assign').addkid(assign)
+
 
     @BaseParser.production("AssignStmt  : EQUAL Assignable;")
     def AssignStmt(self, nt, equal, assignable):
         return assignable
-
     @BaseParser.production("Assignable  : Expr;")
     @BaseParser.production("Assignable  : Function;")
     def Assignable1(self, nt, expr):
@@ -73,9 +69,7 @@ class Parser(BaseParser):
         if dparams: n.addkid(dparams)
         if stmts: n.addkid(stmts)
         n.addkid(ret)
-        #print 'function', n
         return n
-
     @BaseParser.production("ParamDecl   : RPAREN;")
     def ParamDecl1(self, nt, rparen):
         pass
@@ -117,11 +111,6 @@ class Parser(BaseParser):
         return Node('Expr').addkid(expr)
 
     @BaseParser.productions('''
-    MulDiv' : e;
-    AddSub' : e;''')
-    def Pass(self, nt, *prod): pass
-
-    @BaseParser.productions('''
     MulDiv : Atomic MulDiv';
     AddSub : MulDiv AddSub';''')
     def OpCollapse(self, nt, b, extra):
@@ -149,56 +138,56 @@ class Parser(BaseParser):
             return op.value, b, (extra[0], extra[1], extra[2])
         return op.value, b
 
+    @BaseParser.productions('''
+    MulDiv' : e;
+    AddSub' : e;''')
+    def Pass(self, nt, *prod): pass
+
+
     @BaseParser.production('Atomic : Value')
     def Atomic1(self, nt, val):
         return val
-
-
     @BaseParser.production('Atomic : LPAREN Expr RPAREN')
     def Atomic2(self, nt, lparen, expr, rparen):
         return expr
 
+
     @BaseParser.production('Value : INT_VAL')
     def Value1(self, nt, val):
         return Node('INT').addkid(val.value)
-
     @BaseParser.production('Value : NameOrCall')
     def Value2(self, nt, val):
-        #print nt, val
         return val
+
 
     @BaseParser.production("NameOrCall : NAME NameOrCall';")
     def NameOrCall(self, nt, name, val):
         if val is None: return Node('NAME').addkid(name.value)
         return val.addkid(name.value, before=True)
-
     @BaseParser.production("NameOrCall' : Call'")
     def NameOrCall_1(self, nt, call):
         return call
-
     @BaseParser.production("NameOrCall' : e")
     def NameOrCall_2(self, nt, e): pass
+
 
     @BaseParser.production("Params : Expr Params';")
     def Params(self, nt, expr, params):
         return params.addkid(expr, before=True)
-
     @BaseParser.production("Params' : COMMA Expr Params';")
     def Params_1(self, nt, comma, expr, params):
         return params.addkid(expr, before=True)
-
     @BaseParser.production("Params' : e;")
     def Params_2(self, nt, e):
         return Node('Params')
 
+
     @BaseParser.production("DParams : NAME DParams';")
     def DParams(self, nt, name, dparams):
         return dparams.addkid(name.value, before=True)
-
     @BaseParser.production("DParams' : COMMA NAME DParams';")
     def DParams_1(self, nt, comma, name, dparams):
         return dparams.addkid(name.value, before=True)
-
     @BaseParser.production("DParams' : e;")
     def DParams_2(self, nt, e):
         return Node('DParams')
