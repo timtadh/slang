@@ -55,7 +55,7 @@ class Productions(MutableMapping):
     def __init__(self, tokens, *args, **kwargs):
         super(Productions, self).__init__(*args, **kwargs)
         self.productions = dict()
-        self.functions = dict()
+        #self.functions = dict()
         self.order = list()
         self.tokens = tokens
         self.index = dict()
@@ -69,23 +69,23 @@ class Productions(MutableMapping):
         for k,v in b.iteritems():
             for p in v:
                 self[k] = p
-            if k not in b.functions: continue
-            if k in self.functions: offset = len(self.functions[k])
-            else: offset = 0
-            for i, f in enumerate(b.functions[k]):
-                self.addfunc(k, offset+i, f)
+            #if k not in b.functions: continue
+            #if k in self.functions: offset = len(self.functions[k])
+            #else: offset = 0
+            #for i, f in enumerate(b.functions[k]):
+                #self.addfunc(k, offset+i, f)
 
         return self
 
-    def addfunc(self, key, i, func):
-        assert len(self[key])-1 == i
-        if key not in self.functions:
-            self.functions[key] = list()
-        assert len(self.functions[key]) == i
-        self.functions[key].append(func)
+    #def addfunc(self, key, i, func):
+        #assert len(self[key])-1 == i
+        #if key not in self.functions:
+            #self.functions[key] = list()
+        #assert len(self.functions[key]) == i
+        #self.functions[key].append(func)
 
-    def getfunc(self, key, i):
-        return self.functions[key][i]
+    #def getfunc(self, key, i):
+        #return self.functions[key][i]
 
     def __setitem__(self, key, value):
         if key.sym not in self.productions:

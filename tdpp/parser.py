@@ -43,26 +43,47 @@ class BaseParser(object):
 
     def __new__(cls, lexer, *args, **kwargs):
         self = super(BaseParser, cls).__new__(cls)
-        Start = NonTerminal('Start')
+        if 'start_symbol' in kwargs: Start = NonTerminal(kwargs['start_symbol'])
+        else: Start = NonTerminal('Start')
         if 'debug' in kwargs: self.debug = kwargs['debug']
         else: self.debug = False
         self.lexer = lexer
-        PARSE = functools.partial(gram_parse, cls.tokens)
+        self.functions = dict()
+        self._init(Start)
+        return self
+
+    def _init(self, Start):
+        def count(counter, nt):
+            if nt not in counter:
+                counter[nt] = -1
+            counter[nt] += 1
+            return counter[nt]
+        PARSE = functools.partial(gram_parse, self.tokens)
         productions = None
+        counter = dict()
         for attrname in dir(self):
             attr = getattr(self, attrname)
-            if type(attr) == types.MethodType and hasattr(attr, cls.PRODUCTIONS):
-                for prod in getattr(attr, cls.PRODUCTIONS):
+            if type(attr) == types.MethodType and hasattr(attr, self.PRODUCTIONS):
+                for prod in getattr(attr, self.PRODUCTIONS):
                     p = PARSE(prod)
-                    p.addfunc(p[0], 0, attr)
                     if productions is not None: productions |= p
                     else: productions = p
+                    self._addfunc(productions, p[0], count(counter, p[0]), attr)
         if Start in productions.order:
             productions.order.remove(Start)
             productions.order.insert(0, Start)
         self.productions = productions
         self.M = build_table(productions, self.debug)
-        return self
+
+    def _addfunc(self, productions, nt, i, f):
+        assert len(productions[nt])-1 == i
+        if nt not in self.functions:
+            self.functions[nt] = list()
+        assert len(self.functions[nt]) == i
+        self.functions[nt].append(f)
+
+    def _getfunc(self, nt, i):
+        return self.functions[nt][i]
 
     def parse(self, text):
         g = self.__parse__(self.lexer(text), self.productions)
@@ -122,8 +143,9 @@ class BaseParser(object):
                 raise Exception
             elif M[(X, a)]:
                 nt = M[(X, a)][0]
-                production = productions[nt][M[(X, a)][1]]
-                function = productions.getfunc(nt, M[(X, a)][1])
+                production_number = M[(X, a)][1]
+                production = productions[nt][production_number]
+                function = self._getfunc(nt, production_number)
                 if self.debug: print 'reduce', X, a, production
                 yield len(production), X, function
                 stack.pop()

@@ -206,7 +206,7 @@ class Parser(BaseParser):
 
 if __name__ == '__main__':
     import il, il_gen
-    parser = Parser(Lex, debug=False)
+    parser = Parser(Lex, debug=True)
     ast = parser.parse('''
         f = func(a, b) { return a + b }
         print f(5, 10)
