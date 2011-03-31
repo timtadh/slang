@@ -61,6 +61,37 @@ class Parser(BaseParser):
     def Assignable1(self, nt, expr):
         return expr
 
+    @BaseParser.productions('''
+    IfStmt : IF LPAREN BooleanExpr RPAREN
+             LCURLY Stmts RCURLY IfStmt';
+    IfStmt' : ELSE LCURLY Stmts RCURLY;
+    IfStmt' : e; ''')
+    def IfStatement(self, nt, *args):
+        print nt, args
+
+    @BaseParser.productions('''
+    BooleanExpr : OrExpr;
+    OrExpr      : AndExpr OrExpr';
+    OrExpr'     : OR AndExpr OrExpr';
+    OrExpr'     : e;
+    AndExpr     : NotExpr AndExpr';
+    AndExpr'    : AND NotExpr AndExpr';
+    AndExpr'    : e;
+    NotExpr     : NOT BooleanTerm;
+    NotExpr     : BooleanTerm;
+    BooleanTerm : CmpExpr;
+    BooleanTerm : LPAREN BooleanExpr RPAREN;
+    CmpExpr     : Value CmpOp Value;
+    Atomic'     : Expr RPAREN;
+    CmpOp       : EQEQ;
+    CmpOp       : NQ;
+    CmpOp       : LT;
+    CmpOp       : LE;
+    CmpOp       : GT;
+    CmpOp       : GE;
+    ''')
+    def BooleanExpr(self, nt, *args):
+        print nt, args
 
     @BaseParser.production("Function    : FUNC LPAREN ParamDecl LCURLY FuncBody RCURLY;")
     def Function(self, nt, func, lparen, dparams, lcurly, body, rcurly):

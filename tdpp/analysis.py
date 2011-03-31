@@ -98,7 +98,7 @@ def build_table(productions, DEBUG=False):
             raise Exception
         M[key] = value
 
-    assert LL1(productions)
+    assert LL1(productions, DEBUG)
     FIRST = functools.partial(first, productions)
     FOLLOW = functools.partial(follow, productions)
 

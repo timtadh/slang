@@ -37,6 +37,7 @@ class BaseParser(object):
             for p in productions.split(';'):
                 p = p.strip()
                 if not p: continue
+                if p[0] == '#': continue
                 getattr(f, cls.PRODUCTIONS).append(p + ';')
             return f
         return dec

@@ -29,6 +29,7 @@ def parse(s):
         return a
 
     def accumulate(op, b, extra):
+        print 'accumulate>', op, b, extra
         if extra is not None:
             if len(extra) == 2:
                 return op, b, (extra[0], extra[1])
@@ -36,6 +37,7 @@ def parse(s):
         return op, b
 
     def Expr(i):
+        productions = [(Term, Expr_)]
         i, r0 = Term(i)
         i, r1 = Expr_(i)
 
@@ -43,6 +45,7 @@ def parse(s):
         return i, collapse(r0, r1)
 
     def Expr_(i):
+        productions = [(PLUS, Term, Expr_), (MINUS, Term, Expr_), (e,)]
         if i >= len(s): return i, None
         a = s[i]
         if a.type == 'PLUS':
@@ -101,4 +104,4 @@ def parse(s):
     return r
 
 if __name__ == '__main__':
-    print parse('9*4/(4*2+4)*6/8-23')
+    print parse('9*(4*(3*2+4))')
