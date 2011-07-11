@@ -96,7 +96,7 @@ def t_if():
 
 
 def t_if_set():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(2) == run('''
         if (1 > 2) {
             a = 1

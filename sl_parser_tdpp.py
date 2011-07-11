@@ -62,11 +62,13 @@ class Parser(BaseParser):
         return expr
 
     @BaseParser.productions('''
+    Stmt : IfStmt;
     IfStmt : IF LPAREN BooleanExpr RPAREN
              LCURLY Stmts RCURLY IfStmt';
     IfStmt' : ELSE LCURLY Stmts RCURLY;
     IfStmt' : e; ''')
     def IfStatement(self, nt, *args):
+        raise Exception, "IfStatments not implemented with the tdpp parser."
         print nt, args
 
     @BaseParser.productions('''
@@ -229,6 +231,9 @@ if __name__ == '__main__':
     parser = Parser(Lex, debug=True)
     ast = parser.parse('''
         f = func(a, b) { return a + b }
+        if (1 > 5) {
+            print 5
+        }
         print f(5, 10)
     ''')
 
