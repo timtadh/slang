@@ -39,7 +39,10 @@ class generate(object):
         self.fcount = 0
         self.tcount = 0
         self.lcount = 0
+        self.bcount = 0
         #self.functions = dict()
+        self.blocks = dict()
+        self.blkstack = list() # a stack of blocks.
         self.objs = SymbolTable()
 
     def index_labels(self, insts):
@@ -53,14 +56,19 @@ class generate(object):
         self.tcount += 1
         return 't%i' % self.tcount
 
-    #def fun(self):
-        #self.fcount += 1
-        #return 'f%i' % self.fcount
+    def block(self):
+        self.bcount += 1
+        name = 'b%i' % self.bcount
+        self.blocks[name] = il.Block(name)
+        return self.blocks[name]
+
+    @property
+    def cblock(self):
+        return self.blkstack[-1]
 
     def label(self):
         self.lcount += 1
         return 'label_%i' % self.lcount
-
 
     def Stmts(self, node):
         assert node.label == 'Stmts'
@@ -86,16 +94,19 @@ class generate(object):
     def If(self, node):
         assert node.label == 'If'
         code = list()
+
         cmpexpr = node.children[0].children[0]
         endlabel = self.label()
         thenstmts = self.Stmts(node.children[1])
         thenstmts[0].label = self.label()
         thenstmts += [ il.Inst(il.J, endlabel, 0, 0) ]
+
         if len(node.children) == 3:
             elsestmts = self.Stmts(node.children[2])
             elsestmts[0].label = self.label()
             elsestmts += [ il.Inst(il.J, endlabel, 0, 0) ]
-        else: elsestmts = None
+        else:
+            elsestmts = None
 
         cmpexpr = self.CmpOp(cmpexpr)
         cmpr = cmpexpr[-1].result
@@ -154,6 +165,8 @@ class generate(object):
     def Func(self, node):
         assert node.label == 'Func'
         self.objs = self.objs.push()
+        blk = self.block()
+        blocks.append(blk)
 
         code = list()
 
@@ -167,6 +180,7 @@ class generate(object):
             else:
                 raise Exception, c.label
 
+        blocks.pop()
         self.objs = self.objs.pop()
 
         return code

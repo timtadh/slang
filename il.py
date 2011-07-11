@@ -83,6 +83,12 @@ def run(il, labels, params=None, var=None, stdout=None):
             raise Exception, opsr[i.op]
         c += 1
 
+class Block(object):
+
+    def __init__(self, name):
+        self.name = name
+        self.insts = list()
+
 class Inst(object):
 
     def __init__(self, op, a, b, result, label=None):
