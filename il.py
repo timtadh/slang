@@ -56,6 +56,7 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
         elif i.op == OPRM:
             rparams.append(var[i.b.name])
         elif i.op == GPRM:
+            print i.a
             var[i.result.name] = params[i.a]
             #print i.result, var[i.result.name]
         elif i.op == RPRM:
@@ -63,9 +64,9 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
         elif i.op == CALL:
             #print i.a
             if isinstance(i.a.type, Func):
-                params = run(i.a.type.entry, blocks, nparams, var)
+                params = run(i.a.type.entry, blocks, functions, nparams, var)
             else:
-                params = run(var[i.a.name].type.entry, blocks, nparams, var)
+                params = run(var[i.a.name].type.entry, blocks, functions, nparams, var)
             nparams = list()
         elif i.op == RTRN:
             return rparams
@@ -91,6 +92,7 @@ class Block(object):
     def __init__(self, name):
         self.name = name
         self.insts = list()
+        self.next = None
 
 class Inst(object):
 
