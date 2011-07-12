@@ -26,18 +26,12 @@ class generate(object):
                 print inst
             print
         print
-        #functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
-        #for sym in self.objs.itervalues():
-            #if isinstance(sym.type, il.Func):
-                #_, labels = self.index_labels(sym.type.code)
-                #sym.type.labels = labels
+
         return self.top.name, self.blocks
 
     def __init__(self):
-        self.funcs = set()
         self.fcount = 0
         self.tcount = 0
-        self.lcount = 0
         self.bcount = 0
         #self.functions = dict()
         self.blocks = dict()
@@ -45,13 +39,6 @@ class generate(object):
         self.top = self.block()
         self.blkstack.append(self.top)
         self.objs = SymbolTable()
-
-    def index_labels(self, insts):
-        labels = dict()
-        for i, inst in enumerate(insts):
-            if inst.label is not None:
-                labels[inst.label] = i
-        return labels
 
     def tmp(self):
         self.tcount += 1
@@ -66,10 +53,6 @@ class generate(object):
     @property
     def cblock(self):
         return self.blkstack[-1]
-
-    def label(self):
-        self.lcount += 1
-        return 'label_%i' % self.lcount
 
     def Stmts(self, node):
         assert node.label == 'Stmts'
@@ -158,7 +141,6 @@ class generate(object):
         elif c.label == 'Func':
             blk = self.Func(c)
             self.objs[name].type.entry = blk.name
-            self.funcs.add(self.objs[name])
         else:
             raise Exception, c.label
 

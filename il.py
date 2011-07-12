@@ -94,21 +94,16 @@ class Block(object):
 
 class Inst(object):
 
-    def __init__(self, op, a, b, result, label=None):
+    def __init__(self, op, a, b, result):
         self.op     = op
         self.a      = a
         self.b      = b
         self.result = result
-        self.label  = label
 
     def __repr__(self): return str(self)
 
     def __str__(self):
-        if self.label is None:
-            return '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
-        s = '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
-        s = '%-25s : %s' % (s, self.label)
-        return s
+        return '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
 
 class Type(object):
 
