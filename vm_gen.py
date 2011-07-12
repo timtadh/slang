@@ -14,37 +14,42 @@ import vm
 
 class generate(object):
 
-    def __new__(cls, main, mlabels):
+    def __new__(cls, entry, blocks):
         self = super(generate, cls).__new__(cls)
         self.__init__()
+        self.blocks = blocks
         #self.var = dict()
         self.bp_offset = 0
         ##self.main = main
-        self.funcs = deque()
+        #self.funcs = deque()
         self.floc = dict()
-        self.labels = dict()
+        #self.labels = dict()
         code = list()
         code += self.InitCode()
-        code += self.Func(main, mlabels, 'main', main=True)
+        code += self.Func(entry, 'main', main=True)
         code += self.ExitCode()
-        print self.funcs
-        while self.funcs:
-            fun = self.funcs.popleft()
-            self.floc[fun.id] = len(code)
-            code += self.Func(fun.type.code, fun.type.labels, fun.id)
-        for c, i in enumerate(code):
-            if len(i) > 3 and i[3] in self.labels:
-                self.labels[i[3]] = c
+        #print self.funcs
+        for blk in self.blocks.values():
+            #fun = self.funcs.popleft()
+            self.floc[blk.name] = len(code)
+            code += self.Func(blk.name, blk.name)
+        #for c, i in enumerate(code):
+            #if len(i) > 3 and i[3] in self.labels:
+                #self.labels[i[3]] = c
         #print self.labels
         def transform(i):
-            if isinstance(i[2], Symbol) and i[2].id in self.floc:
-                return (i[0], i[1], self.floc[i[2].id])
-            if i[0] == vm.IMM and i[2] in self.labels:
-                return (i[0], i[1], self.labels[i[2]])
+            if isinstance(i[2], Symbol) and i[2].type.entry in self.floc:
+                if len(i) == 4:
+                    return (i[0], i[1], self.floc[i[2].type.entry], i[3])
+                else:
+                    return (i[0], i[1], self.floc[i[2].type.entry])
+            #if i[0] == vm.IMM and i[2] in self.labels:
+                #return (i[0], i[1], self.labels[i[2]])
             return i
         code = [transform(i) for i in code]
         for c, i in enumerate(code):
             print '%3d : %-5s %s' % (c, vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
+
         #raise Exception
         return code
 
@@ -84,12 +89,13 @@ class generate(object):
                 sym.type.basereg = 1 # set the base reg to the frame pointer
                 sym.type.offset = -1 * i # set the offset
                 i += 1
-            if issubclass(sym.type.__class__, il.Func):
-                self.funcs.append(sym)
+            #if issubclass(sym.type.__class__, il.Func):
+                #self.funcs.append(sym)
         return i-1
 
-    def Func(self, insts, labels, name, main=False):
+    def Func(self, entry, name, main=False):
         #print '->', insts
+        insts = self.blocks[entry].insts
         self.bp_offset = 3
         code = list()
         if not main: code += self.FramePush()
@@ -131,9 +137,9 @@ class generate(object):
                 code += self.Nop(i)
             else:
                 raise Exception, il.opsr[i.op]
-            if i.label is not None:
-                print code[l]
-                code[l] = (code[l][0], code[l][1], code[l][2], i.label)
+            #if i.label is not None:
+                #print code[l]
+                #code[l] = (code[l][0], code[l][1], code[l][2], i.label)
         return code
 
     def Nop(self, i):
