@@ -14,11 +14,12 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-def run(il, labels, params=None, var=None, stdout=None):
+def run(entry, blocks, params=None, var=None, stdout=None):
     if stdout == None: stdout = sys.stdout
     if not var: var = dict()
     nparams = list()
     rparams = list()
+    il = blocks[entry].insts
     #print params
     c = 0
     while c < len(il):
@@ -62,9 +63,9 @@ def run(il, labels, params=None, var=None, stdout=None):
         elif i.op == CALL:
             #print i.a
             if isinstance(i.a.type, Func):
-                params = run(i.a.type.code, i.a.type.labels, nparams, var)
+                params = run(i.a.type.entry, blocks, nparams, var)
             else:
-                params = run(var[i.a.name].type.code, var[i.a.name].type.labels, nparams, var)
+                params = run(var[i.a.name].type.entry, blocks, nparams, var)
             nparams = list()
         elif i.op == RTRN:
             return rparams
@@ -72,10 +73,12 @@ def run(il, labels, params=None, var=None, stdout=None):
             #print i.a
             if var[i.a.name] == 0:
                 #raise Exception, "go to label %s" % (i.b)
-                c = labels[i.b]
+                il = blocks[i.b].insts
+                c = 0
                 continue;
         elif i.op == J:
-            c = labels[i.a]
+            il = blocks[i.a].insts
+            c = 0
             continue;
         elif i.op == NOP:
             pass
@@ -141,34 +144,20 @@ class Int(Type):
 
 class Func(Type):
 
-    def __init__(self, code):
-        self._code = code
-        self._labels = None
+    def __init__(self, entry):
+        self._entry = entry
         super(Func, self).__init__()
 
     @property
-    def code(self):
-        return self._code
+    def entry(self):
+        return self._entry
 
-    @code.setter
-    def code(self, val):
-        self._code = val
-
-    @property
-    def labels(self):
-        #print self._labels
-        assert self._labels is not None
-        return self._labels
-
-    @labels.setter
-    def labels(self, val):
-        #print self._labels, val
-        self._labels = val
+    @entry.setter
+    def entry(self, val):
+        self._entry = val
 
     def __repr__(self):
-        if self.code is None:
-            return '{Func%d}' % (self.id)
-        return '{Func%d %d}' % (self.id, len(self.code))
+        return '{Func%d %s}' % (self.id, str(self.entry))
 
 class FuncPointer(Int):
     def __repr__(self):

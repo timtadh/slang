@@ -25,14 +25,13 @@ class generate(object):
             for inst in self.blocks[name].insts:
                 print inst
             print
-
         print
         #functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
         #for sym in self.objs.itervalues():
             #if isinstance(sym.type, il.Func):
                 #_, labels = self.index_labels(sym.type.code)
                 #sym.type.labels = labels
-        return main
+        return self.top.name, self.blocks
 
     def __init__(self):
         self.funcs = set()
@@ -158,8 +157,7 @@ class generate(object):
             self.objs[name] = self.cblock.insts[-1].result
         elif c.label == 'Func':
             blk = self.Func(c)
-            self.objs[name].type.code = blk.insts
-            self.objs[name].type.labels = self.index_labels(self.objs[name].type.code)
+            self.objs[name].type.entry = blk.name
             self.funcs.add(self.objs[name])
         else:
             raise Exception, c.label
