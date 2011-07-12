@@ -41,6 +41,7 @@ def t_func_call():
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print f()
         ''').rstrip('\n')
+    #assert False
 
 def t_func_uppernames():
     #raise nose.SkipTest
@@ -55,6 +56,7 @@ def t_func_uppernames():
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print g()
         ''').rstrip('\n')
+    #assert False
 
 def t_func_pointers():
     #raise nose.SkipTest
@@ -102,7 +104,7 @@ def t_if():
 
 
 def t_if_set():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert str(2) == run('''
         if (1 > 2) {
             a = 1

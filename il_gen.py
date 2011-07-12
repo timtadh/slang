@@ -14,32 +14,40 @@ class generate(object):
     def __new__(cls, root):
         self = super(generate, cls).__new__(cls)
         self.__init__()
-        self.Stmts(root, self.top)
 
-        print
-        print 'main', self.top.name
+        self.push_func()
+        entry = self.block()
+        self.Stmts(root, entry)
+        main = self.pop_func()
+
+        print 'Basic Blocks:'
 
         for b in xrange(1, self.bcount+1):
             name = 'b%i' % b
-            print "block:", name
+            print ' '*2, "block:", name
             for inst in self.blocks[name].insts:
-                print inst
+                print ' '*4, inst
             print
         print
 
-        return self.top.name, self.blocks
+        print "Functions:"
+
+        for name, f in sorted(self.functions.iteritems(), key=lambda x: x[0]):
+            print name, ':', ', '.join(b.name for b in f)
+        print
+        print
+
+        return entry.name, self.blocks
 
     def __init__(self):
-        #self.fcount = 0
+        self.fcount = 0
         self.tcount = 0
         self.bcount = 0
 
         self.blocks = dict()
-        self.top = self.block()
 
         self.functions = dict()
-        self.functions['main'] = [ self.top ]
-        self.fstack = [ 'main' ]
+        self.fstack = list()
 
         self.objs = SymbolTable()
 
@@ -50,8 +58,23 @@ class generate(object):
     def block(self):
         self.bcount += 1
         name = 'b%i' % self.bcount
-        self.blocks[name] = il.Block(name)
-        return self.blocks[name]
+        blk = il.Block(name)
+        self.blocks[name] = blk
+        self.cfunc.append(blk)
+        return blk
+
+    def push_func(self):
+        self.fcount += 1
+        name = 'f%i' % self.fcount
+        self.functions[name] = list()
+        self.fstack.append(self.functions[name])
+
+    def pop_func(self):
+        return self.fstack.pop()
+
+    @property
+    def cfunc(self):
+        return self.fstack[-1]
 
     def Stmts(self, node, blk):
         assert node.label == 'Stmts'
@@ -140,6 +163,8 @@ class generate(object):
     def Func(self, node, name, blk):
         assert node.label == 'Func'
         parent_blk = blk
+
+        self.push_func()
         blk = self.block()
         self.objs[name].type.entry = blk.name
 
@@ -154,6 +179,7 @@ class generate(object):
             else:
                 raise Exception, c.label
         self.objs = self.objs.pop()
+        self.pop_func()
 
         return parent_blk
 
