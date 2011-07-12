@@ -14,19 +14,19 @@ class generate(object):
     def __new__(cls, root):
         self = super(generate, cls).__new__(cls)
         self.__init__()
-        main = self.Stmts(root)
+        self.Stmts(root)
 
         print
-        print 'main'
-        for i in main:
-            print ' '*4, i
-        for fun in self.funcs:
-            print fun
-            for i in fun.type.code:
-                print ' '*4, i
+        print 'main', self.top.name
+
+        for b in xrange(1, self.bcount+1):
+            name = 'b%i' % b
+            print "block:", name
+            for inst in self.blocks[name].insts:
+                print inst
             print
+
         print
-        main = (main, self.index_labels(main))
         #functions = dict((f, self.index_labels(insts)) for f, insts in self.functions.iteritems())
         #for sym in self.objs.itervalues():
             #if isinstance(sym.type, il.Func):
@@ -43,6 +43,8 @@ class generate(object):
         #self.functions = dict()
         self.blocks = dict()
         self.blkstack = list() # a stack of blocks.
+        self.top = self.block()
+        self.blkstack.append(self.top)
         self.objs = SymbolTable()
 
     def index_labels(self, insts):
@@ -98,26 +100,28 @@ class generate(object):
         finalblk = self.block()
 
         self.CmpOp(node.children[0].children[0])
-        cmpr = self.cblock[-1].result
+        cmpr = self.cblock.insts[-1].result
         blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk.name, 0) ]
 
-        self.blocks.append(thenblk)
+        self.blkstack.append(thenblk)
         self.Stmts(node.children[1])
         thenblk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
-        self.blocks.pop()
+        self.blkstack.pop()
 
         if len(node.children) == 3:
             elseblk = self.block()
 
-            self.blocks.append(elseblk)
+            self.blkstack.append(elseblk)
             self.Stmts(node.children[2])
             elseblk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
-            self.blocks.pop()
+            self.blkstack.pop()
             blk.insts += [ il.Inst(il.J, elseblk.name, 0, 0) ]
         else:
             blk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
 
-        finalblk.insts += [ il.Inst(il.NOP, 0, 0, 0, endlabel) ]
+        #finalblk.insts += [ il.Inst(il.NOP, 0, 0, 0) ]  # i don't think we will need this with blocks
+        self.blkstack.pop()
+        self.blkstack.append(finalblk)
 
     def Print(self, node):
         assert node.label == 'Print'
@@ -165,7 +169,7 @@ class generate(object):
         self.objs = self.objs.push()
         parent_blk = self.cblock.name
         blk = self.block()
-        blocks.append(blk)
+        self.blkstack.append(blk)
 
         for c in node.children:
             if c.label == 'DParams':
@@ -177,7 +181,7 @@ class generate(object):
             else:
                 raise Exception, c.label
 
-        blocks.pop()
+        self.blkstack.pop()
         self.objs = self.objs.pop()
         return blk
 
@@ -199,7 +203,7 @@ class generate(object):
         for i, c in enumerate(node.children):
             t = Symbol(self.tmp(), il.Int())
             self.objs[c] = t
-            code += [ il.Inst(il.GPRM, i, 0, t)) ]
+            code += [ il.Inst(il.GPRM, i, 0, t) ]
 
     def Expr(self, node, result):
         if node.label == 'Expr':
@@ -225,9 +229,9 @@ class generate(object):
         ops = {'==':il.EQ, '=!':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
         Ar = Symbol('r'+self.tmp(), il.Int())
         Br = Symbol('r'+self.tmp(), il.Int())
-        A = self.Expr(node.children[0], Ar)
-        B = self.Expr(node.children[1], Br)
-        self.cblock.insts += A + B + [
+        self.Expr(node.children[0], Ar)
+        self.Expr(node.children[1], Br)
+        self.cblock.insts += [
             il.Inst(ops[node.label],
             Ar,
             Br,
@@ -238,13 +242,9 @@ class generate(object):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}
         Ar = Symbol('r'+self.tmp(), il.Int())
         Br = Symbol('r'+self.tmp(), il.Int())
-        A = self.Expr(node.children[0], Ar)
-        B = self.Expr(node.children[1], Br)
-        #ar = A[-1].result
-        #br = B[-1].result
-        #if A[-1].op == 'USE': A = A[:-1]
-        #if B[-1].op == 'USE': B = B[:-1]
-        self.cblock.insts +=  A + B + [
+        self.Expr(node.children[0], Ar)
+        self.Expr(node.children[1], Br)
+        self.cblock.insts +=  [
             il.Inst(il.ops[ops[node.label]],
             Ar,
             Br,
