@@ -15,7 +15,7 @@ class generate(object):
         self = super(generate, cls).__new__(cls)
         self.__init__()
 
-        self.push_func()
+        self.push_func('main')
         entry = self.block()
         self.Stmts(root, entry)
         main = self.pop_func()
@@ -37,7 +37,7 @@ class generate(object):
         print
         print
 
-        return entry.name, self.blocks
+        return entry.name, self.blocks, self.functions
 
     def __init__(self):
         self.fcount = 0
@@ -63,9 +63,9 @@ class generate(object):
         self.cfunc.append(blk)
         return blk
 
-    def push_func(self):
+    def push_func(self, name=None):
         self.fcount += 1
-        name = 'f%i' % self.fcount
+        if name is None: name = 'f%i' % self.fcount
         self.functions[name] = list()
         self.fstack.append(self.functions[name])
 

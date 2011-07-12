@@ -14,7 +14,7 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-def run(entry, blocks, params=None, var=None, stdout=None):
+def run(entry, blocks, functions, params=None, var=None, stdout=None):
     if stdout == None: stdout = sys.stdout
     if not var: var = dict()
     nparams = list()
