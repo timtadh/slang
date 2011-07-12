@@ -83,11 +83,11 @@ class generate(object):
 
         self.CmpOp(node.children[0].children[0])
         cmpr = self.cblock.insts[-1].result
-        blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk.name, 0) ]
+        blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk, 0) ]
 
         self.blkstack.append(thenblk)
         self.Stmts(node.children[1])
-        thenblk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
+        thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
         self.blkstack.pop()
 
         if len(node.children) == 3:
@@ -95,11 +95,11 @@ class generate(object):
 
             self.blkstack.append(elseblk)
             self.Stmts(node.children[2])
-            elseblk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
+            elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
             self.blkstack.pop()
-            blk.insts += [ il.Inst(il.J, elseblk.name, 0, 0) ]
+            blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ]
         else:
-            blk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
+            blk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         #finalblk.insts += [ il.Inst(il.NOP, 0, 0, 0) ]  # i don't think we will need this with blocks
         self.blkstack.pop()

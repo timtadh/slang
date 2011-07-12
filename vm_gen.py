@@ -43,6 +43,16 @@ class generate(object):
                     return (i[0], i[1], self.floc[i[2].type.entry], i[3])
                 else:
                     return (i[0], i[1], self.floc[i[2].type.entry])
+            elif isinstance(i[1], il.Block) and i[1].name in self.floc:
+                if len(i) == 4:
+                    return (i[0], self.floc[i[1].name], i[2], i[3])
+                else:
+                    return (i[0], self.floc[i[1].name], i[2])
+            elif isinstance(i[2], il.Block) and i[2].name in self.floc:
+                if len(i) == 4:
+                    return (i[0], i[1], self.floc[i[2].name], i[3])
+                else:
+                    return (i[0], i[1], self.floc[i[2].name])
             #if i[0] == vm.IMM and i[2] in self.labels:
                 #return (i[0], i[1], self.labels[i[2]])
             return i
@@ -272,7 +282,7 @@ class generate(object):
         return code
 
     def Beqt(self, i):
-        self.labels[i.b] = None
+        #self.labels[i.b] = None
         code = [
             (vm.IMM, 3, i.a.type.offset, 'start beqt'),
             (vm.ADD, 3, i.a.type.basereg),
@@ -285,7 +295,7 @@ class generate(object):
         return code
 
     def J(self, i):
-        self.labels[i.a] = None
+        #self.labels[i.a] = None
         code = [
             (vm.IMM, 4, i.a),
             (vm.J, 4, 0),

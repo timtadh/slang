@@ -73,11 +73,11 @@ def run(entry, blocks, params=None, var=None, stdout=None):
             #print i.a
             if var[i.a.name] == 0:
                 #raise Exception, "go to label %s" % (i.b)
-                il = blocks[i.b].insts
+                il = blocks[i.b.name].insts
                 c = 0
                 continue;
         elif i.op == J:
-            il = blocks[i.a].insts
+            il = blocks[i.a.name].insts
             c = 0
             continue;
         elif i.op == NOP:
