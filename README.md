@@ -25,7 +25,8 @@ Table of Contents
 -----------------
 
 1. Quick Example Program
-1. The SRVM
+1. Intermediate Representations
+1. The SRVM Language
 2. Slang Language Spec
 
 
