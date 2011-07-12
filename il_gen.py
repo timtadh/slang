@@ -72,66 +72,63 @@ class generate(object):
 
     def Stmts(self, node):
         assert node.label == 'Stmts'
-        code = list()
+        code = self.cblock.insts
         for c in node.children:
             if c.label == 'Assign':
                 self.PreAssign(c)
         for c in node.children:
             if c.label == 'Assign':
-                code += self.Assign(c)
+                self.Assign(c)
             elif c.label == 'Expr':
-                code += self.Expr(c)
+                self.Expr(c)
             elif c.label == 'Call':
-                code += self.Call(c)
+                self.Call(c)
             elif c.label == 'Print':
-                code += self.Print(c)
+                self.Print(c)
             elif c.label == 'If':
-                code += self.If(c)
+                self.If(c)
             else:
                 raise Exception, c.label
-        return code
 
     def If(self, node):
         assert node.label == 'If'
-        code = list()
 
-        cmpexpr = node.children[0].children[0]
-        endlabel = self.label()
-        thenstmts = self.Stmts(node.children[1])
-        thenstmts[0].label = self.label()
-        thenstmts += [ il.Inst(il.J, endlabel, 0, 0) ]
+        blk = self.cblock
+        thenblk = self.block()
+        finalblk = self.block()
+
+        self.CmpOp(node.children[0].children[0])
+        cmpr = self.cblock[-1].result
+        blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk.name, 0) ]
+
+        self.blocks.append(thenblk)
+        self.Stmts(node.children[1])
+        thenblk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
+        self.blocks.pop()
 
         if len(node.children) == 3:
-            elsestmts = self.Stmts(node.children[2])
-            elsestmts[0].label = self.label()
-            elsestmts += [ il.Inst(il.J, endlabel, 0, 0) ]
+            elseblk = self.block()
+
+            self.blocks.append(elseblk)
+            self.Stmts(node.children[2])
+            elseblk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
+            self.blocks.pop()
+            blk.insts += [ il.Inst(il.J, elseblk.name, 0, 0) ]
         else:
-            elsestmts = None
+            blk.insts += [ il.Inst(il.J, finalblk.name, 0, 0) ]
 
-        cmpexpr = self.CmpOp(cmpexpr)
-        cmpr = cmpexpr[-1].result
-
-        code += cmpexpr
-        code += [ il.Inst(il.BEQZ, cmpr, thenstmts[0].label, 0) ]
-        if elsestmts:
-            code += [ il.Inst(il.J, elsestmts[0].label, 0, 0) ]
-        code += thenstmts
-        code += elsestmts
-        code += [ il.Inst(il.NOP, 0, 0, 0, endlabel) ]
-
-        return code
+        finalblk.insts += [ il.Inst(il.NOP, 0, 0, 0, endlabel) ]
 
     def Print(self, node):
         assert node.label == 'Print'
         c = node.children[0]
-        code = list()
+        code = self.cblock.insts
         if c.label == 'Expr':
             result = Symbol('r'+self.tmp(), il.Int())
-            code += self.Expr(c, result)
+            self.Expr(c, result)
         else:
             raise Exception, c.label
         code += [ il.Inst(il.PRNT, result, 0, 0)]
-        return code
 
 
     def PreAssign(self, node):
@@ -146,66 +143,63 @@ class generate(object):
         assert node.label == 'Assign'
         name = node.children[0]
         c = node.children[1]
+
         if name in self.objs:
             result = self.objs[name]
         else:
             result = Symbol('r'+self.tmp(), il.Int())
+
         if c.label == 'Expr':
-            code = self.Expr(c, result)
+            self.Expr(c, result)
+            self.objs[name] = self.cblock.insts[-1].result
         elif c.label == 'Func':
-            self.objs[name].type.code = self.Func(c)
+            blk = self.Func(c)
+            self.objs[name].type.code = blk.insts
             self.objs[name].type.labels = self.index_labels(self.objs[name].type.code)
             self.funcs.add(self.objs[name])
-            code = list()
         else:
             raise Exception, c.label
-        if code: self.objs[name] = code[-1].result
-        return code
 
     def Func(self, node):
         assert node.label == 'Func'
         self.objs = self.objs.push()
+        parent_blk = self.cblock.name
         blk = self.block()
         blocks.append(blk)
 
-        code = list()
-
         for c in node.children:
             if c.label == 'DParams':
-                code += self.DParams(node.children[0])
+                self.DParams(node.children[0])
             elif c.label == 'Stmts':
-                code += self.Stmts(c)
+                self.Stmts(c)
             elif c.label == 'Return':
-                code += self.Return(c)
+                self.Return(c)
             else:
                 raise Exception, c.label
 
         blocks.pop()
         self.objs = self.objs.pop()
-
-        return code
+        return blk
 
     def Return(self, node):
         assert node.label == 'Return'
-        code = list()
+        code = self.cblock.insts
         if node.children:
             if node.children[0].label == 'Expr':
                 result = Symbol('r'+self.tmp(), il.Int())
-                code += self.Expr(node.children[0], result)
+                self.Expr(node.children[0], result)
                 code += [ il.Inst(il.OPRM, 0, result, 0) ]
             else:
                 raise Exception
         code += [ il.Inst(il.RTRN, 0, 0, 0) ]
-        return code
 
     def DParams(self, node):
         assert node.label == 'DParams'
-        code = list()
+        code = self.cblock.insts
         for i, c in enumerate(node.children):
             t = Symbol(self.tmp(), il.Int())
             self.objs[c] = t
-            code.append(il.Inst(il.GPRM, i, 0, t))
-        return code
+            code += [ il.Inst(il.GPRM, i, 0, t)) ]
 
     def Expr(self, node, result):
         if node.label == 'Expr':
@@ -219,8 +213,7 @@ class generate(object):
         elif c.label == 'NAME':
             result.type = self.objs[c.children[0]].type
             result.name = self.objs[c.children[0]].name
-            #raise Exception, NotImplemented
-            return [ ]
+            return
         elif c.label == 'Expr':
             return self.Expr(c, result)
         elif c.label == 'Call':
@@ -234,7 +227,7 @@ class generate(object):
         Br = Symbol('r'+self.tmp(), il.Int())
         A = self.Expr(node.children[0], Ar)
         B = self.Expr(node.children[1], Br)
-        return A + B + [
+        self.cblock.insts += A + B + [
             il.Inst(ops[node.label],
             Ar,
             Br,
@@ -251,7 +244,7 @@ class generate(object):
         #br = B[-1].result
         #if A[-1].op == 'USE': A = A[:-1]
         #if B[-1].op == 'USE': B = B[:-1]
-        return A + B + [
+        self.cblock.insts +=  A + B + [
             il.Inst(il.ops[ops[node.label]],
             Ar,
             Br,
@@ -260,7 +253,7 @@ class generate(object):
 
     def Call(self, node, result):
         assert node.label == 'Call'
-        code = list()
+        code = self.cblock.insts
         fun = self.objs[node.children[0]]
         #print self.objs, fun, node.children[0], self.objs['f']
         if isinstance(fun.type, il.Int):
@@ -268,26 +261,24 @@ class generate(object):
         #print fun
         #print repr(fun)
         if len(node.children) != 1:
-            code += self.Params(node.children[1])
+            self.Params(node.children[1])
         code += [ il.Inst(il.CALL, fun, 0, 0) ]
         code += [ il.Inst(il.RPRM, 0, 0, result)]
-        return code
 
     def Params(self, node):
         assert node.label == 'Params'
-        code = list()
+        code = self.cblock.insts
         params = list()
         for c in node.children:
             result = Symbol('r'+self.tmp(), il.Int())
-            code += self.Expr(c, result)
+            self.Expr(c, result)
             params.append(result)
         params.reverse()
         for i, p in enumerate(params):
             code += [ il.Inst(il.IPRM, len(params)-1-i, p, 0) ]
-        return code
 
     def Int(self, node, result):
-        return [ il.Inst(il.IMM, node, 0, result) ]
+        self.cblock.insts += [ il.Inst(il.IMM, node, 0, result) ]
 
 
     # ------------------------------------------------------------------------ #
