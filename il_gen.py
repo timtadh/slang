@@ -143,42 +143,22 @@ class generate(object):
             self.objs.add(s)
 
     def Assign(self, node, blk):
-        print
         assert node.label == 'Assign'
         name = node.children[0]
         c = node.children[1]
 
-        if name == 'c':
-            print '----------'
-            print name
-            print self.objs
         if name in self.objs:
             result = self.objs[name]
         else:
             result = Symbol('r'+self.tmp(), il.Int())
-            if name == 'c':
-                print 'creating new sym'
-                print 'result', result
-
 
         if c.label == 'Expr':
-            if name == 'c':
-                print c
-                print 'c =>', result
             blk = self.Expr(c, result, blk, toplevel=True)
             self.objs[name] = result
-            if name == 'c':
-                print self.objs
-                print 'c =>', result
         elif c.label == 'Func':
             blk = self.Func(c, name, blk)
         else:
             raise Exception, c.label
-
-
-        if name == 'c':
-            print '----------'
-            print
 
         return blk
 
