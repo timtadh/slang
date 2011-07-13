@@ -20,18 +20,18 @@ def run(s):
     return r
 
 def t_expr_const():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert '2' == run('print 2').rstrip('\n')
 
 def t_expr_ops():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert '6' == run('print 2*3').rstrip('\n')
     assert '6' == run('print 1+2+3').rstrip('\n')
     assert '6' == run('print 9-3').rstrip('\n')
     assert '6' == run('print 12/2').rstrip('\n')
 
 def t_expr_compound():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert str(4*3/2) == run('print 4*3/2').rstrip('\n')
     assert str(4/2*3) == run('print 4/2*3').rstrip('\n')
     assert str((3+9)*4/8) == run('print (3+9)*4/8').rstrip('\n')
@@ -40,14 +40,14 @@ def t_expr_compound():
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('print 5 / 4 * 2 + 10 - 5 * 2 / 3').rstrip('\n')
 
 def t_func_call():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print f()
         ''').rstrip('\n')
 
 def t_func_uppernames():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         g = func() {
             g1 = func() { return g2() }
@@ -61,7 +61,7 @@ def t_func_uppernames():
         ''').rstrip('\n')
 
 def t_func_pointers():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         g = func(h) { return h() }
@@ -88,7 +88,7 @@ def t_func_params_stack():
         ''').rstrip('\n')
 
 def t_if():
-    #raise nose.SkipTest
+    raise nose.SkipTest
     assert str(2) == run('''
         if (1 > 2) {
             print 1

@@ -20,7 +20,6 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
     nparams = list()
     rparams = list()
     il = blocks[entry].insts
-    #print params
     c = 0
     while c < len(il):
         i = il[c]
@@ -59,20 +58,17 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
             rparams.append(var[i.b.name])
         elif i.op == GPRM:
             var[i.result.name] = params[i.a]
-            #print i.result, var[i.result.name]
         elif i.op == RPRM:
             var[i.result.name] = params[i.a]
         elif i.op == CALL:
-            #print i.a
             if isinstance(i.a.type, Func):
-                params = run(i.a.type.entry, blocks, functions, nparams, var)
+                params = run(functions[i.a.type.name].entry.name, blocks, functions, nparams, var, stdout=stdout)
             else:
-                params = run(var[i.a.name].type.entry, blocks, functions, nparams, var)
+                params = run(functions[var[i.a.name].type.name].entry.name, blocks, functions, nparams, var, stdout=stdout)
             nparams = list()
         elif i.op == RTRN:
             return rparams
         elif i.op == BEQZ:
-            #print i.a
             if var[i.a.name] == 0:
                 #raise Exception, "go to label %s" % (i.b)
                 il = blocks[i.b.name].insts
@@ -104,13 +100,14 @@ class Function(object):
 
     def __init__(self, name):
         self.name = name
+        self.entry = None
         self.blks = list()
         self.next = list()
 
     def __repr__(self): return str(self)
 
     def __str__(self):
-        return '<Function %s %s>' % (self.name, str([b for b in self.blks]))
+        return '<Function %s %s entry:%s>' % (self.name, str([b for b in self.blks]), str(self.entry))
 
 class Inst(object):
 
@@ -159,17 +156,17 @@ class Int(Type):
 
 class Func(Type):
 
-    def __init__(self, entry):
-        self._entry = entry
+    def __init__(self, name):
+        self._entry = name
         super(Func, self).__init__()
 
     @property
-    def entry(self):
-        return self._entry
+    def name(self):
+        return self._name
 
-    @entry.setter
+    @name.setter
     def entry(self, val):
-        self._entry = val
+        self._name = val
 
     def __repr__(self):
         return '{Func%d %s}' % (self.id, str(self.entry))

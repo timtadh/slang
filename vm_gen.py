@@ -27,13 +27,15 @@ class generate(object):
         #self.labels = dict()
         code = list()
         code += self.InitCode()
-        code += self.Func(entry, 'main', main=True)
-        code += self.ExitCode()
+        #code += self.Func(entry, 'main', main=True)
+        #code += self.ExitCode()
         #print self.funcs
-        for blk in self.blocks.values():
+
+        #for blk in self.blocks.values():
+            #code += [ (vm.NOP, 0, 0, 'start of block %s' % blk.name) ]
             #fun = self.funcs.popleft()
-            self.floc[blk.name] = len(code)
-            code += self.Func(blk.name, blk.name)
+            #self.floc[blk.name] = len(code)
+            #code += self.Func(blk.name, blk.name)
         #for c, i in enumerate(code):
             #if len(i) > 3 and i[3] in self.labels:
                 #self.labels[i[3]] = c
@@ -61,7 +63,7 @@ class generate(object):
         for c, i in enumerate(code):
             print '%3d : %-5s %s' % (c, vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
 
-        #raise Exception
+        raise Exception
         return code
 
     def InitCode(self):

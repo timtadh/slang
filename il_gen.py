@@ -19,6 +19,7 @@ class generate(object):
         entry = self.block()
         self.Stmts(root, entry)
         main = self.pop_func()
+        main.entry = entry
 
         print 'Basic Blocks:'
 
@@ -35,7 +36,7 @@ class generate(object):
         print "Functions:"
 
         for name, f in sorted(self.functions.iteritems(), key=lambda x: x[0]):
-            print name, ':', ', '.join(b.name for b in f)
+            print f
         print
         print
 
@@ -62,14 +63,14 @@ class generate(object):
         name = 'b%i' % self.bcount
         blk = il.Block(name)
         self.blocks[name] = blk
-        self.cfunc.append(blk)
+        self.cfunc.blks.append(blk)
         if prev is not None: prev.next.append(blk)
         return blk
 
     def push_func(self, name=None):
         self.fcount += 1
         if name is None: name = 'f%i' % self.fcount
-        self.functions[name] = list()
+        self.functions[name] = il.Function(name)
         self.fstack.append(self.functions[name])
 
     def pop_func(self):
@@ -87,10 +88,8 @@ class generate(object):
         for c in node.children:
             if c.label == 'Assign':
                 blk = self.Assign(c, blk)
-            elif c.label == 'Expr':
-                blk = self.Expr(c, blk)
             elif c.label == 'Call':
-                blk = self.Call(c, blk)
+                blk = self.Call(c, None, blk)
             elif c.label == 'Print':
                 blk = self.Print(c, blk)
             elif c.label == 'If':
@@ -171,7 +170,8 @@ class generate(object):
 
         self.push_func()
         blk = self.block()
-        self.objs[name].type.entry = blk.name
+        self.cfunc.entry = blk
+        self.objs[name].type.entry = self.cfunc.name
 
         self.objs = self.objs.push()
         for c in node.children:
@@ -282,7 +282,7 @@ class generate(object):
         if len(node.children) != 1:
             blk = self.Params(node.children[1], blk)
         blk.insts += [ il.Inst(il.CALL, fun, 0, 0) ]
-        blk.insts += [ il.Inst(il.RPRM, 0, 0, result)]
+        if result is not None: blk.insts += [ il.Inst(il.RPRM, 0, 0, result)]
         return blk
 
     def Params(self, node, blk):
