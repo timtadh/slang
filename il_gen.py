@@ -17,9 +17,10 @@ class generate(object):
 
         self.push_func('main')
         entry = self.block()
-        self.Stmts(root, entry)
+        blk = self.Stmts(root, entry)
         main = self.pop_func()
         main.entry = entry
+        main.exit = blk
 
         print 'Basic Blocks:'
 
@@ -183,6 +184,7 @@ class generate(object):
                 blk = self.Return(c, blk)
             else:
                 raise Exception, c.label
+        self.cfunc.exit = blk
         self.objs = self.objs.pop()
         self.pop_func()
 

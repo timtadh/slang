@@ -19,33 +19,18 @@ class generate(object):
         self.__init__()
         self.blocks = blocks
         self.functions = functions
-        #self.var = dict()
         self.bp_offset = 0
-        ##self.main = main
-        #self.funcs = deque()
         self.floc = dict()
-        #self.labels = dict()
         self.code = list()
 
         self.code += self.InitCode()
         self.Func('main', main=True)
         self.code += self.ExitCode()
-        #print self.funcs
 
         for f in self.functions.itervalues():
             if f.name == 'main': continue
             self.Func(f.name)
 
-
-        #for blk in self.blocks.values():
-            #code += [ (vm.NOP, 0, 0, 'start of block %s' % blk.name) ]
-            #fun = self.funcs.popleft()
-            #self.floc[blk.name] = len(code)
-            #code += self.Func(blk.name, blk.name)
-        #for c, i in enumerate(code):
-            #if len(i) > 3 and i[3] in self.labels:
-                #self.labels[i[3]] = c
-        #print self.labels
         def transform(i):
             print '%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
             if isinstance(i[2], Symbol):
@@ -60,7 +45,7 @@ class generate(object):
                     return (i[0], i[1], self.floc[i[2].type.entry], i[3])
                 else:
                     return (i[0], i[1], self.floc[i[2].type.entry])
-            elif isinstance(i[1], il.Function):
+            elif isinstance(i[1], il.Block):
                 if i[1].name not in self.floc:
                     print self.floc
                     raise Exception, (
@@ -72,7 +57,14 @@ class generate(object):
                     return (i[0], self.floc[i[1].name], i[2], i[3])
                 else:
                     return (i[0], self.floc[i[1].name], i[2])
-            elif isinstance(i[2], il.Block) and i[2].name in self.floc:
+            elif isinstance(i[2], il.Block):
+                if i[2].name not in self.floc:
+                    print self.floc
+                    raise Exception, (
+                        "\nInst: %s \n"
+                        "should have had its symbol replaced but it wasn't in the floc dict"
+
+                    ) % ('%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', '')))
                 if len(i) == 4:
                     return (i[0], i[1], self.floc[i[2].name], i[3])
                 else:
@@ -81,7 +73,7 @@ class generate(object):
                 #return (i[0], i[1], self.labels[i[2]])
             return i
         code = [transform(i) for i in self.code]
-        for c, i in enumerate(self.code):
+        for c, i in enumerate(code):
             print '%3d : %-5s %s' % (c, vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
 
         #raise Exception
@@ -149,7 +141,6 @@ class generate(object):
 
         def block(insts):
             for i in insts:
-                #l = len(code)
                 if i.op == il.PRNT:
                     self.code += self.Print(i)
                 elif i.op == il.IMM:
@@ -184,6 +175,14 @@ class generate(object):
         block(self.blocks[func.entry.name].insts)
         for b in func.blks:
             if b.name == func.entry.name: continue
+            if b.name == func.exit.name: continue
+            self.floc[b.name] = len(self.code)
+            self.code += [ (vm.NOP, 0, 0, 'start of block %s' % b.name) ]
+            block(self.blocks[b.name].insts)
+        if func.entry.name != func.exit.name:
+            b = func.exit
+            self.floc[b.name] = len(self.code)
+            self.code += [ (vm.NOP, 0, 0, 'start of block %s' % b.name) ]
             block(self.blocks[b.name].insts)
 
     def Nop(self, i):

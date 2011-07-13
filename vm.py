@@ -17,7 +17,7 @@ A = [J, PC]
 B = [LOAD, IMM, ADD, SUB, MUL, DIV, PRNT, BEQT, EQ, NE, LT, LE, GT, GE, AND, OR, NOT]
 C = [SAVE]
 
-DEBUG = True
+DEBUG = False
 
 prints = list()
 
