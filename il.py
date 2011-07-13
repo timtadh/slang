@@ -100,6 +100,18 @@ class Block(object):
     def __str__(self):
         return '<Block %s>' % self.name
 
+class Function(object):
+
+    def __init__(self, name):
+        self.name = name
+        self.blks = list()
+        self.next = list()
+
+    def __repr__(self): return str(self)
+
+    def __str__(self):
+        return '<Function %s %s>' % (self.name, str([b for b in self.blks]))
+
 class Inst(object):
 
     def __init__(self, op, a, b, result):

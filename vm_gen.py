@@ -14,10 +14,11 @@ import vm
 
 class generate(object):
 
-    def __new__(cls, entry, blocks):
+    def __new__(cls, entry, blocks, functions):
         self = super(generate, cls).__new__(cls)
         self.__init__()
         self.blocks = blocks
+        self.functions = functions
         #self.var = dict()
         self.bp_offset = 0
         ##self.main = main
