@@ -25,11 +25,17 @@ class generate(object):
         #self.funcs = deque()
         self.floc = dict()
         #self.labels = dict()
-        code = list()
-        code += self.InitCode()
-        #code += self.Func(entry, 'main', main=True)
-        #code += self.ExitCode()
+        self.code = list()
+
+        self.code += self.InitCode()
+        self.Func('main', main=True)
+        self.code += self.ExitCode()
         #print self.funcs
+
+        for f in self.functions.itervalues():
+            if f.name == 'main': continue
+            self.Func(f.name)
+
 
         #for blk in self.blocks.values():
             #code += [ (vm.NOP, 0, 0, 'start of block %s' % blk.name) ]
@@ -41,12 +47,27 @@ class generate(object):
                 #self.labels[i[3]] = c
         #print self.labels
         def transform(i):
-            if isinstance(i[2], Symbol) and i[2].type.entry in self.floc:
+            print '%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
+            if isinstance(i[2], Symbol):
+                if i[2].type.entry not in self.floc:
+                    print self.floc
+                    raise Exception, (
+                        "\nInst: %s \n"
+                        "should have had its symbol replaced but it wasn't in the floc dict"
+
+                    ) % ('%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', '')))
                 if len(i) == 4:
                     return (i[0], i[1], self.floc[i[2].type.entry], i[3])
                 else:
                     return (i[0], i[1], self.floc[i[2].type.entry])
-            elif isinstance(i[1], il.Block) and i[1].name in self.floc:
+            elif isinstance(i[1], il.Function):
+                if i[1].name not in self.floc:
+                    print self.floc
+                    raise Exception, (
+                        "\nInst: %s \n"
+                        "should have had its symbol replaced but it wasn't in the floc dict"
+
+                    ) % ('%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', '')))
                 if len(i) == 4:
                     return (i[0], self.floc[i[1].name], i[2], i[3])
                 else:
@@ -59,11 +80,11 @@ class generate(object):
             #if i[0] == vm.IMM and i[2] in self.labels:
                 #return (i[0], i[1], self.labels[i[2]])
             return i
-        code = [transform(i) for i in code]
-        for c, i in enumerate(code):
+        code = [transform(i) for i in self.code]
+        for c, i in enumerate(self.code):
             print '%3d : %-5s %s' % (c, vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
 
-        raise Exception
+        #raise Exception
         return code
 
     def InitCode(self):
@@ -85,12 +106,13 @@ class generate(object):
             (vm.EXIT, 0,0)
         ]
 
-    def gather_syms(self, insts):
+    def gather_syms(self, blks):
         syms = set()
-        for i in insts:
-            if isinstance(i.a, Symbol): syms.add(i.a)
-            if isinstance(i.b, Symbol): syms.add(i.b)
-            if isinstance(i.result, Symbol): syms.add(i.result)
+        for b in blks:
+            for i in b.insts:
+                if isinstance(i.a, Symbol): syms.add(i.a)
+                if isinstance(i.b, Symbol): syms.add(i.b)
+                if isinstance(i.result, Symbol): syms.add(i.result)
         return syms
 
     def place_symbols(self, syms):
@@ -106,54 +128,63 @@ class generate(object):
                 #self.funcs.append(sym)
         return i-1
 
-    def Func(self, entry, name, main=False):
+    def Func(self, name, main=False):
         #print '->', insts
-        insts = self.blocks[entry].insts
+        func = self.functions[name]
+        self.floc[func.name] = len(self.code)
+        #insts = self.blocks[func.entry.name].insts
+
         self.bp_offset = 3
-        code = list()
-        if not main: code += self.FramePush()
-        syms = self.gather_syms(insts)
+
+        if not main:
+            self.code += self.FramePush()
+        syms = self.gather_syms(func.blks)
         #print syms
         fp_offset = self.place_symbols(syms)
         #print syms
-        code += [
+        self.code += [
             (vm.IMM, 4, fp_offset, 'start func %s' % (name)),
             (vm.ADD, 1, 4, 'fp offset add inst'),
         ]
-        for i in insts:
-            l = len(code)
-            if i.op == il.PRNT:
-                code += self.Print(i)
-            elif i.op == il.IMM:
-                code += self.Imm(i)
-            elif i.op == il.GPRM:
-                code += self.Gprm(i)
-            elif i.op == il.IPRM:
-                code += self.Iprm(i)
-            elif i.op == il.OPRM:
-                code += self.Oprm(i)
-            elif i.op == il.RPRM:
-                code += self.Rprm(i)
-            elif i.op == il.CALL:
-                code += self.Call(i)
-            elif i.op == il.RTRN:
-                code += self.Return(i)
-            elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
-                code += self.Op(i)
-            elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
-                code += self.CmpOp(i)
-            elif i.op == il.BEQZ:
-                code += self.Beqt(i)
-            elif i.op == il.J:
-                code += self.J(i)
-            elif i.op == il.NOP:
-                code += self.Nop(i)
-            else:
-                raise Exception, il.opsr[i.op]
-            #if i.label is not None:
-                #print code[l]
-                #code[l] = (code[l][0], code[l][1], code[l][2], i.label)
-        return code
+
+        def block(insts):
+            for i in insts:
+                #l = len(code)
+                if i.op == il.PRNT:
+                    self.code += self.Print(i)
+                elif i.op == il.IMM:
+                    self.code += self.Imm(i)
+                elif i.op == il.GPRM:
+                    self.code += self.Gprm(i)
+                elif i.op == il.IPRM:
+                    self.code += self.Iprm(i)
+                elif i.op == il.OPRM:
+                    self.code += self.Oprm(i)
+                elif i.op == il.RPRM:
+                    self.code += self.Rprm(i)
+                elif i.op == il.CALL:
+                    self.code += self.Call(i)
+                elif i.op == il.RTRN:
+                    self.code += self.Return(i)
+                elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
+                    self.code += self.Op(i)
+                elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
+                    self.code += self.CmpOp(i)
+                elif i.op == il.BEQZ:
+                    self.code += self.Beqt(i)
+                elif i.op == il.J:
+                    self.code += self.J(i)
+                elif i.op == il.NOP:
+                    self.code += self.Nop(i)
+                else:
+                    raise Exception, il.opsr[i.op]
+                #if i.label is not None:
+                    #print code[l]
+                    #code[l] = (code[l][0], code[l][1], code[l][2], i.label)
+        block(self.blocks[func.entry.name].insts)
+        for b in func.blks:
+            if b.name == func.entry.name: continue
+            block(self.blocks[b.name].insts)
 
     def Nop(self, i):
         code = [
