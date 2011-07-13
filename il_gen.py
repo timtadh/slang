@@ -24,9 +24,11 @@ class generate(object):
 
         for b in xrange(1, self.bcount+1):
             name = 'b%i' % b
+            blk = self.blocks[name]
             print ' '*2, "block:", name
-            for inst in self.blocks[name].insts:
+            for inst in blk.insts:
                 print ' '*4, inst
+            print ' '*4, 'next ->', blk.next
             print
         print
 
@@ -61,7 +63,7 @@ class generate(object):
         blk = il.Block(name)
         self.blocks[name] = blk
         self.cfunc.append(blk)
-        if prev is not None: prev.next = blk
+        if prev is not None: prev.next.append(blk)
         return blk
 
     def push_func(self, name=None):
@@ -100,8 +102,8 @@ class generate(object):
     def If(self, node, blk):
         assert node.label == 'If'
 
-        thenblk = self.block()
-        finalblk = self.block()
+        thenblk = self.block(blk)
+        finalblk = self.block(thenblk)
 
         cmpr = Symbol('r'+self.tmp(), il.Int())
         blk = self.CmpOp(node.children[0].children[0], cmpr, blk)
@@ -111,7 +113,8 @@ class generate(object):
         thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         if len(node.children) == 3:
-            elseblk = self.block()
+            elseblk = self.block(blk)
+            elseblk.next.append(finalblk)
             elseblk = self.Stmts(node.children[2], elseblk)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
             blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ]

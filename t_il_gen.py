@@ -136,6 +136,7 @@ def t_bb():
         }
         print f(1, 5)
         ''').rstrip('\n')
+    assert False
     assert str(10) == run('''
         f = func(a, b) {
             if (a > b) {
