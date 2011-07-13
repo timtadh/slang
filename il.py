@@ -7,7 +7,7 @@
 import sys
 
 opsr = (
-    'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
+    'MV', 'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
     'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT',
     'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'BEQZ', 'NOP', 'J'
 )
@@ -34,6 +34,8 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
             var[i.result.name] = var[i.a.name] - var[i.b.name]
         elif i.op == ADD:
             var[i.result.name] = var[i.a.name] + var[i.b.name]
+        elif i.op == MV:
+            var[i.result.name] = var[i.a.name]
         elif i.op == EQ:
             var[i.result.name] = 1 - int(var[i.a.name] == var[i.b.name])
         elif i.op == NE:
@@ -56,7 +58,6 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
         elif i.op == OPRM:
             rparams.append(var[i.b.name])
         elif i.op == GPRM:
-            print i.a
             var[i.result.name] = params[i.a]
             #print i.result, var[i.result.name]
         elif i.op == RPRM:
@@ -93,6 +94,11 @@ class Block(object):
         self.name = name
         self.insts = list()
         self.next = None
+
+    def __repr__(self): return str(self)
+
+    def __str__(self):
+        return '<Block %s>' % self.name
 
 class Inst(object):
 

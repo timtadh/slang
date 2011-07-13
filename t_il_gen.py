@@ -104,7 +104,7 @@ def t_if():
 
 
 def t_if_set():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(2) == run('''
         if (1 > 2) {
             a = 1
@@ -120,4 +120,30 @@ def t_if_set():
             a = 2
         }
         print a
+        ''').rstrip('\n')
+
+
+
+def t_bb():
+    assert str(5) == run('''
+        f = func(a, b) {
+            if (a > b) {
+                c = a
+            } else {
+                c = b
+            }
+            return c
+        }
+        print f(1, 5)
+        ''').rstrip('\n')
+    assert str(10) == run('''
+        f = func(a, b) {
+            if (a > b) {
+                c = a
+            } else {
+                c = b
+            }
+            return c
+        }
+        print f(10, 5)
         ''').rstrip('\n')

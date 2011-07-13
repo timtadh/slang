@@ -55,12 +55,13 @@ class generate(object):
         self.tcount += 1
         return 't%i' % self.tcount
 
-    def block(self):
+    def block(self, prev=None):
         self.bcount += 1
         name = 'b%i' % self.bcount
         blk = il.Block(name)
         self.blocks[name] = blk
         self.cfunc.append(blk)
+        if prev is not None: prev.next = blk
         return blk
 
     def push_func(self, name=None):
@@ -142,22 +143,43 @@ class generate(object):
             self.objs.add(s)
 
     def Assign(self, node, blk):
+        print
         assert node.label == 'Assign'
         name = node.children[0]
         c = node.children[1]
 
+        if name == 'c':
+            print '----------'
+            print name
+            print self.objs
         if name in self.objs:
             result = self.objs[name]
         else:
             result = Symbol('r'+self.tmp(), il.Int())
+            if name == 'c':
+                print 'creating new sym'
+                print 'result', result
+
 
         if c.label == 'Expr':
-            blk = self.Expr(c, result, blk)
+            if name == 'c':
+                print c
+                print 'c =>', result
+            blk = self.Expr(c, result, blk, toplevel=True)
             self.objs[name] = result
+            if name == 'c':
+                print self.objs
+                print 'c =>', result
         elif c.label == 'Func':
             blk = self.Func(c, name, blk)
         else:
             raise Exception, c.label
+
+
+        if name == 'c':
+            print '----------'
+            print
+
         return blk
 
     def Func(self, node, name, blk):
@@ -203,7 +225,7 @@ class generate(object):
             blk.insts += [ il.Inst(il.GPRM, i, 0, t) ]
         return blk
 
-    def Expr(self, node, result, blk):
+    def Expr(self, node, result, blk, toplevel=False):
         if node.label == 'Expr':
             c = node.children[0]
         else:
@@ -214,8 +236,21 @@ class generate(object):
         elif c.label == '/' or c.label == '*' or c.label == '-' or c.label == '+':
             blk = self.Op(c, result, blk)
         elif c.label == 'NAME':
-            result.type = self.objs[c.children[0]].type
-            result.name = self.objs[c.children[0]].name
+            ## If it this is a top level expression (eg. c = a) then
+            ## this is a copy instruction. Otherwise, this is a reference
+            ## instruction, (eg. c = a + 2)
+            ## c = a
+            ##   MV A, 0, C
+            ## c = a + 2
+            ##   IMM 2, 0, tmp
+            ##   ADD a, tmp, c
+            if toplevel:
+                blk.insts += [
+                    il.Inst(il.MV, self.objs[c.children[0]], 0, result)
+                ]
+            else:
+                result.type = self.objs[c.children[0]].type
+                result.name = self.objs[c.children[0]].name
         elif c.label == 'Expr':
             blk = self.Expr(c, result, blk)
         elif c.label == 'Call':
