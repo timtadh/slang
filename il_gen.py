@@ -196,7 +196,7 @@ class generate(object):
                 blk = self.Expr(node.children[0], result, blk)
                 blk.insts += [ il.Inst(il.OPRM, 0, result, 0) ]
             else:
-                raise Exception
+                raise Exception, 'Expected Expr got %s' % node.children[0].label
         blk.insts += [ il.Inst(il.RTRN, 0, 0, 0) ]
         return blk
 
@@ -234,8 +234,6 @@ class generate(object):
             else:
                 result.type = self.objs[c.children[0]].type
                 result.name = self.objs[c.children[0]].name
-        elif c.label == 'Expr':
-            blk = self.Expr(c, result, blk)
         elif c.label == 'Call':
             blk = self.Call(c, result, blk)
         else:

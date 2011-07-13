@@ -121,6 +121,13 @@ def t_if_set():
         }
         print a
         ''').rstrip('\n')
+    assert str(1) == run('''
+        a = 2
+        if (1 < 2) {
+            a = 1
+        }
+        print a
+        ''').rstrip('\n')
 
 def t_lone_expr():
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
