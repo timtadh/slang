@@ -155,13 +155,18 @@ class generate(object):
                 elif i.op == il.IPRM:
                     self.code += self.Iprm(i)
                 elif i.op == il.OPRM:
-                    self.code += self.FramePop(len(func.params))
+                    if not main and func.oparam_count > 0:
+                        self.code += self.FramePop(len(func.params))
+                    if func.oparam_count == 0:
+                        raise Exception, "expected no return paramters got at least 1."
                     self.code += self.Oprm(i)
                 elif i.op == il.RPRM:
                     self.code += self.Rprm(i)
                 elif i.op == il.CALL:
                     self.code += self.Call(i)
                 elif i.op == il.RTRN:
+                    if not main and func.oparam_count == 0:
+                        self.code += self.FramePop(len(func.params))
                     self.code += self.Return(i)
                 elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
                     self.code += self.Op(i)
@@ -287,7 +292,7 @@ class generate(object):
 
     def Return(self, i):
         code = list()
-        #if len(self.code) == 202:
+        #if len(self.code) >= 90 and len(self.code) < 110:
             #code = [
                 #(vm.IMM,  3, len(self.code), 'DEBUG'),
                 #(vm.PRNT, 3, 0, 'DEBUG'),

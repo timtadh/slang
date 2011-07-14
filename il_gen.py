@@ -197,6 +197,7 @@ class generate(object):
                 result = Symbol('r'+self.tmp(), il.Int())
                 blk = self.Expr(node.children[0], result, blk)
                 blk.insts += [ il.Inst(il.OPRM, 0, result, 0) ]
+                self.cfunc.oparam_count += 1
             else:
                 raise Exception, 'Expected Expr got %s' % node.children[0].label
         blk.insts += [ il.Inst(il.RTRN, 0, 0, 0) ]

@@ -105,11 +105,12 @@ class Function(object):
         self.blks = list()
         self.next = list()
         self.params = list()
+        self.oparam_count = 0
 
     def __repr__(self): return str(self)
 
     def __str__(self):
-        return '<Function %s %s entry:%s exit:%s params:%s>' % (self.name, str([b for b in self.blks]), str(self.entry), str(self.exit), str(self.params))
+        return '<Function %s %s entry:%s exit:%s params:%s oparams:%i>' % (self.name, str([b for b in self.blks]), str(self.entry), str(self.exit), str(self.params), self.oparam_count)
 
 class Inst(object):
 

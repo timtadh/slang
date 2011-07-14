@@ -138,7 +138,7 @@ def t_if_set():
         ''').rstrip('\n')
 
 def t_lone_expr():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         a = func() {
             f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
