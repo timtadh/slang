@@ -168,6 +168,8 @@ class generate(object):
                     if not main and func.oparam_count == 0:
                         self.code += self.FramePop(len(func.params))
                     self.code += self.Return(i)
+                elif i.op == il.MV:
+                    self.code += self.Mv(i)
                 elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
                     self.code += self.Op(i)
                 elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
@@ -368,6 +370,17 @@ class generate(object):
         ]
         #self.var[i.result] = self.bp_offset
         #self.bp_offset += 1
+        return code
+
+    def Mv(self, i):
+        code = [
+            (vm.IMM, 3, i.a.type.offset, 'start MV'),
+            (vm.ADD, 3, i.a.type.basereg),
+            (vm.LOAD, 3, 3),
+            (vm.IMM, 4, i.result.type.offset),
+            (vm.ADD, 4, i.result.type.basereg),
+            (vm.SAVE, 4, 3, 'Save in MV'),
+        ]
         return code
 
     def Op(self, i):

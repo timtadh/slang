@@ -150,7 +150,7 @@ def t_lone_expr():
         ''').rstrip('\n')
 
 def t_bb():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5) == run('''
         f = func(a, b) {
             if (a > b) {
