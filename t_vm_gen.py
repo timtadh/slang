@@ -69,14 +69,19 @@ def t_func_pointers():
         ''').rstrip('\n')
 
 def t_func_params_simple():
-    raise nose.SkipTest
-    assert str(7) == run('''
+    #raise nose.SkipTest
+    assert str(4) == run('''
         sub = func(a, b) { return a - b }
         print sub(5+7, 8)
         ''').rstrip('\n')
 
 def t_func_params_stack():
     raise nose.SkipTest
+    ## This tests currently fails because the code generator is not setup to do this properly.
+    ## It may require a non-trivial re-write to get this to work, because none of the operators
+    ## check if the referenced symbol is in the current block scope (read stack frame) of the
+    ## function context. When it is out of scope it should look up the stack for the appropriate
+    ## frame.
     assert str(4) == run('''
         sub = func(a, b) {
             _sub = func() {
