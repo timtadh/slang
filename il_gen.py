@@ -207,6 +207,7 @@ class generate(object):
         for i, c in enumerate(node.children):
             t = Symbol(self.tmp(), il.Int())
             self.objs[c] = t
+            self.cfunc.params.append(c)
             blk.insts += [ il.Inst(il.GPRM, i, 0, t) ]
         return blk
 

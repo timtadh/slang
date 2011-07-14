@@ -104,11 +104,12 @@ class Function(object):
         self.exit = None
         self.blks = list()
         self.next = list()
+        self.params = list()
 
     def __repr__(self): return str(self)
 
     def __str__(self):
-        return '<Function %s %s entry:%s exit:%s>' % (self.name, str([b for b in self.blks]), str(self.entry), str(self.exit))
+        return '<Function %s %s entry:%s exit:%s params:%s>' % (self.name, str([b for b in self.blks]), str(self.entry), str(self.exit), str(self.params))
 
 class Inst(object):
 
