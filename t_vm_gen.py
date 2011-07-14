@@ -70,7 +70,7 @@ def t_func_pointers():
 
 def t_func_params_simple():
     raise nose.SkipTest
-    assert str(4) == run('''
+    assert str(7) == run('''
         sub = func(a, b) { return a - b }
         print sub(5+7, 8)
         ''').rstrip('\n')

@@ -32,7 +32,7 @@ class generate(object):
             self.Func(f.name)
 
         def transform(i):
-            print '%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
+            #print '%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
             if isinstance(i[2], Symbol):
                 if i[2].type.entry not in self.floc:
                     print self.floc
@@ -116,6 +116,11 @@ class generate(object):
                 sym.type.basereg = 1 # set the base reg to the frame pointer
                 sym.type.offset = -1 * i # set the offset
                 i += 1
+            #if issubclass(sym.type.__class__, il.FuncPointer):
+                #print 'is subclass int'
+                #sym.type.basereg = 1 # set the base reg to the frame pointer
+                #sym.type.offset = -1 * i # set the offset
+                #i += 1
             #if issubclass(sym.type.__class__, il.Func):
                 #self.funcs.append(sym)
         return i-1
@@ -129,7 +134,7 @@ class generate(object):
         self.bp_offset = 3
 
         if not main:
-            self.code += self.FramePush()
+            self.code += self.FramePush(len(func.params))
         syms = self.gather_syms(func.blks)
         #print syms
         fp_offset = self.place_symbols(syms)
@@ -150,6 +155,7 @@ class generate(object):
                 elif i.op == il.IPRM:
                     self.code += self.Iprm(i)
                 elif i.op == il.OPRM:
+                    self.code += self.FramePop(len(func.params))
                     self.code += self.Oprm(i)
                 elif i.op == il.RPRM:
                     self.code += self.Rprm(i)
@@ -193,14 +199,16 @@ class generate(object):
 
     def Gprm(self, i):
         code = [
-            (vm.IMM,  3, 0, 'start GPRM'),
-            (vm.ADD,  3, 0),
-            (vm.IMM,  4, i.a+1),
-            (vm.SUB,  3, 4),
+            (vm.IMM,  3, 0, 'start GPRM'),            # $3 = 0
+            (vm.ADD,  3, 0),                          # $3 = $3 + $bp
+            (vm.IMM,  4, i.a),                        # $
+            (vm.ADD,  3, 4),
             (vm.LOAD, 4, 3),
             (vm.IMM,  3, i.result.type.offset),
             (vm.ADD,  3, i.result.type.basereg),
             (vm.SAVE, 3, 4, 'save in GPRM'),
+
+
             #(vm.IMM, 4, 1),
             #(vm.ADD, 1, 4, 'end GPRM'),
         ]
@@ -210,8 +218,7 @@ class generate(object):
         return code
 
     def Oprm(self, i):
-        code = self.FramePop()
-        code += [
+        code = [
             (vm.IMM,  4, i.b.type.offset, 'Return Value offset'),  # offset for bp for loading return val
             (vm.ADD,  3, 4),              # $3 = offset($3) + $fp (which was the old bp)
             (vm.LOAD, 3, 3, 'Loading Return Value into $3'),              # $3 = *$3
@@ -225,19 +232,23 @@ class generate(object):
         if isinstance(i.b.type, il.Func):
             # this is a function param not a value
             code = [
-                (vm.IMM,  3, i.b, 'start put func as arg'),  # offset for bp for loading param val
-                (vm.SAVE, 1, 3, 'save in Iprm 1'),              # *$fp = $3
-                (vm.IMM,  4, 1),              # $4 = 1
-                (vm.ADD,  1, 4, 'end put func as arg'),              # $fp += $4
+                (vm.IMM,  3, i.b, 'start put func as arg'),     # $3 = &func
+                (vm.IMM,  4, i.a),                  # $4 = $fp storage offset
+                (vm.ADD,  4, 1),                    # $4 = $4 + $fp
+                (vm.SAVE, 4, 3, 'save in Iprm 1'),  # *$4 = $3
+                #(vm.IMM,  4, 1),                                # $4 = 1
+                #(vm.ADD,  1, 4, 'end put func as arg'),         # $fp += $4
             ]
         else:
             code = [
-                (vm.IMM,  3, i.b.type.offset),  # offset for bp for loading param val
-                (vm.ADD,  3, i.b.type.basereg), # $3 = offset($3) + $bp
-                (vm.LOAD, 3, 3),                # $3 = *$3
-                (vm.SAVE, 1, 3, 'save in Iprm 2'),              # *$fp = $3
-                (vm.IMM,  4, 1),              # $4 = 1
-                (vm.ADD,  1, 4),              # $fp += $4
+                (vm.IMM,  3, i.b.type.offset),      # offset for bp for loading param val
+                (vm.ADD,  3, i.b.type.basereg),     # $3 = offset($3) + $fp
+                (vm.LOAD, 3, 3),                    # $3 = *$3
+                (vm.IMM,  4, i.a),                  # $4 = $fp storage offset
+                (vm.ADD,  4, 1),                    # $4 = $4 + $fp
+                (vm.SAVE, 4, 3, 'save in Iprm 2'),  # *$4 = $3
+                #(vm.IMM,  4, 1),                    # $4 = 1
+                #(vm.ADD,  1, 4),                    # $fp += $4
             ]
         return code
 
@@ -275,14 +286,22 @@ class generate(object):
         return code
 
     def Return(self, i):
-        code = [
+        code = list()
+        #if len(self.code) == 202:
+            #code = [
+                #(vm.IMM,  3, len(self.code), 'DEBUG'),
+                #(vm.PRNT, 3, 0, 'DEBUG'),
+                #(vm.PRNT, 2, 0, 'DEBUG'),
+                #(vm.EXIT, 0, 0, 'DEBUG'),
+            #]
+        code += [
             (vm.J, 2, 0),
         ]
         return code
 
-    def FramePush(self):
+    def FramePush(self, param_count):
         code = [
-            (vm.IMM,  4, 0, 'start frame push'),  # START FUNC
+            (vm.IMM,  4, param_count, 'start frame push'),  # START FUNC
             (vm.ADD,  4, 1),  # mv fp into reg[4]
             (vm.SAVE, 4, 0),  # stack save: save bp
             (vm.IMM,  3, 1),  # $3 = 1
@@ -298,9 +317,9 @@ class generate(object):
         ]
         return code
 
-    def FramePop(self):
+    def FramePop(self, param_count):
         code = [
-            (vm.IMM, 4, 0, 'start frame pop'),
+            (vm.IMM, 4, param_count, 'start frame pop'),
             (vm.ADD, 4, 0),  # load bp into 4
             (vm.LOAD, 0, 4), # stack restore: bp
             (vm.IMM, 3, 1),  # $3 = 1
