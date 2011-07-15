@@ -90,6 +90,7 @@ class Block(object):
         self.name = name
         self.insts = list()
         self.next = list()
+        self.prev = list()
 
     def __repr__(self): return str(self)
 

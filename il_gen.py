@@ -31,6 +31,7 @@ class generate(object):
             for inst in blk.insts:
                 print ' '*4, inst
             print ' '*4, 'next ->', blk.next
+            print ' '*4, 'prev ->', blk.prev
             print
         print
 
@@ -65,7 +66,9 @@ class generate(object):
         blk = il.Block(name)
         self.blocks[name] = blk
         self.cfunc.blks.append(blk)
-        if prev is not None: prev.next.append(blk)
+        if prev is not None:
+            prev.next.append(blk)
+            blk.prev.append(prev)
         return blk
 
     def push_func(self, name=None):
@@ -115,6 +118,7 @@ class generate(object):
         if len(node.children) == 3:
             elseblk = self.block(blk)
             elseblk.next.append(finalblk)
+            finalblk.prev.append(elseblk)
             elseblk = self.Stmts(node.children[2], elseblk)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
             blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ]
