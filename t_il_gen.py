@@ -153,6 +153,7 @@ def t_bb():
         }
         print f(1, 5)
         ''').rstrip('\n')
+    #assert False
     assert str(10) == run('''
         f = func(a, b) {
             if (a > b) {
@@ -163,4 +164,19 @@ def t_bb():
             return c
         }
         print f(10, 5)
+        ''').rstrip('\n')
+
+
+def t_recursive():
+    #raise nose.SkipTest
+    assert str(0) == run('''
+        f = func(x) {
+            if (x > 0) {
+                c = f(x-1)
+            } else {
+                c = x
+            }
+            return c
+        }
+        print f(10)
         ''').rstrip('\n')
