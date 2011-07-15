@@ -106,20 +106,22 @@ class generate(object):
         assert node.label == 'If'
 
         thenblk = self.block(blk)
-        finalblk = self.block(thenblk)
+        finalblk = self.block()
 
         cmpr = Symbol('r'+self.tmp(), il.Int())
         blk = self.CmpOp(node.children[0].children[0], cmpr, blk)
         blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk, 0) ]
 
         thenblk = self.Stmts(node.children[1], thenblk)
+        thenblk.next.append(finalblk)
+        finalblk.prev.append(thenblk)
         thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         if len(node.children) == 3:
             elseblk = self.block(blk)
+            elseblk = self.Stmts(node.children[2], elseblk)
             elseblk.next.append(finalblk)
             finalblk.prev.append(elseblk)
-            elseblk = self.Stmts(node.children[2], elseblk)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
             blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ]
         else:
