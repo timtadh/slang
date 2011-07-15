@@ -62,9 +62,11 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
             var[i.result.name] = params[i.a]
         elif i.op == CALL:
             if isinstance(i.a.type, Func):
-                params = run(functions[i.a.type.name].entry.name, blocks, functions, nparams, var, stdout=stdout)
+                _entry = functions[i.a.type.name].entry.name
+                params = run(_entry, blocks, functions, nparams, var, stdout=stdout)
             else:
-                params = run(functions[var[i.a.name].type.name].entry.name, blocks, functions, nparams, var, stdout=stdout)
+                _entry = functions[i.a.type.name].entry.name
+                params = run(_entry, blocks, functions, nparams, var, stdout=stdout)
             nparams = list()
         elif i.op == RTRN:
             return rparams
