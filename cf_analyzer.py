@@ -109,4 +109,6 @@ class analyze(object):
 
             if r.next == q.next and len(r.next[0].prev) == 2: # this is an IF-THEN-ELSE
                 return True, cfs.IF_THEN_ELSE, set([cblk, r, q, r.next[0]])
+            elif r.next[0] == q: # this is an IF-THEN
+                return True, cfs.IF_THEN, set([cblk, r, q])
 

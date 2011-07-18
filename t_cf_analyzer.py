@@ -138,13 +138,20 @@ def t_acyclic_chain_ifthenelse():
     assert rtype == cfs.CHAIN
     assert nset == set(_chain[0] + [ _if_then_else[0][0] ])
 
-
 def t_acyclic_ifthenelse():
     i = I()
     blks, cblk, postmax, postctr = if_then_else(i)
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN_ELSE
+    assert nset == set(blks)
+
+def t_acyclic_ifthen():
+    i = I()
+    blks, cblk, postmax, postctr = if_then(i)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
+    assert rtype == cfs.IF_THEN
     assert nset == set(blks)
 
 def t_expr_const():
