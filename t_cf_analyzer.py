@@ -138,6 +138,14 @@ def t_acyclic_chain_ifthenelse():
     assert rtype == cfs.CHAIN
     assert nset == set(_chain[0] + [ _if_then_else[0][0] ])
 
+def t_acyclic_ifthen():
+    i = I()
+    blks, cblk, postmax, postctr = if_then(i)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
+    assert rtype == cfs.IF_THEN
+    assert nset == set(blks)
+
 def t_acyclic_ifthenelse():
     i = I()
     blks, cblk, postmax, postctr = if_then_else(i)
@@ -146,13 +154,25 @@ def t_acyclic_ifthenelse():
     assert rtype == cfs.IF_THEN_ELSE
     assert nset == set(blks)
 
-def t_acyclic_ifthen():
+def t_acyclic_ifthen_chain():
     i = I()
-    blks, cblk, postmax, postctr = if_then(i)
+    _if_then = if_then(i)
+    _chain = chain(i)
+    blks, cblk, postmax, postctr = join(_if_then, _chain)
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN
-    assert nset == set(blks)
+    assert nset == set(_if_then[0])
+
+def t_acyclic_ifthenelse_chain():
+    i = I()
+    _if_then_else = if_then_else(i)
+    _chain = chain(i)
+    blks, cblk, postmax, postctr = join(_if_then_else, _chain)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
+    assert rtype == cfs.IF_THEN_ELSE
+    assert nset == set(_if_then_else[0])
 
 def t_expr_const():
     raise nose.SkipTest
