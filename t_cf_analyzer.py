@@ -109,7 +109,7 @@ def t_acyclic_chain():
     assert rtype == cfs.CHAIN
     assert nset == set(blks)
 
-def t_acyclic_chain():
+def t_acyclic_2xchain():
     i = I()
     blks, cblk, postmax, postctr = join(chain(i), chain(i))
     rtype, nset = mock().acyclic(blks, cblk)
