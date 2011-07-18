@@ -51,13 +51,46 @@ class analyze(object):
         postmax = len(blks)-1
         postctr = 1
         while len(blks) > 1 and postctr <= postmax:
-            n = blks[postctr]
-            print n
+            cblk = blks[postctr]
+            print cblk
+            print self.acyclic(f, blks, cblk, postmax, postctr)
 
             break
 
+    ## Adapted from figure 7.41 on page 208
     def acyclic(self, f, blks, cblk, postmax, postctr):
         nset = set()
 
-        ## Check for a chain of blks starting with the current blk
+        ## BEGIN CHAIN CHECK:
+        ##   Check for a chain of blks starting with the current blk
+        n = cblk
+        p = True                # len(n.prev) == 1 [assume for start of loop]
+        s = (len(n.next) == 1)  # len(n.next) == 1 eg. |successor| == 1
 
+        ## look for a chain starting with the current block
+        while p and s:
+            nset.add(n)
+            n = n.next[0]
+            p = (len(n.prev) == 1)
+            s = (len(n.next) == 1)
+
+        ## the current blk is part of the chain as well.
+        if p:
+            nset.add(n)
+
+        ## now look backwards
+        n = cblk
+        p = (len(n.prev) == 1)
+        s = True
+        while p and s:
+            nset.add(n)
+            n = n.prev[0]
+            p = (len(n.prev) == 1)
+            s = (len(n.next) == 1)
+
+        ## the current blk is part of the chain as well.
+        if s:
+            nset.add(n)
+
+        print nset
+        ## END CHAIN CHECK
