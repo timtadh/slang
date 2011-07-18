@@ -119,11 +119,11 @@ class generate(object):
 
         if len(node.children) == 3:
             elseblk = self.block(blk)
+            blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ] ## This line must go here. subtle bug
             elseblk = self.Stmts(node.children[2], elseblk)
             elseblk.next.append(finalblk)
             finalblk.prev.append(elseblk)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
-            blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ]
         else:
             blk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
