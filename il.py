@@ -65,7 +65,7 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
                 _entry = functions[i.a.type.name].entry.name
                 params = run(_entry, blocks, functions, nparams, var, stdout=stdout)
             else:
-                _entry = functions[i.a.type.name].entry.name
+                _entry = functions[var[i.a.name].type.name].entry.name
                 params = run(_entry, blocks, functions, nparams, var, stdout=stdout)
             nparams = list()
         elif i.op == RTRN:
