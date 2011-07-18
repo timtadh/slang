@@ -100,7 +100,13 @@ class analyze(object):
         if s:
             nset.add(n)
 
-        print nset
-        if len(nset) > 1:
-            return cfs.CHAIN, nset
         ## END CHAIN CHECK
+        if len(nset) > 1:  # chain
+            return True, cfs.CHAIN, nset
+        elif len(cblk.next) == 2: # if-then, if-then-else, ...
+            r = cblk.next[0]
+            q = cblk.next[1]
+
+            if r.next == q.next and len(r.next[0].prev) == 2: # this is an IF-THEN-ELSE
+                return True, cfs.IF_THEN_ELSE, set([cblk, r, q, r.next[0]])
+

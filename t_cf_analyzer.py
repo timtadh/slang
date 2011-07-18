@@ -77,7 +77,7 @@ def if_then_else(i):
     b3.prev += [ b1 ]
     b4.prev += [ b2, b3 ]
 
-    return [b1, b2, b3], b1, 2, 0
+    return [b1, b2, b3, b4], b1, 2, 0
 
 def join(*grps):
     blks = list()
@@ -105,14 +105,16 @@ def join(*grps):
 def t_acyclic_chain():
     i = I()
     blks, cblk, postmax, postctr = chain(i)
-    rtype, nset = mock().acyclic(blks, cblk)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
     assert rtype == cfs.CHAIN
     assert nset == set(blks)
 
 def t_acyclic_2xchain():
     i = I()
     blks, cblk, postmax, postctr = join(chain(i), chain(i))
-    rtype, nset = mock().acyclic(blks, cblk)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
     assert rtype == cfs.CHAIN
     assert nset == set(blks)
 
@@ -121,7 +123,8 @@ def t_acyclic_chain_ifthen():
     _chain = chain(i)
     _if_then = if_then(i)
     blks, cblk, postmax, postctr = join(_chain, _if_then)
-    rtype, nset = mock().acyclic(blks, cblk)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
     assert rtype == cfs.CHAIN
     assert nset == set(_chain[0] + [ _if_then[0][0] ])
 
@@ -130,9 +133,19 @@ def t_acyclic_chain_ifthenelse():
     _chain = chain(i)
     _if_then_else = if_then_else(i)
     blks, cblk, postmax, postctr = join(_chain, _if_then_else)
-    rtype, nset = mock().acyclic(blks, cblk)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
     assert rtype == cfs.CHAIN
     assert nset == set(_chain[0] + [ _if_then_else[0][0] ])
+
+
+def t_acyclic_ifthenelse():
+    i = I()
+    blks, cblk, postmax, postctr = if_then_else(i)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    assert ok == True
+    assert rtype == cfs.IF_THEN_ELSE
+    assert nset == set(blks)
 
 def t_expr_const():
     raise nose.SkipTest
