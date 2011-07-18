@@ -4,6 +4,13 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
+import sys
+
+typesr = (
+    'CHAIN', 'IF_THEN', 'IF_THEN_ELSE',
+)
+types = dict((k, i) for i, k in enumerate(typesr))
+sys.modules[__name__].__dict__.update(types)
 
 class Node(object):
 

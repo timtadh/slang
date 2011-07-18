@@ -9,7 +9,15 @@
 
 import sys
 
+import cf_struct as cfs
+
 class analyze(object):
+
+    @classmethod
+    def __mock__(cls):
+        self = super(analyze, cls).__new__(cls)
+        self.__init__()
+        return self
 
     def __new__(cls, entry, blocks, functions, stdout=None):
         self = super(analyze, cls).__new__(cls)
@@ -53,12 +61,12 @@ class analyze(object):
         while len(blks) > 1 and postctr <= postmax:
             cblk = blks[postctr]
             print cblk
-            print self.acyclic(f, blks, cblk, postmax, postctr)
+            print self.acyclic(blks, cblk)
 
             break
 
     ## Adapted from figure 7.41 on page 208
-    def acyclic(self, f, blks, cblk, postmax, postctr):
+    def acyclic(self, blks, cblk):
         nset = set()
 
         ## BEGIN CHAIN CHECK:
@@ -93,4 +101,6 @@ class analyze(object):
             nset.add(n)
 
         print nset
+        if len(nset) > 1:
+            return cfs.CHAIN, nset
         ## END CHAIN CHECK
