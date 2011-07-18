@@ -16,11 +16,11 @@ class Node(object):
 
     def __init__(self, rtype, blks):
         self.region_type = rtype
-        self.blks = blks
+        self.blks = list(blks)
 
     def __repr__(self): return str(self)
 
     def __str__(self):
         return (
-            '<cf.Node region:%s>'
-        ) % (self.region_type,)
+            '<cf.Node region:%s blks:%s>'
+        ) % (typesr[self.region_type], str(self.blks))

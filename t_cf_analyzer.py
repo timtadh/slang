@@ -179,7 +179,7 @@ def t_expr_const():
     print analyze('print 2')
 
 def t_recursive():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     print analyze('''
         f = func(x) {
             if (x > 0) {

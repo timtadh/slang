@@ -57,13 +57,31 @@ class analyze(object):
         blks = self.postorder(f)
 
         postmax = len(blks)-1
-        postctr = 1
+        postctr = 0
         while len(blks) > 1 and postctr <= postmax:
             cblk = blks[postctr]
             print cblk
-            print self.acyclic(blks, cblk)
+            ok, rtype, nset = self.acyclic(blks, cblk)
+            if ok:
+                print ok, cfs.typesr[rtype], nset
+                p = self.reduce(blks, rtype, nset, postctr, postmax)
+                raise Exception, "reduce"
+            elif False:
+                pass
+                ## if nessesary insert cyclic region detection here
+                ## right now, I only have if-statements and functions
+                ## so there are no inter-block cycles.
+            else:
+                postctr += 1
+            #break
 
-            break
+    def reduce(self, blks, rtype, nset, postctr, postmax):
+        node = cfs.Node(rtype, nset)
+        self.replace(blks, node, nset, postctr, postmax)
+        print node
+
+    def replace(self, blks, node, nset, postctr, postmax):
+        pass
 
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
@@ -111,4 +129,6 @@ class analyze(object):
                 return True, cfs.IF_THEN_ELSE, set([cblk, r, q, r.next[0]])
             elif r.next[0] == q: # this is an IF-THEN
                 return True, cfs.IF_THEN, set([cblk, r, q])
+
+        return False, None, None
 
