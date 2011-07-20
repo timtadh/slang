@@ -4,7 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import cStringIO
+import os, subprocess
 
 from sl_parser import Parser, Lexer
 import cf_analyzer as cf
@@ -12,13 +12,26 @@ import cf_struct as cfs
 import il_gen, il
 import nose
 
+img_dir = os.path.abspath('./imgs')
+
 def analyze(s):
-    out = cStringIO.StringIO()
-    cf.analyze(*il_gen.generate(Parser().parse(s, lexer=Lexer())), stdout=out)
-    return out.getvalue()
+    entry, blocks, functions = il_gen.generate(Parser().parse(s, lexer=Lexer()))
+    cf.analyze(entry, blocks, functions)
+    return functions
 
 def mock():
     return cf.analyze.__mock__()
+
+def dot(name, dotty):
+    if not os.path.exists(img_dir):
+        os.mkdir(img_dir)
+    fname = os.path.join(img_dir, name) + '.png'
+
+    p = subprocess.Popen(['dot', '-Tpng', '-o', fname], stdin=subprocess.PIPE)
+    p.stdin.write(dotty + '\0')
+    p.stdin.close()
+    p.wait()
+
 
 def I():
     def gen():
@@ -178,9 +191,24 @@ def t_expr_const():
     raise nose.SkipTest
     print analyze('print 2')
 
-def t_recursive():
+def t_ite():
     #raise nose.SkipTest
-    print analyze('''
+    dotty = analyze('''
+        f = func(x) {
+            if (x > 0) {
+                c = f(x-1)
+            } else {
+                c = x
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2'].tree.dotty()
+    dot('cf.ite', dotty)
+
+def t_ite_it():
+    #raise nose.SkipTest
+    dotty = analyze('''
         f = func(x) {
             if (x > 0) {
                 c = f(x-1)
@@ -193,5 +221,33 @@ def t_recursive():
             return c
         }
         print f(10)
-        ''')
-    assert False
+        ''')['f2'].tree.dotty()
+    dot('cf.ite_it', dotty)
+    #assert False
+
+
+def t_nest_ite():
+    #raise nose.SkipTest
+    dotty = analyze('''
+        f = func(x) {
+            if (x > 0) {
+                if (x/2 + x/2 == x) { // then it is even
+                    c = f(x+1)
+                } else {
+                    c = f(x-3)
+                }
+            } else {
+                if (x < 5) {
+                    if (x != 0) {
+                        x = x - 1
+                    }
+                    c = x
+                } else {
+                    c = 10
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2'].tree.dotty()
+    dot('cf.ite_it', dotty)

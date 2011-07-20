@@ -254,7 +254,7 @@ class generate(object):
         return blk
 
     def CmpOp(self, node, result, blk):
-        ops = {'==':il.EQ, '=!':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
+        ops = {'==':il.EQ, '!=':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
         Ar = Symbol('r'+self.tmp(), il.Int())
         Br = Symbol('r'+self.tmp(), il.Int())
         blk = self.Expr(node.children[0], Ar, blk)
