@@ -12,7 +12,7 @@ import cf_struct as cfs
 import il_gen, il
 import nose
 
-GEN_IMGS = True
+GEN_IMGS = False
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):

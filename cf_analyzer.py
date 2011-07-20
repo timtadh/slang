@@ -12,6 +12,8 @@ import sys
 import cf_struct as cfs
 
 class analyze(object):
+    '''Produce a structural control flow tree for each function. Takes the output of il_gen as
+    input.'''
 
     @classmethod
     def __mock__(cls):
@@ -25,23 +27,18 @@ class analyze(object):
         if stdout is None: self.stdout = sys.stdout
         self.functions = functions
 
+        ## the control flow analysis modifies the graph as we go.
+        ## this is undesirable. we would like the underlying graph
+        ## to remain. Therefore, we "push" a copy of the current
+        ## graph down and pop it back at the end.
         for blk in blocks.itervalues():
             blk.push_links()
 
         for f in self.functions.itervalues():
-            print f.name
             f.tree = self.structure(f)
-            print f.tree
-            print
-        print
 
         for blk in blocks.itervalues():
             blk.pop_links()
-
-        for blk in blocks.itervalues():
-            print blk
-            print 'next', blk.next
-            print 'prev', blk.prev
 
         return None
 
@@ -50,7 +47,7 @@ class analyze(object):
 
     ## A post-order Depth First Search traversal.
     def postorder(self, f):
-
+        '''Produces a post order depth-first-search traversal of the graph of the function f.'''
         visited = set()
         order = list()
 
@@ -65,20 +62,20 @@ class analyze(object):
         return order
 
     def structure(self, f):
+        '''Produces a control tree of the function f using structural analysis.'''
         blks = self.postorder(f)
 
         #postmax = len(blks)-1
         postctr = 0
         while len(blks) > 1 and postctr <= len(blks):
             cblk = blks[postctr]
+
             ok, rtype, nset = self.acyclic(blks, cblk)
             if ok:
-                #print ok, cfs.typesr[rtype], nset
+                ## Then we have an acyclic region. reduce the graph.
                 newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
                 if f.entry in nset:
                     f.entry = newnode
-
-                #raise Exception, "reduce"
             elif False:
                 pass
                 ## if nessesary insert cyclic region detection here
@@ -93,40 +90,46 @@ class analyze(object):
         return blks[0]
 
     def reduce(self, blks, rtype, nset, postctr):
+        '''Reduces the graph (blks) by replacing the set (nset) with an abstract node of rtype.
+        Also updates postctr appropriately.'''
+
+        def compact(blks, node, nset):
+            ## TODO: Refactor this method to use one loop
+            max_pos = 0
+            for i, b in enumerate(blks):
+                if b in nset: max_pos = i
+
+            blks[max_pos] = node
+            blks = [b for b in blks if b not in nset]
+            return blks
+
+        def replace(blks, node, nset, postctr):
+            ## TODO: refactor this method to have compact set postctr
+            blks = compact(blks, node, nset)
+            for i, b in enumerate(blks):
+                if b is node: postctr = i + 1
+
+            for n in nset:
+                for v in n.next:
+                    if v not in nset:
+                        node.next.append(v)
+                        v.prev.remove(n)
+                        v.prev.append(node)
+                for u in n.prev:
+                    if u not in nset:
+                        node.prev.append(u)
+                        u.next.remove(n)
+                        u.next.append(node)
+
+            return blks, postctr
+
         node = cfs.Node(rtype, nset)
-        blks, postctr = self.replace(blks, node, nset, postctr)
+        blks, postctr = replace(blks, node, nset, postctr)
         return node, blks, postctr
-
-    def replace(self, blks, node, nset, postctr):
-        blks = self.compact(blks, node, nset)
-        for i, b in enumerate(blks):
-            if b is node: postctr = i + 1
-
-        for n in nset:
-            for v in n.next:
-                if v not in nset:
-                    node.next.append(v)
-                    v.prev.remove(n)
-                    v.prev.append(node)
-            for u in n.prev:
-                if u not in nset:
-                    node.prev.append(u)
-                    u.next.remove(n)
-                    u.next.append(node)
-
-        return blks, postctr
-
-    def compact(self, blks, node, nset):
-        max_pos = 0
-        for i, b in enumerate(blks):
-            if b in nset: max_pos = i
-
-        blks[max_pos] = node
-        blks = [b for b in blks if b not in nset]
-        return blks
 
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
+        ''' Detects acyclic control flow regions suchs as: chains and if-statements.'''
         nset = set()
 
         ## BEGIN CHAIN CHECK:
