@@ -25,12 +25,22 @@ class analyze(object):
         if stdout is None: self.stdout = sys.stdout
         self.functions = functions
 
+        for blk in blocks.itervalues():
+            blk.push_links()
 
         for f in self.functions.itervalues():
             print f.name
             f.tree = self.structure(f)
             print
         print
+
+        for blk in blocks.itervalues():
+            blk.pop_links()
+
+        for blk in blocks.itervalues():
+            print blk
+            print 'next', blk.next
+            print 'prev', blk.prev
 
         return None
 
@@ -102,8 +112,8 @@ class analyze(object):
                     node.prev.append(u)
                     u.next.remove(n)
                     u.next.append(node)
-        return blks, postctr
 
+        return blks, postctr
 
     def compact(self, blks, node, nset):
         max_pos = 0

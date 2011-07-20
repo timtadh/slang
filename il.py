@@ -93,6 +93,20 @@ class Block(object):
         self.insts = list()
         self.next = list()
         self.prev = list()
+        self.link_stack = list()
+
+    def push_links(self):
+        self.link_stack.append({'next':self.next, 'prev':self.prev})
+        self.next = list(self.next)
+        self.prev = list(self.prev)
+
+    def pop_links(self):
+        next = self.next
+        prev = self.prev
+        old = self.link_stack.pop()
+        self.next = old['next']
+        self.prev = old['prev']
+        return next, prev
 
     def __repr__(self): return str(self)
 
