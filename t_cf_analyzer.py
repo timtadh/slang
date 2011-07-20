@@ -12,6 +12,7 @@ import cf_struct as cfs
 import il_gen, il
 import nose
 
+GEN_IMGS = True
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
@@ -23,6 +24,7 @@ def mock():
     return cf.analyze.__mock__()
 
 def dot(name, dotty):
+    if not GEN_IMGS: return
     if not os.path.exists(img_dir):
         os.mkdir(img_dir)
     fname = os.path.join(img_dir, name) + '.png'
@@ -191,9 +193,34 @@ def t_expr_const():
     raise nose.SkipTest
     print analyze('print 2')
 
+def t_none():
+    #raise nose.SkipTest
+    tree = analyze('''
+        f = func(x) {
+            return x
+        }
+        print f(10)
+        ''')['f2'].tree
+    #dot('cf.none', tree.dotty())
+    assert not hasattr(tree, 'region_type')
+
+def t_it():
+    #raise nose.SkipTest
+    tree = analyze('''
+        f = func(x) {
+            if (x > 0) {
+                x = f(x-1)
+            }
+            return x
+        }
+        print f(10)
+        ''')['f2'].tree
+    dot('cf.it', tree.dotty())
+    assert tree.region_type == cfs.IF_THEN
+
 def t_ite():
     #raise nose.SkipTest
-    dotty = analyze('''
+    tree = analyze('''
         f = func(x) {
             if (x > 0) {
                 c = f(x-1)
@@ -203,12 +230,14 @@ def t_ite():
             return c
         }
         print f(10)
-        ''')['f2'].tree.dotty()
-    dot('cf.ite', dotty)
+        ''')['f2'].tree
+    dot('cf.ite', tree.dotty())
+    assert tree.region_type == cfs.IF_THEN_ELSE
+
 
 def t_ite_it():
     #raise nose.SkipTest
-    dotty = analyze('''
+    tree = analyze('''
         f = func(x) {
             if (x > 0) {
                 c = f(x-1)
@@ -221,14 +250,15 @@ def t_ite_it():
             return c
         }
         print f(10)
-        ''')['f2'].tree.dotty()
-    dot('cf.ite_it', dotty)
-    #assert False
+        ''')['f2'].tree
+    dot('cf.ite_it', tree.dotty())
+    assert tree.region_type == cfs.IF_THEN_ELSE
+    assert tree.children[3].region_type == cfs.IF_THEN
 
 
 def t_nest_ite():
     #raise nose.SkipTest
-    dotty = analyze('''
+    tree = analyze('''
         f = func(x) {
             if (x > 0) {
                 if (x/2 + x/2 == x) { // then it is even
@@ -249,5 +279,9 @@ def t_nest_ite():
             return c
         }
         print f(10)
-        ''')['f2'].tree.dotty()
-    dot('cf.ite_it', dotty)
+        ''')['f2'].tree
+    dot('cf.nest_ite', tree.dotty())
+    assert tree.region_type == cfs.IF_THEN_ELSE
+    assert tree.children[1].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[2].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[2].children[2].region_type == cfs.IF_THEN
