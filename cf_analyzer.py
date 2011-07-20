@@ -126,7 +126,7 @@ class analyze(object):
 
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
-        nset = oset()
+        nset = set()
 
         ## BEGIN CHAIN CHECK:
         ##   Check for a chain of blks starting with the current blk

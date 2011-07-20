@@ -16,7 +16,7 @@ class Node(object):
 
     def __init__(self, rtype, blks):
         self.region_type = rtype
-        self.blks = list(blks)
+        self.children = list(blks)
         self.next = list()
         self.prev = list()
 
