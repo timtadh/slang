@@ -126,6 +126,8 @@ class generate(object):
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
         else:
             blk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
+            blk.next.append(finalblk)
+            finalblk.prev.append(blk)
 
         return finalblk
 

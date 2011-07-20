@@ -22,7 +22,9 @@ class Node(object):
 
     @property
     def name(self):
-        return '(' + ' '.join([b.name for b in self.blks]) + ')'
+        return (
+            '(%s : %s)'
+        ) % (typesr[self.region_type], ' '.join([b.name for b in self.blks]))
 
     def __repr__(self): return str(self)
 
