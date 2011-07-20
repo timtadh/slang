@@ -17,10 +17,16 @@ class Node(object):
     def __init__(self, rtype, blks):
         self.region_type = rtype
         self.blks = list(blks)
+        self.next = list()
+        self.prev = list()
+
+    @property
+    def name(self):
+        return '(' + ' '.join([b.name for b in self.blks]) + ')'
 
     def __repr__(self): return str(self)
 
     def __str__(self):
         return (
-            '<cf.Node region:%s blks:%s>'
-        ) % (typesr[self.region_type], str(self.blks))
+            '<cf.Node %s (%s)>'
+        ) % (typesr[self.region_type], ' '.join([b.name for b in self.blks]))
