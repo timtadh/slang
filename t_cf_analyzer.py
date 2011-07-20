@@ -187,9 +187,6 @@ def t_recursive():
             } else {
                 c = x
             }
-            if (x > 5) {
-                print x
-            }
             return c
         }
         print f(10)

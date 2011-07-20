@@ -109,6 +109,7 @@ class Function(object):
         self.next = list()
         self.params = list()
         self.oparam_count = 0
+        self.tree = None
 
     def __repr__(self): return str(self)
 

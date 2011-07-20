@@ -28,7 +28,7 @@ class analyze(object):
 
         for f in self.functions.itervalues():
             print f.name
-            self.structure(f)
+            f.tree = self.structure(f)
             print
         print
 
@@ -60,7 +60,6 @@ class analyze(object):
         postctr = 0
         while len(blks) > 1 and postctr <= len(blks):
             cblk = blks[postctr]
-            print cblk
             ok, rtype, nset = self.acyclic(blks, cblk)
             if ok:
                 print ok, cfs.typesr[rtype], nset
@@ -76,7 +75,11 @@ class analyze(object):
                 ## so there are no inter-block cycles.
             else:
                 postctr += 1
-            #break
+
+        if len(blks) != 1:
+            raise Exception, 'Construction of control tree failed'
+
+        return blks[0]
 
     def reduce(self, blks, rtype, nset, postctr):
         node = cfs.Node(rtype, nset)
@@ -87,7 +90,6 @@ class analyze(object):
         blks = self.compact(blks, node, nset)
         for i, b in enumerate(blks):
             if b is node: postctr = i + 1
-        print postctr
 
         for n in nset:
             for v in n.next:
@@ -100,12 +102,6 @@ class analyze(object):
                     node.prev.append(u)
                     u.next.remove(n)
                     u.next.append(node)
-
-        for b in blks:
-            print b
-            print 'next', b.next
-            print 'prev', b.prev
-            print
         return blks, postctr
 
 
@@ -114,13 +110,8 @@ class analyze(object):
         for i, b in enumerate(blks):
             if b in nset: max_pos = i
 
-        print max_pos
-        print 'blks', blks
-
         blks[max_pos] = node
-
         blks = [b for b in blks if b not in nset]
-        print 'new blks', blks
         return blks
 
     ## Adapted from figure 7.41 on page 208
