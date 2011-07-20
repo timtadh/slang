@@ -108,7 +108,7 @@ def t_acyclic_chain():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.CHAIN
-    assert nset == set(blks)
+    assert set(nset) == set(blks)
 
 def t_acyclic_2xchain():
     i = I()
@@ -116,7 +116,7 @@ def t_acyclic_2xchain():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.CHAIN
-    assert nset == set(blks)
+    assert set(nset) == set(blks)
 
 def t_acyclic_chain_ifthen():
     i = I()
@@ -126,7 +126,7 @@ def t_acyclic_chain_ifthen():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.CHAIN
-    assert nset == set(_chain[0] + [ _if_then[0][0] ])
+    assert set(nset) == set(_chain[0] + [ _if_then[0][0] ])
 
 def t_acyclic_chain_ifthenelse():
     i = I()
@@ -136,7 +136,7 @@ def t_acyclic_chain_ifthenelse():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.CHAIN
-    assert nset == set(_chain[0] + [ _if_then_else[0][0] ])
+    assert set(nset) == set(_chain[0] + [ _if_then_else[0][0] ])
 
 def t_acyclic_ifthen():
     i = I()
@@ -144,7 +144,7 @@ def t_acyclic_ifthen():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN
-    assert nset == set(blks)
+    assert set(nset) == set(blks)
 
 def t_acyclic_ifthenelse():
     i = I()
@@ -152,7 +152,7 @@ def t_acyclic_ifthenelse():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN_ELSE
-    assert nset == set(blks)
+    assert set(nset) == set(blks)
 
 def t_acyclic_ifthen_chain():
     i = I()
@@ -162,7 +162,7 @@ def t_acyclic_ifthen_chain():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN
-    assert nset == set(_if_then[0])
+    assert set(nset) == set(_if_then[0])
 
 def t_acyclic_ifthenelse_chain():
     i = I()
@@ -172,7 +172,7 @@ def t_acyclic_ifthenelse_chain():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN_ELSE
-    assert nset == set(_if_then_else[0])
+    assert set(nset) == set(_if_then_else[0])
 
 def t_expr_const():
     raise nose.SkipTest
@@ -186,6 +186,9 @@ def t_recursive():
                 c = f(x-1)
             } else {
                 c = x
+            }
+            if (x == 0) {
+                print x
             }
             return c
         }

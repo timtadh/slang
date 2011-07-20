@@ -24,11 +24,11 @@ class Node(object):
     def name(self):
         return (
             '(%s : %s)'
-        ) % (typesr[self.region_type], ' '.join([b.name for b in self.blks]))
+        ) % (typesr[self.region_type], ' '.join([b.name for b in self.children]))
 
     def __repr__(self): return str(self)
 
     def __str__(self):
         return (
             '<cf.Node %s (%s)>'
-        ) % (typesr[self.region_type], ' '.join([b.name for b in self.blks]))
+        ) % (typesr[self.region_type], ' '.join([b.name for b in self.children]))

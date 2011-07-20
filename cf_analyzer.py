@@ -31,6 +31,7 @@ class analyze(object):
         for f in self.functions.itervalues():
             print f.name
             f.tree = self.structure(f)
+            print f.tree
             print
         print
 
@@ -76,8 +77,8 @@ class analyze(object):
                 newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
                 if f.entry in nset:
                     f.entry = newnode
-                #raise Exception, "reduce"
 
+                #raise Exception, "reduce"
             elif False:
                 pass
                 ## if nessesary insert cyclic region detection here
