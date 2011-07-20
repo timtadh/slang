@@ -72,7 +72,7 @@ class analyze(object):
             cblk = blks[postctr]
             ok, rtype, nset = self.acyclic(blks, cblk)
             if ok:
-                print ok, cfs.typesr[rtype], nset
+                #print ok, cfs.typesr[rtype], nset
                 newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
                 if f.entry in nset:
                     f.entry = newnode
@@ -126,7 +126,7 @@ class analyze(object):
 
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
-        nset = set()
+        nset = oset()
 
         ## BEGIN CHAIN CHECK:
         ##   Check for a chain of blks starting with the current blk
@@ -167,9 +167,9 @@ class analyze(object):
             q = cblk.next[1]
 
             if r.next == q.next and len(r.next[0].prev) == 2: # this is an IF-THEN-ELSE
-                return True, cfs.IF_THEN_ELSE, set([cblk, r, q, r.next[0]])
+                return True, cfs.IF_THEN_ELSE, [cblk, r, q, r.next[0]]
             elif r.next[0] == q: # this is an IF-THEN
-                return True, cfs.IF_THEN, set([cblk, r, q])
+                return True, cfs.IF_THEN, [cblk, r, q]
 
         return False, None, None
 
