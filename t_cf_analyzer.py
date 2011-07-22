@@ -27,8 +27,13 @@ def dot(name, dotty):
     if not GEN_IMGS: return
     if not os.path.exists(img_dir):
         os.mkdir(img_dir)
-    plain = os.path.join(img_dir, name) + '.txt'
+    dot = os.path.join(img_dir, name) + '.dot'
+    plain = os.path.join(img_dir, name) + '.plain'
     png = os.path.join(img_dir, name) + '.png'
+
+    f = open(dot, 'w')
+    f.write(dotty)
+    f.close()
 
     p = subprocess.Popen(['dot', '-Tplain', '-o', plain], stdin=subprocess.PIPE)
     p.stdin.write(dotty + '\0')
