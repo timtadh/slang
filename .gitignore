@@ -6,4 +6,5 @@ sl_parser_tab.py
 gram_parser_tab.py
 .coverage
 env
+imgs
 
