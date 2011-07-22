@@ -13,7 +13,7 @@ import il
 from il import il_gen
 import nose
 
-GEN_IMGS = True
+GEN_IMGS = False
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
