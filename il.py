@@ -4,7 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import sys
+import sys, collections
 
 opsr = (
     'MV', 'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
@@ -107,6 +107,57 @@ class Block(object):
         self.next = old['next']
         self.prev = old['prev']
         return next, prev
+
+    def dotty(self):
+        def string(n):
+            #if isinstance(s, Node): return str(s.label)
+            if isinstance(n, Block):
+                s = '      Block %s\n' % (n.name)
+                s += '\n'.join("%-4s %-17s %-17s %s" % (opsr[i.op], i.a, i.b, i.result) for i in n.insts)
+            else:
+                s = str(n)
+            s = (
+                s.replace("'", "\\'").
+                replace('"', '\\"').
+                replace('\n', '\\n').
+                replace('<', '[').
+                replace('>', ']')
+            )
+            s = ''.join('<tr><td align="left">' + line + "</td></tr>" for line in s.split('\\n'))
+            return s
+
+        def add_node(nodes, name, label):
+            nodes.append(node % locals())
+        node = '%(name)s [shape=rect, fontname="Courier", label=<<table border="0">%(label)s</table>>];'
+        edge = '%s -> %s;'
+        nodes = list()
+        edges = list()
+
+        i = 0
+        queue = collections.deque()
+        queue.append((i, self))
+        visited = dict()
+        i += 1
+        while len(queue) > 0:
+            c, n = queue.pop()
+            if n.name in visited:
+                name = visited[n.name]
+            else:
+                name = 'n%d' % c
+                visited[n.name] = name
+                add_node(nodes, name, string(n))
+            for v in n.next:
+                if v.name in visited:
+                    vname = visited[v.name]
+                else:
+                    vname = 'n%d' % i
+                    visited[v.name] = vname
+                    queue.append((i, v))
+                    add_node(nodes, vname, string(v))
+                    i += 1
+                edges.append(edge % (name, vname))
+        print >>sys.stderr, 'digraph G {\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
+        return 'digraph G {\nrankdir=LR;\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
 
     def __repr__(self): return str(self)
 

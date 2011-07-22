@@ -74,8 +74,8 @@ class analyze(object):
             if ok:
                 ## Then we have an acyclic region. reduce the graph.
                 newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
-                if f.entry in nset:
-                    f.entry = newnode
+                #if f.entry in nset:
+                    #f.entry = newnode
             elif False:
                 pass
                 ## if nessesary insert cyclic region detection here

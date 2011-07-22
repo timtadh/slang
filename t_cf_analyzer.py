@@ -12,7 +12,7 @@ import cf_struct as cfs
 import il_gen, il
 import nose
 
-GEN_IMGS = False
+GEN_IMGS = True
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
@@ -258,7 +258,7 @@ def t_ite_it():
 
 def t_nest_ite():
     #raise nose.SkipTest
-    tree = analyze('''
+    f = analyze('''
         f = func(x) {
             if (x > 0) {
                 if (x/2 + x/2 == x) { // then it is even
@@ -279,8 +279,10 @@ def t_nest_ite():
             return c
         }
         print f(10)
-        ''')['f2'].tree
+        ''')['f2']
+    tree = f.tree
     dot('cf.nest_ite', tree.dotty())
+    dot('blks.nest_ite', f.entry.dotty())
     assert tree.region_type == cfs.IF_THEN_ELSE
     assert tree.children[1].region_type == cfs.IF_THEN_ELSE
     assert tree.children[2].region_type == cfs.IF_THEN_ELSE
