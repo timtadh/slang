@@ -4,6 +4,8 @@ Control Flow Analyzer
 This package does control flow analysis on the output of the intermediate code generator (found in
 the `il` package).
 
+---
+
 The purpose of the control flow analysis is to build a representation on which to efficiently
 compute dataflow analysis. There are several types of control flow representation which might be
 computed in a compiler, Slang uses `structural` analysis. Structural analysis identifies functional
