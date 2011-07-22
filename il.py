@@ -156,7 +156,6 @@ class Block(object):
                     add_node(nodes, vname, string(v))
                     i += 1
                 edges.append(edge % (name, vname))
-        print >>sys.stderr, 'digraph G {\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
         return 'digraph G {\nrankdir=LR;\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
 
     def __repr__(self): return str(self)

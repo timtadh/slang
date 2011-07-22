@@ -9,7 +9,7 @@
 
 import sys
 
-import cf_struct as cfs
+import struct as cfs
 
 class analyze(object):
     '''Produce a structural control flow tree for each function. Takes the output of il_gen as

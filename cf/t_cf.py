@@ -7,8 +7,8 @@
 import os, subprocess
 
 from sl_parser import Parser, Lexer
-import cf_analyzer as cf
-import cf_struct as cfs
+import analyzer as cf
+import struct as cfs
 import il_gen, il
 import nose
 
