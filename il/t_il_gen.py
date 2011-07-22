@@ -6,7 +6,7 @@
 
 import cStringIO
 
-from sl_parser import Parser, Lexer
+from frontend.sl_parser import Parser, Lexer
 from table import SymbolTable
 import il_gen, il
 import nose

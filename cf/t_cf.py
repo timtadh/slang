@@ -6,10 +6,11 @@
 
 import os, subprocess
 
-from sl_parser import Parser, Lexer
-import analyzer as cf
-import struct as cfs
-import il_gen, il
+from frontend.sl_parser import Parser, Lexer
+import cf.analyzer as cf
+import cf.struct as cfs
+import il
+from il import il_gen
 import nose
 
 GEN_IMGS = True

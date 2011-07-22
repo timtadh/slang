@@ -6,9 +6,10 @@
 
 import cStringIO
 
-from sl_parser import Parser, Lexer
-from table import SymbolTable
-import il_gen, il
+from frontend.sl_parser import Parser, Lexer
+#from table import SymbolTable
+import il
+from il import il_gen
 import vm_gen, vm
 import nose
 

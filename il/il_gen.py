@@ -5,7 +5,7 @@
 #For licensing see the LICENSE file in the top level directory.
 
 
-from sl_parser import Parser, Lexer
+from frontend.sl_parser import Parser, Lexer
 from table import Symbol, SymbolTable
 import il
 
