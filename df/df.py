@@ -48,7 +48,9 @@
 #------------------------------------------------------------------------#
 
 
-class analyze(object):
 
-    def __new__(cls, )
+class engine(object):
+
+    def __new__(cls, analyzer, entry, blocks, functions):
+        pass
 
