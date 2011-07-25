@@ -8,7 +8,7 @@
 from collections import deque
 
 from frontend.sl_parser import Parser, Lexer
-from il.table import Symbol, SymbolTable
+from il.table import SymbolTable
 import il
 from il import il_gen
 import vm
@@ -34,7 +34,7 @@ class generate(object):
 
         def transform(i):
             #print '%-5s %s' % (vm.opsr[i[0]], str(i[1:])[1:-1].replace(',', ''))
-            if isinstance(i[2], Symbol):
+            if isinstance(i[2], il.Symbol):
                 if i[2].type.entry not in self.floc:
                     print self.floc
                     raise Exception, (
@@ -103,9 +103,9 @@ class generate(object):
         syms = set()
         for b in blks:
             for i in b.insts:
-                if isinstance(i.a, Symbol): syms.add(i.a)
-                if isinstance(i.b, Symbol): syms.add(i.b)
-                if isinstance(i.result, Symbol): syms.add(i.result)
+                if isinstance(i.a, il.Symbol): syms.add(i.a)
+                if isinstance(i.b, il.Symbol): syms.add(i.b)
+                if isinstance(i.result, il.Symbol): syms.add(i.result)
         return syms
 
     def place_symbols(self, syms):

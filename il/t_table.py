@@ -5,8 +5,8 @@
 #For licensing see the LICENSE file in the top level directory.
 
 from nose.tools import assert_raises
-from table import Symbol, SymbolTable
-from il import Int, Func, FuncPointer
+from table import SymbolTable
+from il import Symbol, Int, Func, FuncPointer
 
 def test_pushpop():
     table = SymbolTable()

@@ -120,7 +120,6 @@ class analyze(object):
                         if u not in node.prev: node.prev.append(u)
                         u.next.remove(n)
                         if node not in u.next: u.next.append(node)
-            print blks, postctr
             return blks, postctr
 
         node = cfs.Node(rtype, nset)

@@ -6,25 +6,6 @@
 
 from collections import MutableMapping
 
-class Symbol(object):
-
-    IDC = 0
-
-    def __init__(self, name, type):
-        self._id = Symbol.IDC
-        Symbol.IDC += 1
-        self.name = name
-        self.type = type
-
-    @property
-    def id(self):
-        return self._id
-
-    def __repr__(self):
-        return '<sym %d - %s%s>' % (self.id, self.name, self.type)
-
-    def __str__(self): return '<sym %s%s>' % (self.name, self.type)
-
 class SymbolTable(MutableMapping):
 
     def __init__(self, *args, **kwargs):

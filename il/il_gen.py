@@ -6,7 +6,7 @@
 
 
 from frontend.sl_parser import Parser, Lexer
-from table import Symbol, SymbolTable
+from table import SymbolTable
 import il
 
 class generate(object):
@@ -108,7 +108,7 @@ class generate(object):
         thenblk = self.block(blk)
         finalblk = self.block()
 
-        cmpr = Symbol('r'+self.tmp(), il.Int())
+        cmpr = il.Symbol('r'+self.tmp(), il.Int())
         blk = self.CmpOp(node.children[0].children[0], cmpr, blk)
         blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk, 0) ]
 
@@ -137,7 +137,7 @@ class generate(object):
 
         c = node.children[0]
         if c.label == 'Expr':
-            result = Symbol('r'+self.tmp(), il.Int())
+            result = il.Symbol('r'+self.tmp(), il.Int())
             blk = self.Expr(c, result, blk)
         else:
             raise Exception, c.label
@@ -150,7 +150,7 @@ class generate(object):
         name = node.children[0]
         c = node.children[1]
         if c.label == 'Func':
-            s = Symbol(name, il.Func(None))
+            s = il.Symbol(name, il.Func(None))
             self.objs.add(s)
 
     def Assign(self, node, blk):
@@ -161,7 +161,7 @@ class generate(object):
         if name in self.objs:
             result = self.objs[name]
         else:
-            result = Symbol('r'+self.tmp(), il.Int())
+            result = il.Symbol('r'+self.tmp(), il.Int())
 
         if c.label == 'Expr':
             blk = self.Expr(c, result, blk, toplevel=True)
@@ -202,7 +202,7 @@ class generate(object):
         assert node.label == 'Return'
         if node.children:
             if node.children[0].label == 'Expr':
-                result = Symbol('r'+self.tmp(), il.Int())
+                result = il.Symbol('r'+self.tmp(), il.Int())
                 blk = self.Expr(node.children[0], result, blk)
                 blk.insts += [ il.Inst(il.OPRM, 0, result, 0) ]
                 self.cfunc.oparam_count += 1
@@ -214,7 +214,7 @@ class generate(object):
     def DParams(self, node, blk):
         assert node.label == 'DParams'
         for i, c in enumerate(node.children):
-            t = Symbol(self.tmp(), il.Int())
+            t = il.Symbol(self.tmp(), il.Int())
             self.objs[c] = t
             self.cfunc.params.append(c)
             blk.insts += [ il.Inst(il.GPRM, i, 0, t) ]
@@ -255,8 +255,8 @@ class generate(object):
 
     def CmpOp(self, node, result, blk):
         ops = {'==':il.EQ, '!=':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
-        Ar = Symbol('r'+self.tmp(), il.Int())
-        Br = Symbol('r'+self.tmp(), il.Int())
+        Ar = il.Symbol('r'+self.tmp(), il.Int())
+        Br = il.Symbol('r'+self.tmp(), il.Int())
         blk = self.Expr(node.children[0], Ar, blk)
         blk = self.Expr(node.children[1], Br, blk)
         blk.insts += [
@@ -269,8 +269,8 @@ class generate(object):
 
     def Op(self, node, result, blk):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}
-        Ar = Symbol('r'+self.tmp(), il.Int())
-        Br = Symbol('r'+self.tmp(), il.Int())
+        Ar = il.Symbol('r'+self.tmp(), il.Int())
+        Br = il.Symbol('r'+self.tmp(), il.Int())
         blk = self.Expr(node.children[0], Ar, blk)
         blk = self.Expr(node.children[1], Br, blk)
         blk.insts +=  [
@@ -299,7 +299,7 @@ class generate(object):
         assert node.label == 'Params'
         params = list()
         for c in node.children:
-            result = Symbol('r'+self.tmp(), il.Int())
+            result = il.Symbol('r'+self.tmp(), il.Int())
             blk = self.Expr(c, result, blk)
             params.append(result)
         params.reverse()
