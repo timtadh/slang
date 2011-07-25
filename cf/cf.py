@@ -107,20 +107,20 @@ class analyze(object):
             ## TODO: refactor this method to have compact set postctr
             blks = compact(blks, node, nset)
             for i, b in enumerate(blks):
-                if b is node: postctr = i + 1
+                if b is node: postctr = i
 
             for n in nset:
                 for v in n.next:
                     if v not in nset:
-                        node.next.append(v)
+                        if v not in node.next: node.next.append(v)
                         v.prev.remove(n)
-                        v.prev.append(node)
+                        if node not in v.prev: v.prev.append(node)
                 for u in n.prev:
                     if u not in nset:
-                        node.prev.append(u)
+                        if u not in node.prev: node.prev.append(u)
                         u.next.remove(n)
-                        u.next.append(node)
-
+                        if node not in u.next: u.next.append(node)
+            print blks, postctr
             return blks, postctr
 
         node = cfs.Node(rtype, nset)
@@ -171,9 +171,9 @@ class analyze(object):
             q = cblk.next[1]
 
             if r.next == q.next and len(r.next[0].prev) == 2: # this is an IF-THEN-ELSE
-                return True, cfs.IF_THEN_ELSE, [cblk, r, q, r.next[0]]
+                return True, cfs.IF_THEN_ELSE, [cblk, r, q]
             elif r.next[0] == q: # this is an IF-THEN
-                return True, cfs.IF_THEN, [cblk, r, q]
+                return True, cfs.IF_THEN, [cblk, r]
 
         return False, None, None
 

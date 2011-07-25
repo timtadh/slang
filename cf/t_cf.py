@@ -166,22 +166,25 @@ def t_acyclic_chain_ifthenelse():
     assert set(nset) == set(_chain[0] + [ _if_then_else[0][0] ])
 
 def t_acyclic_ifthen():
+    #raise nose.SkipTest
     i = I()
     blks, cblk, postmax, postctr = if_then(i)
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN
-    assert set(nset) == set(blks)
+    assert set(nset) == set(blks[:2])
 
 def t_acyclic_ifthenelse():
+    #raise nose.SkipTest
     i = I()
     blks, cblk, postmax, postctr = if_then_else(i)
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN_ELSE
-    assert set(nset) == set(blks)
+    assert set(nset) == set(blks[:3])
 
 def t_acyclic_ifthen_chain():
+    #raise nose.SkipTest
     i = I()
     _if_then = if_then(i)
     _chain = chain(i)
@@ -189,9 +192,10 @@ def t_acyclic_ifthen_chain():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN
-    assert set(nset) == set(_if_then[0])
+    assert set(nset) == set(_if_then[0][:2])
 
 def t_acyclic_ifthenelse_chain():
+    #raise nose.SkipTest
     i = I()
     _if_then_else = if_then_else(i)
     _chain = chain(i)
@@ -199,11 +203,7 @@ def t_acyclic_ifthenelse_chain():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     assert ok == True
     assert rtype == cfs.IF_THEN_ELSE
-    assert set(nset) == set(_if_then_else[0])
-
-def t_expr_const():
-    raise nose.SkipTest
-    print analyze('print 2')
+    assert set(nset) == set(_if_then_else[0][:3])
 
 def t_none():
     #raise nose.SkipTest
@@ -228,7 +228,8 @@ def t_it():
         print f(10)
         ''')['f2'].tree
     dot('cf.it', tree.dotty())
-    assert tree.region_type == cfs.IF_THEN
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN
 
 def t_ite():
     #raise nose.SkipTest
@@ -244,7 +245,8 @@ def t_ite():
         print f(10)
         ''')['f2'].tree
     dot('cf.ite', tree.dotty())
-    assert tree.region_type == cfs.IF_THEN_ELSE
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
 
 
 def t_ite_it():
@@ -264,8 +266,10 @@ def t_ite_it():
         print f(10)
         ''')['f2'].tree
     dot('cf.ite_it', tree.dotty())
-    assert tree.region_type == cfs.IF_THEN_ELSE
-    assert tree.children[3].region_type == cfs.IF_THEN
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[1].region_type == cfs.CHAIN
+    assert tree.children[1].children[0].region_type == cfs.IF_THEN
 
 
 def t_nest_ite():
@@ -295,7 +299,11 @@ def t_nest_ite():
     tree = f.tree
     dot('cf.nest_ite', tree.dotty())
     dot('blks.nest_ite', f.entry.dotty())
-    assert tree.region_type == cfs.IF_THEN_ELSE
-    assert tree.children[1].region_type == cfs.IF_THEN_ELSE
-    assert tree.children[2].region_type == cfs.IF_THEN_ELSE
-    assert tree.children[2].children[2].region_type == cfs.IF_THEN
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[1].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[1].children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[2].children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].children[2].children[0].region_type == cfs.IF_THEN
