@@ -10,19 +10,21 @@ import il
 class ReachingDefintions(abstract.DataFlowAnalyzer):
 
     def __init__(self):
-        self.var_count = 0
+        self.def_count = 0
 
     def init(self, blocks, functions):
-        vars = set()
-        for blk in blocks.itervalues():
-            for i in blk.insts:
-                if isinstance(i.a, il.Symbol): vars.add(i.a.id)
-                if isinstance(i.b, il.Symbol): vars.add(i.b.id)
-                if isinstance(i.result, il.Symbol): vars.add(i.result.id)
-        self.var_count = len(vars)
-        print self.var_count
+        defs = list()
+        for name, blk in blocks.iteritems():
+            for i, inst in enumerate(blk.insts):
+                #if isinstance(i.a, il.Symbol): vars.add(i.a.id)
+                #if isinstance(i.b, il.Symbol): vars.add(i.b.id)
+                if isinstance(inst.result, il.Symbol): defs.append(inst.result.id)
+        self.def_count = len(defs)
+        print defs
+        print self.def_count
 
     def flow_function(self, blk): pass
+
     def newelement(self): pass
     def meet(self, a, b): pass
     def join(self, a, b): pass
