@@ -12,7 +12,7 @@ import abstract, example
 import nose
 
 def cf_analyze(s):
-    entry, blocks, functions = il.il_gen.generate(Parser().parse(s, lexer=Lexer()))
+    entry, blocks, functions = il.il_gen.generate(Parser().parse(s, lexer=Lexer()), True)
     cf.analyze(entry, blocks, functions)
     return blocks, functions
 
@@ -42,4 +42,29 @@ def t_example_init():
         ''')
 
     rd.init(functions['f2'])
+    assert set(rd.defs.keys()) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
+    assert set(t.id for t in rd.defs.values()) == set([1, 2, 4, 5, 6, 8, 9, 11])
+
+def t_example_flowfunction():
+    rd = example.ReachingDefintions()
+
+    blocks, functions = cf_analyze('''
+        f = func(x) {
+            if (x > 0) {
+                x = x + 5 - 3
+                x = x - 4
+                c = x*2
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    rd.init(functions['f2'])
+    print
+    ff = rd.flow_function(blocks['b3'])
+
+    print ff(set([('b2', 0)]))
+
     assert False
+
