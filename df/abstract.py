@@ -9,6 +9,10 @@ import abc
 class DataFlowAnalyzer(object):
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractproperty
+    def name(self):
+        '''the name of this analyzer'''
+
     @abc.abstractmethod
     def init(self, f):
         '''collect and initialize the analyzer.'''

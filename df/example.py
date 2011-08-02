@@ -30,6 +30,9 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
         self.defs = dict()
         self.types = dict()
 
+    @property
+    def name(self): return 'ReachingDefinitionsExample'
+
     def init(self, f):
         defs = list()
         for blk in f.blks:

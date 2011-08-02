@@ -49,12 +49,12 @@
 
 import il, cf
 
-def engine(analyzer, functions):
+class results(object):
+    def __init__(self):
+        self.inn = dict()
+        self.out = dict()
 
-    class results(object):
-        def __init__(self):
-            self.inn = dict()
-            self.out = dict()
+def engine(analyzer, functions):
 
     def compute(f):
 
@@ -130,6 +130,9 @@ def engine(analyzer, functions):
             print 'in', R.inn[blk.name]
             print 'out', R.out[blk.name]
             print
+
+        f.df[A.name] = R
+        print f.df
 
 
     compute(functions['f2'])

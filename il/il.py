@@ -175,6 +175,7 @@ class Function(object):
         self.params = list()
         self.oparam_count = 0
         self.tree = None
+        self.df = dict()
 
     def __repr__(self): return str(self)
 
