@@ -67,7 +67,8 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
         #print
 
         def flowfunc(include, exclude, flow):
-            return (flow | include) - exclude
+            result = (flow | include) - exclude
+            return result
 
         return functools.partial(flowfunc, include, exclude)
 
@@ -75,11 +76,6 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
     def id(self, a): return set(a)
     def meet(self, a, b): return a & b
     def join(self, a, b): return a | b
-
-    def compose(self, f, g):
-        def h(x):
-            return f(g(x))
-        return h
 
     def star(self, f):
         def h(x):

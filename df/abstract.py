@@ -10,7 +10,7 @@ class DataFlowAnalyzer(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def init(self, blocks, functions):
+    def init(self, f):
         '''collect and initialize the analyzer.'''
 
     @abc.abstractmethod
@@ -35,10 +35,6 @@ class DataFlowAnalyzer(object):
     @abc.abstractmethod
     def join(self, a, b):
         '''the join operator on the underlying lattice'''
-
-    @abc.abstractmethod
-    def compose(self, a, b):
-        '''compose flow functions together, eg. a(b(x))'''
 
     @abc.abstractmethod
     def star(self, a, b):

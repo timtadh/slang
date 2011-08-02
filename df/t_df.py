@@ -124,3 +124,22 @@ def t_example_ifthenelse_byhand():
     assert set(d for d in _then if d in rd.types[2]) == set([('b3', 4)])
     assert set(d for d in _else if d in rd.types[2]) == set([('b5', 0)])
     assert set(d for d in _final if d in rd.types[2]) == set([('b3', 4), ('b5', 0)])
+
+
+def t_example_ifthenelse_engine():
+
+    blocks, functions = cf_analyze('''
+        f = func(x) {
+            c = 3
+            if (x > 0) {
+                c = f(x-1)
+            } else {
+                c = x
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.engine(example.ReachingDefintions, functions)
+    assert False
