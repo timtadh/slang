@@ -39,9 +39,9 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
                     if inst.result.type.id not in self.types:
                         self.types[inst.result.type.id] = set()
                     self.types[inst.result.type.id].add((blk.name, i))
-        print self.defs
-        print self.types
-        print self.types.keys()
+        #print self.defs
+        #print self.types
+        #print self.types.keys()
 
     def flow_function(self, blk):
         include = set()
@@ -58,21 +58,29 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
                 include.add(loc)
                 included_types.add(typ)
                 exclude |= set((b,i) for b, i in self.types[typ] if b in prev_blks) - set([loc])
-        print
-        print 'include', include
-        print 'included_types', included_types
-        print 'exclude', exclude
-        print
-        print prev_blks
-        print
+        #print
+        #print 'include', include
+        #print 'included_types', included_types
+        #print 'exclude', exclude
+        #print
+        #print prev_blks
+        #print
 
         def flowfunc(include, exclude, flow):
             return (flow | include) - exclude
 
         return functools.partial(flowfunc, include, exclude)
 
-    def newelement(self): pass
-    def meet(self, a, b): pass
-    def join(self, a, b): pass
-    def compose(self, a, b): pass
-    def star(self, a, b): pass
+    def newelement(self): return set()
+    def id(self, a): return set(a)
+    def meet(self, a, b): return a & b
+    def join(self, a, b): return a | b
+
+    def compose(self, f, g):
+        def h(x):
+            return f(g(x))
+        return h
+
+    def star(self, f):
+        def h(x):
+            return self.meet(self.id(x), f(x))

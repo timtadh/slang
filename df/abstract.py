@@ -21,6 +21,10 @@ class DataFlowAnalyzer(object):
         '''
 
     @abc.abstractmethod
+    def id(self, a):
+        '''the identity flow function'''
+
+    @abc.abstractmethod
     def newelement(self):
         '''create a new lattice element.'''
 
