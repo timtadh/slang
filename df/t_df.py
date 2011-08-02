@@ -66,5 +66,30 @@ def t_example_flowfunction():
 
     print ff(set([('b2', 0)]))
 
-    assert False
+    #assert False
 
+def t_example_flowfunction_finally():
+    rd = example.ReachingDefintions()
+
+    blocks, functions = cf_analyze('''
+        f = func(x) {
+            c = 3
+            if (x > 0) {
+                c = f(x-1)
+            } else {
+                c = x
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    rd.init(functions['f2'])
+    print
+    ff_if = rd.flow_function(blocks['b2'])
+    ff_then = rd.flow_function(blocks['b3'])
+    ff_else = rd.flow_function(blocks['b5'])
+    ff_finally = rd.flow_function(blocks['b4'])
+
+    #print ff(set([('b2', 0)]))
+    assert False

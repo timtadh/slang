@@ -4,10 +4,25 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import functools
+import functools, collections
 
 import abstract
 import il
+
+def DFS(root, attr):
+
+    visited = set()
+    stack = collections.deque()
+    stack.append(root)
+
+    while stack:
+        blk = stack.pop()
+        visited.add(blk.name)
+        for b in getattr(blk, attr):
+            if b.name not in visited:
+                stack.append(b)
+
+    return visited - set([root.name])
 
 class ReachingDefintions(abstract.DataFlowAnalyzer):
 
@@ -32,6 +47,7 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
         include = set()
         included_types = set()
         exclude = set()
+        prev_blks = DFS(blk, 'prev')
         for i, inst in enumerate(blk.insts[-1::-1]):
             i = len(blk.insts) - (i + 1)
             if isinstance(inst.result, il.Symbol):
@@ -41,11 +57,14 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
                 #print (blk.name, i), typ
                 include.add(loc)
                 included_types.add(typ)
-                exclude |= self.types[typ] - set([loc])
+                exclude |= set((b,i) for b, i in self.types[typ] if b in prev_blks) - set([loc])
         print
-        print include
-        print included_types
-        print exclude
+        print 'include', include
+        print 'included_types', included_types
+        print 'exclude', exclude
+        print
+        print prev_blks
+        print
 
         def flowfunc(include, exclude, flow):
             return (flow | include) - exclude

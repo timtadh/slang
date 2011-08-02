@@ -93,6 +93,7 @@ class Block(object):
         self.insts = list()
         self.next = list()
         self.prev = list()
+        self.all_pred = set()
         self.link_stack = list()
 
     def push_links(self):
