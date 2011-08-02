@@ -64,9 +64,7 @@ def t_example_flowfunction():
     print
     ff = rd.flow_function(blocks['b3'])
 
-    print ff(set([('b2', 0)]))
-
-    #assert False
+    assert ff(set([('b2', 0)])) == set([('b3', 4), ('b3', 5), ('b3', 2), ('b3', 0), ('b3', 1), ('b3', 6), ('b3', 7)])
 
 def t_example_flowfunction_finally():
     rd = example.ReachingDefintions()
@@ -91,5 +89,7 @@ def t_example_flowfunction_finally():
     ff_else = rd.flow_function(blocks['b5'])
     ff_finally = rd.flow_function(blocks['b4'])
 
-    #print ff(set([('b2', 0)]))
-    assert False
+    assert ff_if(set([('b4', 1)])) == set([('b4', 1), ('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert ff_then(set([('b2', 1)])) == set([('b3', 4), ('b3', 0), ('b3', 1)])
+    assert ff_else(set([('b2', 1)])) == set([('b5', 0)])
+    assert ff_finally(set()) == set()
