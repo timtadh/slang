@@ -51,55 +51,88 @@ import il, cf
 
 def engine(analyzer, functions):
 
-    def flow_function(A, node, *kids):
-        print node
-        print kids
-        def if_then(x):
-            _if = kids[0]
-            _then = kids[1]
-            r_if = _if(x)
-            return A.join(_then(r_if), r_if)
+    class results(object):
+        def __init__(self):
+            self.inn = dict()
+            self.out = dict()
 
-        def if_then_else(x):
-            _if = kids[0]
-            _then = kids[1]
-            _else = kids[2]
-            r_if = _if(x)
-            return A.join(_then(r_if), _else(r_if))
+    def compute(f):
 
-        def chain(x):
-            acc = x
-            for c in kids:
-                acc = c(acc)
-            return acc
+        A = analyzer()
+        R = results()
 
-        if node.region_type == cf.cfs.CHAIN:
-            return chain
-        elif node.region_type == cf.cfs.IF_THEN:
-            return if_then
-        elif node.region_type == cf.cfs.IF_THEN_ELSE:
-            return if_then_else
-        else:
-            raise Exception, "unexpect region type"
+        def save(inn, out, node):
+            if isinstance(node, il.Block):
+                R.inn[node.name] = inn
+                R.out[node.name] = out
 
-    def process_tree(analyzer, f):
+        def flow_function(node, *kids):
 
-        def visit(n):
+            def if_then(x):
+                _if, node_if = kids[0]
+                _then, node_then = kids[1]
+                r_if = _if(x)
+                r_then = _then(r_if)
+                result = A.join(r_then, r_if)
+                save(x, r_if, node_if)
+                save(r_if, r_then, node_then)
+                return result
 
-            if isinstance(n, il.Block):
-                return analyzer.flow_function(n)
+            def if_then_else(x):
+                _if, node_if = kids[0]
+                _then, node_then = kids[1]
+                _else, node_else = kids[2]
+                r_if = _if(x)
+                r_then = _then(r_if)
+                r_else = _else(r_if)
+                result =  A.join(r_then, r_else)
+                save(x, r_if, node_if)
+                save(r_if, r_then, node_then)
+                save(r_if, r_else, node_else)
+                return result
 
-            kids_ff = [visit(c) for c in n.children]
-            return flow_function(analyzer, n, *kids_ff)
+            def chain(x):
+                acc = x
+                for c, node in kids:
+                    newacc = c(acc)
+                    save(acc, newacc, node)
+                    acc = newacc
+                return acc
 
-        return visit(f.tree)
+
+            if node.region_type == cf.cfs.CHAIN:
+                return chain
+            elif node.region_type == cf.cfs.IF_THEN:
+                return if_then
+            elif node.region_type == cf.cfs.IF_THEN_ELSE:
+                return if_then_else
+            else:
+                raise Exception, "unexpect region type"
+
+        def process_tree(f):
+
+            def visit(n):
+
+                if isinstance(n, il.Block):
+                    return A.flow_function(n)
+
+                kids_ff = [(visit(c), c) for c in n.children]
+                return flow_function(n, *kids_ff)
+
+            return visit(f.tree)
+
+        A.init(f)
+        ff = process_tree(f)
+        print ff(set())
+
+        for blk in f.blks:
+            print blk
+            print 'in', R.inn[blk.name]
+            print 'out', R.out[blk.name]
+            print
 
 
-    f = functions['f2']
-    a = analyzer()
-    a.init(f)
-    ff = process_tree(a, f)
-    print ff(set())
+    compute(functions['f2'])
 
     #for f in functions:
         #a = analyzer()
