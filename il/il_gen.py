@@ -11,7 +11,7 @@ import il
 
 class generate(object):
 
-    def __new__(cls, root):
+    def __new__(cls, root, debug=False):
         self = super(generate, cls).__new__(cls)
         self.__init__()
 
@@ -22,25 +22,26 @@ class generate(object):
         main.entry = entry
         main.exit = blk
 
-        print 'Basic Blocks:'
+        if debug:
+            print 'Basic Blocks:'
 
-        for b in xrange(1, self.bcount+1):
-            name = 'b%i' % b
-            blk = self.blocks[name]
-            print ' '*2, "block:", name
-            for inst in blk.insts:
-                print ' '*4, inst
-            print ' '*4, 'next ->', blk.next
-            print ' '*4, 'prev ->', blk.prev
+            for b in xrange(1, self.bcount+1):
+                name = 'b%i' % b
+                blk = self.blocks[name]
+                print ' '*2, "block:", name
+                for i, inst in enumerate(blk.insts):
+                    print ' '*4, '(%i)' % i, inst
+                print ' '*4, 'next ->', blk.next
+                print ' '*4, 'prev ->', blk.prev
+                print
             print
-        print
 
-        print "Functions:"
+            print "Functions:"
 
-        for name, f in sorted(self.functions.iteritems(), key=lambda x: x[0]):
-            print f
-        print
-        print
+            for name, f in sorted(self.functions.iteritems(), key=lambda x: x[0]):
+                print f
+            print
+            print
 
         return entry.name, self.blocks, self.functions
 

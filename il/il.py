@@ -191,7 +191,9 @@ class Inst(object):
     def __repr__(self): return str(self)
 
     def __str__(self):
-        return '<%s %s %s -- %s>' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
+        if not self.result:
+            return '%-5s %-18s %-18s' % (opsr[self.op], str(self.a), str(self.b))
+        return '%-5s %-18s %-18s --> %s' % (opsr[self.op], str(self.a), str(self.b), str(self.result))
 
 class Symbol(object):
 
@@ -208,9 +210,9 @@ class Symbol(object):
         return self._id
 
     def __repr__(self):
-        return '<sym %d - %s%s>' % (self.id, self.name, self.type)
+        return '[sym %d - %s%s]' % (self.id, self.name, self.type)
 
-    def __str__(self): return '<sym %s%s>' % (self.name, self.type)
+    def __str__(self): return '[sym %s%s]' % (self.name, self.type)
 
 class Type(object):
 
