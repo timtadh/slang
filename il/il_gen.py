@@ -45,6 +45,8 @@ class generate(object):
         return entry.name, self.blocks, self.functions
 
     def __init__(self):
+        il.Symbol.IDC = 0
+        il.Type.IDC = 0
         self.fcount = 0
         self.tcount = 0
         self.bcount = 0
