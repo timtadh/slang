@@ -12,13 +12,15 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
     def __init__(self):
         self.def_count = 0
 
-    def init(self, blocks, functions):
+    def init(self, f):
+        print f
         defs = list()
-        for name, blk in blocks.iteritems():
+        for blk in f.blks:
+            name = blk.name
             for i, inst in enumerate(blk.insts):
-                #if isinstance(i.a, il.Symbol): vars.add(i.a.id)
-                #if isinstance(i.b, il.Symbol): vars.add(i.b.id)
-                if isinstance(inst.result, il.Symbol): defs.append(inst.result.id)
+                if isinstance(inst.result, il.Symbol):
+                    print (name, blk), inst.result.id
+                    defs.append(inst.result.id)
         self.def_count = len(defs)
         print defs
         print self.def_count

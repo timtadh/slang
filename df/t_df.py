@@ -41,5 +41,5 @@ def t_example_init():
         print f(10)
         ''')
 
-    rd.init(blocks, functions)
+    rd.init(functions['f2'])
     assert False
