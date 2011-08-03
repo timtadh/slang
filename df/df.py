@@ -96,8 +96,8 @@ def forward(analyzer, functions, debug=False):
 
             def chain(x):
                 acc = x
-                for c, node in kids:
-                    newacc = c(acc)
+                for f, node in kids:
+                    newacc = f(acc)
                     save(acc, newacc, node)
                     acc = newacc
                 return acc
@@ -145,9 +145,93 @@ def forward(analyzer, functions, debug=False):
                 print ' '*4, 'out', R.out[blk.name]
                 print
 
+    for f in functions.itervalues():
+        compute(f)
 
 
-    #compute(functions['f2'])
+def backward(analyzer, functions, debug=False):
+
+    assert issubclass(analyzer, abstract.DataFlowAnalyzer)
+    assert analyzer.direction == 'backward'
+
+    def compute(f):
+
+        A = analyzer(f)
+        R = results()
+
+        def save(inn, out, node):
+            if isinstance(node, il.Block):
+                R.inn[node.name] = inn
+                R.out[node.name] = out
+
+        def flow_function(node, *kids):
+
+            def if_then(out_it):
+                _if, node_if = kids[0]
+                _then, node_then = kids[1]
+                in_then = _then(out_it)
+                out_if = A.join(in_then, out_it)
+                in_it = in_if = _if(out_if)
+                return in_it
+
+            def if_then_else(out_ite):
+                _if, node_if = kids[0]
+                _then, node_then = kids[1]
+                _else, node_else = kids[2]
+                in_then = _then(out)
+                in_else = _else(out)
+                out_if = A.join(in_then, in_else)
+                in_it = in_if = _if(out_if)
+                return in_it
+
+            def chain(out_chain):
+                acc = out_chain
+                for f, node in kids[-1::-1]:
+                    acc = f(acc)
+                return acc
+
+
+            if node.region_type == cf.cfs.CHAIN:
+                return chain
+            elif node.region_type == cf.cfs.IF_THEN:
+                return if_then
+            elif node.region_type == cf.cfs.IF_THEN_ELSE:
+                return if_then_else
+            else:
+                raise Exception, "unexpect region type"
+
+        def process_tree(f):
+
+            def visit(n):
+
+                if isinstance(n, il.Block):
+                    return A.flow_function(n)
+
+                kids_ff = [(visit(c), c) for c in n.children]
+                return flow_function(n, *kids_ff)
+
+            if isinstance(f.tree, il.Block):
+                blk = f.tree
+                ff = A.flow_function(blk)
+                def single_block(inn):
+                    out = ff(inn)
+                    save(inn, out, blk)
+                    return out
+                return single_block
+            else:
+                return visit(f.tree)
+
+        ff = process_tree(f)
+        ff(A.newelement())
+        f.df[A.name] = R
+
+        if debug:
+            print f.name
+            for blk in f.blks:
+                print ' '*2, blk
+                print ' '*4, 'in ', R.inn[blk.name]
+                print ' '*4, 'out', R.out[blk.name]
+                print
 
     for f in functions.itervalues():
         compute(f)
