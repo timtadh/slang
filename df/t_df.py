@@ -222,8 +222,6 @@ def t_livevar_flowfunction():
         print f(10)
         ''')
     lv = livevar.LiveVariable(functions['f2'])
-    print
-    ff = lv.flow_function(blocks['b4'])
-    print ff(set())
-
-    assert False
+    assert lv.flow_function(blocks['b2'])(set([1, 2, 3, 5])) == set()
+    assert lv.flow_function(blocks['b3'])(set([8, 6, 2])) == set([0, 1])
+    assert lv.flow_function(blocks['b4'])(set()) == set([2])

@@ -9,7 +9,6 @@ import functools
 import abstract, il
 from lib import DFS
 
-
 class LiveVariable(abstract.DataFlowAnalyzer):
 
     name = 'livevar'
@@ -29,15 +28,11 @@ class LiveVariable(abstract.DataFlowAnalyzer):
             if isinstance(inst.result, il.Symbol):
                 if inst.result.type.id not in useb: defb.add(inst.result.type.id)
 
-        print 'defb', defb
-        print 'useb', useb
-
         def flowfunc(useb, defb, flow):
             result = useb | (flow - defb)
             return result
 
         return functools.partial(flowfunc, useb, defb)
-
 
     def newelement(self): return set()
     def id(self, a): return set(a)
