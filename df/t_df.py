@@ -21,11 +21,12 @@ def t_abstract_instantiate_fail():
     abstract.DataFlowAnalyzer()
 
 def t_example_instantiate():
-    example.ReachingDefintions()
+    blocks, functions = cf_analyze('''
+        print 10
+        ''')
+    example.ReachingDefintions(functions['main'])
 
 def t_example_init():
-    rd = example.ReachingDefintions()
-
     blocks, functions = cf_analyze('''
         f = func(x) {
             if (x > 0) {
@@ -41,13 +42,11 @@ def t_example_init():
         print f(10)
         ''')
 
-    rd.init(functions['f2'])
+    rd = example.ReachingDefintions(functions['f2'])
     assert set(rd.defs.keys()) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
     assert set(t.id for t in rd.defs.values()) == set([1, 2, 4, 5, 6, 8, 9, 11])
 
 def t_example_flowfunction():
-    rd = example.ReachingDefintions()
-
     blocks, functions = cf_analyze('''
         f = func(x) {
             if (x > 0) {
@@ -60,14 +59,13 @@ def t_example_flowfunction():
         print f(10)
         ''')
 
-    rd.init(functions['f2'])
+    rd = example.ReachingDefintions(functions['f2'])
     print
     ff = rd.flow_function(blocks['b3'])
 
     assert ff(set([('b2', 0)])) == set([('b3', 4), ('b3', 5), ('b3', 2), ('b3', 0), ('b3', 1), ('b3', 6), ('b3', 7)])
 
 def t_example_flowfunction_finally():
-    rd = example.ReachingDefintions()
 
     blocks, functions = cf_analyze('''
         f = func(x) {
@@ -82,7 +80,7 @@ def t_example_flowfunction_finally():
         print f(10)
         ''')
 
-    rd.init(functions['f2'])
+    rd = example.ReachingDefintions(functions['f2'])
     ff_if = rd.flow_function(blocks['b2'])
     ff_then = rd.flow_function(blocks['b3'])
     ff_else = rd.flow_function(blocks['b5'])
@@ -94,7 +92,6 @@ def t_example_flowfunction_finally():
     assert ff_finally(set()) == set()
 
 def t_example_ifthenelse_byhand():
-    rd = example.ReachingDefintions()
 
     blocks, functions = cf_analyze('''
         f = func(x) {
@@ -109,7 +106,7 @@ def t_example_ifthenelse_byhand():
         print f(10)
         ''')
 
-    rd.init(functions['f2'])
+    rd = example.ReachingDefintions(functions['f2'])
     ff_if = rd.flow_function(blocks['b2'])
     ff_then = rd.flow_function(blocks['b3'])
     ff_else = rd.flow_function(blocks['b5'])
@@ -141,5 +138,5 @@ def t_example_ifthenelse_engine():
         print f(10)
         ''')
 
-    df.engine(example.ReachingDefintions, functions)
+    df.forward(example.ReachingDefintions, functions)
     assert False

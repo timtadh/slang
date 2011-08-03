@@ -26,14 +26,12 @@ def DFS(root, attr):
 
 class ReachingDefintions(abstract.DataFlowAnalyzer):
 
-    def __init__(self):
+    name = 'ReachingDefinitionsExample'
+    direction = 'forward'
+
+    def __init__(self, f):
         self.defs = dict()
         self.types = dict()
-
-    @property
-    def name(self): return 'ReachingDefinitionsExample'
-
-    def init(self, f):
         defs = list()
         for blk in f.blks:
             for i, inst in enumerate(blk.insts):

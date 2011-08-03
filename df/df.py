@@ -47,18 +47,22 @@
 #
 #------------------------------------------------------------------------#
 
-import il, cf
+import il, cf, abstract
 
 class results(object):
     def __init__(self):
         self.inn = dict()
         self.out = dict()
 
-def engine(analyzer, functions):
+def forward(analyzer, functions):
+
+    print analyzer.direction
+    assert issubclass(analyzer, abstract.DataFlowAnalyzer)
+    assert analyzer.direction == 'forward'
 
     def compute(f):
 
-        A = analyzer()
+        A = analyzer(f)
         R = results()
 
         def save(inn, out, node):
@@ -119,9 +123,17 @@ def engine(analyzer, functions):
                 kids_ff = [(visit(c), c) for c in n.children]
                 return flow_function(n, *kids_ff)
 
-            return visit(f.tree)
+            if isinstance(f.tree, il.Block):
+                blk = f.tree
+                ff = A.flow_function(blk)
+                def single_block(inn):
+                    out = ff(inn)
+                    save(inn, out, blk)
+                    return out
+                return single_block
+            else:
+                return visit(f.tree)
 
-        A.init(f)
         ff = process_tree(f)
         print ff(set())
 
@@ -135,9 +147,7 @@ def engine(analyzer, functions):
         print f.df
 
 
-    compute(functions['f2'])
+    #compute(functions['f2'])
 
-    #for f in functions:
-        #a = analyzer()
-        #a.init(f)
-        #process_tree(a, f)
+    for f in functions.itervalues():
+        compute(f)

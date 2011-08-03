@@ -10,11 +10,15 @@ class DataFlowAnalyzer(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
+    def direction(self):
+        '''the direction of the analyzer either 'forward' or 'backward' '''
+
+    @abc.abstractproperty
     def name(self):
         '''the name of this analyzer'''
 
     @abc.abstractmethod
-    def init(self, f):
+    def __init__(self, f):
         '''collect and initialize the analyzer.'''
 
     @abc.abstractmethod
