@@ -138,7 +138,7 @@ def t_example_ifthenelse_engine():
         print f(10)
         ''')
 
-    df.forward(example.ReachingDefintions, functions)
+    df.forward(example.ReachingDefintions, functions, True)
 
     name = example.ReachingDefintions.name
 
@@ -183,7 +183,7 @@ def t_example_ifthen_engine():
         print f(10)
         ''')
 
-    df.forward(example.ReachingDefintions, functions)
+    df.forward(example.ReachingDefintions, functions, True)
 
     name = example.ReachingDefintions.name
 
