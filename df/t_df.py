@@ -8,7 +8,7 @@ import os, subprocess, itertools
 
 from frontend.sl_parser import Parser, Lexer
 import cf, il, df
-import abstract, reachdef
+import abstract, reachdef, livevar
 import nose
 
 def cf_analyze(s):
@@ -209,3 +209,21 @@ def t_reachdef_ifthen_engine():
     assert b4_inn == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
     assert b4_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b2', 1), ('b3', 0), ('b3', 1), ('b2', 0)])
 
+
+def t_livevar_flowfunction():
+    blocks, functions = cf_analyze('''
+        f = func(x) {
+            c = 3
+            if (x > 0) {
+                c = f(x-1)
+            }
+            return c
+        }
+        print f(10)
+        ''')
+    lv = livevar.LiveVariable(functions['f2'])
+    print
+    ff = lv.flow_function(blocks['b4'])
+    print ff(set())
+
+    assert False

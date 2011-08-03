@@ -12,7 +12,7 @@ from lib import DFS
 
 class ReachingDefintions(abstract.DataFlowAnalyzer):
 
-    name = 'ReachingDefinitionsExample'
+    name = 'reachdef'
     direction = 'forward'
 
     def __init__(self, f):

@@ -10,28 +10,34 @@ import abstract, il
 from lib import DFS
 
 
-class ReachingDefintions(abstract.DataFlowAnalyzer):
+class LiveVariable(abstract.DataFlowAnalyzer):
 
-    name = 'ReachingDefinitionsExample'
+    name = 'livevar'
     direction = 'forward'
 
-    def __init__(self, f):
-        self.defs = dict()
-        self.types = dict()
-        defs = list()
-        for blk in f.blks:
-            for i, inst in enumerate(blk.insts):
-                if isinstance(inst.result, il.Symbol):
-                    self.defs[(blk.name, i)] = inst.result.type
-                    if inst.result.type.id not in self.types:
-                        self.types[inst.result.type.id] = set()
-                    self.types[inst.result.type.id].add((blk.name, i))
-        #print self.defs
-        #print self.types
-        #print self.types.keys()
+    def __init__(self, f): pass
 
     def flow_function(self, blk):
-        raise Exception
+        defb = set()
+        useb = set()
+
+        for inst in blk.insts:
+            if isinstance(inst.a, il.Symbol):
+                if inst.a.type.id not in defb: useb.add(inst.a.type.id)
+            if isinstance(inst.b, il.Symbol):
+                if inst.b.type.id not in defb: useb.add(inst.b.type.id)
+            if isinstance(inst.result, il.Symbol):
+                if inst.result.type.id not in useb: defb.add(inst.result.type.id)
+
+        print 'defb', defb
+        print 'useb', useb
+
+        def flowfunc(useb, defb, flow):
+            result = useb | (flow - defb)
+            return result
+
+        return functools.partial(flowfunc, useb, defb)
+
 
     def newelement(self): return set()
     def id(self, a): return set(a)
