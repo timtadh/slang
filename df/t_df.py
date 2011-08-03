@@ -4,7 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import os, subprocess
+import os, subprocess, itertools
 
 from frontend.sl_parser import Parser, Lexer
 import cf, il, df
@@ -43,8 +43,8 @@ def t_reachdef_init():
         ''')
 
     rd = reachdef.ReachingDefintions(functions['f2'])
-    assert set(rd.defs.keys()) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
-    assert set(t.id for t in rd.defs.values()) == set([1, 2, 4, 5, 6, 8, 9, 11])
+    assert set(t for t in rd.types.keys()) == set([1, 2, 4, 5, 6, 8, 9, 11])
+    assert set(itertools.chain(*rd.types.values())) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
 
 def t_reachdef_flowfunction():
     blocks, functions = cf_analyze('''
