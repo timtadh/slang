@@ -10,6 +10,9 @@ import abstract
 import il
 
 def DFS(root, attr):
+    cache_attr = '__reachable_from_%s' % attr
+    if hasattr(root, cache_attr):
+        return set(getattr(root, cache_attr))
 
     visited = set()
     stack = collections.deque()
@@ -22,7 +25,9 @@ def DFS(root, attr):
             if b.name not in visited:
                 stack.append(b)
 
-    return visited - set([root.name])
+    ret = visited - set([root.name])
+    setattr(root, cache_attr, set(ret))
+    return ret
 
 class ReachingDefintions(abstract.DataFlowAnalyzer):
 
