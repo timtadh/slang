@@ -167,6 +167,7 @@ def backward(analyzer, functions, debug=False):
         def flow_function(node, *kids):
 
             def if_then(out_it):
+                print 'flow function for if_then', [node for f, node in kids]
                 _if, node_if = kids[0]
                 _then, node_then = kids[1]
                 in_then = _then(out_it)
@@ -177,6 +178,7 @@ def backward(analyzer, functions, debug=False):
                 return in_it
 
             def if_then_else(out_ite):
+                print 'flow function for if_then_else', [node for f, node in kids]
                 _if, node_if = kids[0]
                 _then, node_then = kids[1]
                 _else, node_else = kids[2]
@@ -190,6 +192,7 @@ def backward(analyzer, functions, debug=False):
                 return in_it
 
             def chain(out_chain):
+                print 'flow function for chain', [node for f, node in kids]
                 acc = out_chain
                 for f, node in kids[-1::-1]:
                     newacc = f(acc)

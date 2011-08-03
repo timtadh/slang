@@ -29,6 +29,7 @@ class LiveVariable(abstract.DataFlowAnalyzer):
                 if inst.result.type.id not in useb: defb.add(inst.result.type.id)
 
         def flowfunc(useb, defb, flow):
+            print 'flow function for', blk.name
             result = useb | (flow - defb)
             return result
 

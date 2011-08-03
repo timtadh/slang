@@ -225,3 +225,35 @@ def t_livevar_flowfunction():
     assert lv.flow_function(blocks['b2'])(set([1, 2, 3, 5])) == set()
     assert lv.flow_function(blocks['b3'])(set([8, 6, 2])) == set([0, 1])
     assert lv.flow_function(blocks['b4'])(set()) == set([2])
+
+def t_livevar_ifthenelse_engine():
+
+    blocks, functions = cf_analyze('''
+        f = func(x) {
+            c = 3
+            if (x > 0) {
+                c = f(x-1)
+            } else {
+                c = x
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.backward(livevar.LiveVariable, functions, True)
+
+    name = livevar.LiveVariable.name
+
+    b1_inn = functions['main'].df[name].inn['b1']
+    b1_out = functions['main'].df[name].out['b1']
+    b2_inn = functions['f2'].df[name].inn['b2']
+    b2_out = functions['f2'].df[name].out['b2']
+    b3_inn = functions['f2'].df[name].inn['b3']
+    b3_out = functions['f2'].df[name].out['b3']
+    b4_inn = functions['f2'].df[name].inn['b4']
+    b4_out = functions['f2'].df[name].out['b4']
+    b5_inn = functions['f2'].df[name].inn['b5']
+    b5_out = functions['f2'].df[name].out['b5']
+
+    assert False
