@@ -28,7 +28,7 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
         include = set()
         included_types = set()
         exclude = set()
-        prev_blks = DFS(blk, 'prev')
+        #prev_blks = DFS(blk, 'prev')
         for i, inst in enumerate(blk.insts[-1::-1]):
             i = len(blk.insts) - (i + 1)
             if isinstance(inst.result, il.Symbol):
@@ -38,7 +38,8 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
                 #print (blk.name, i), typ
                 include.add(loc)
                 included_types.add(typ)
-                exclude |= set((b,i) for b, i in self.types[typ] if b in prev_blks) - set([loc])
+                #exclude |= set((b,i) for b, i in self.types[typ] if b in prev_blks) - set([loc])
+                exclude |= self.types[typ] - set([loc])
         #print
         #print 'include', include
         #print 'included_types', included_types
