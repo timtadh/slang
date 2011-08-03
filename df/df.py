@@ -56,7 +56,6 @@ class results(object):
 
 def forward(analyzer, functions):
 
-    print analyzer.direction
     assert issubclass(analyzer, abstract.DataFlowAnalyzer)
     assert analyzer.direction == 'forward'
 
@@ -135,16 +134,16 @@ def forward(analyzer, functions):
                 return visit(f.tree)
 
         ff = process_tree(f)
-        print ff(set())
+        ff(set())
 
+        print f.name
         for blk in f.blks:
-            print blk
-            print 'in', R.inn[blk.name]
-            print 'out', R.out[blk.name]
+            print ' '*2, blk
+            print ' '*4, 'in ', R.inn[blk.name]
+            print ' '*4, 'out', R.out[blk.name]
             print
 
         f.df[A.name] = R
-        print f.df
 
 
     #compute(functions['f2'])

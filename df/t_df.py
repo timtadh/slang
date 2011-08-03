@@ -139,4 +139,34 @@ def t_example_ifthenelse_engine():
         ''')
 
     df.forward(example.ReachingDefintions, functions)
-    assert False
+
+    name = example.ReachingDefintions.name
+
+    b1_inn = functions['main'].df[name].inn['b1']
+    b1_out = functions['main'].df[name].out['b1']
+    b2_inn = functions['f2'].df[name].inn['b2']
+    b2_out = functions['f2'].df[name].out['b2']
+    b3_inn = functions['f2'].df[name].inn['b3']
+    b3_out = functions['f2'].df[name].out['b3']
+    b4_inn = functions['f2'].df[name].inn['b4']
+    b4_out = functions['f2'].df[name].out['b4']
+    b5_inn = functions['f2'].df[name].inn['b5']
+    b5_out = functions['f2'].df[name].out['b5']
+
+    assert b1_inn == set()
+    assert b1_out == set([('b1', 0), ('b1', 3)])
+
+
+    assert b2_inn == set()
+    assert b2_out == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+
+    assert b3_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b3_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 0)])
+
+    assert b4_inn == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b5', 0), ('b2', 0)])
+    assert b4_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b5', 0), ('b3', 0), ('b3', 1), ('b2', 0)])
+
+    assert b5_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b5_out == set([('b2', 3), ('b5', 0), ('b2', 2), ('b2', 0)])
+
+    #assert False
