@@ -172,22 +172,29 @@ def backward(analyzer, functions, debug=False):
                 in_then = _then(out_it)
                 out_if = A.join(in_then, out_it)
                 in_it = in_if = _if(out_if)
+                save(in_then, out_it, node_then)
+                save(in_if, out_if, node_if)
                 return in_it
 
             def if_then_else(out_ite):
                 _if, node_if = kids[0]
                 _then, node_then = kids[1]
                 _else, node_else = kids[2]
-                in_then = _then(out)
-                in_else = _else(out)
+                in_then = _then(out_ite)
+                in_else = _else(out_ite)
                 out_if = A.join(in_then, in_else)
                 in_it = in_if = _if(out_if)
+                save(in_then, out_ite, node_then)
+                save(in_else, out_ite, node_else)
+                save(in_if, out_if, node_if)
                 return in_it
 
             def chain(out_chain):
                 acc = out_chain
                 for f, node in kids[-1::-1]:
-                    acc = f(acc)
+                    newacc = f(acc)
+                    save(newacc, acc, node)
+                    acc = newacc
                 return acc
 
 
