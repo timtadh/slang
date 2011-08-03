@@ -12,7 +12,7 @@ from lib import DFS
 class LiveVariable(abstract.DataFlowAnalyzer):
 
     name = 'livevar'
-    direction = 'forward'
+    direction = 'backward'
 
     def __init__(self, f): pass
 
