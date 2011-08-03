@@ -8,7 +8,7 @@ import os, subprocess
 
 from frontend.sl_parser import Parser, Lexer
 import cf, il, df
-import abstract, example
+import abstract, reachdef
 import nose
 
 def cf_analyze(s):
@@ -20,13 +20,13 @@ def cf_analyze(s):
 def t_abstract_instantiate_fail():
     abstract.DataFlowAnalyzer()
 
-def t_example_instantiate():
+def t_reachdef_instantiate():
     blocks, functions = cf_analyze('''
         print 10
         ''')
-    example.ReachingDefintions(functions['main'])
+    reachdef.ReachingDefintions(functions['main'])
 
-def t_example_init():
+def t_reachdef_init():
     blocks, functions = cf_analyze('''
         f = func(x) {
             if (x > 0) {
@@ -42,11 +42,11 @@ def t_example_init():
         print f(10)
         ''')
 
-    rd = example.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefintions(functions['f2'])
     assert set(rd.defs.keys()) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
     assert set(t.id for t in rd.defs.values()) == set([1, 2, 4, 5, 6, 8, 9, 11])
 
-def t_example_flowfunction():
+def t_reachdef_flowfunction():
     blocks, functions = cf_analyze('''
         f = func(x) {
             if (x > 0) {
@@ -59,13 +59,13 @@ def t_example_flowfunction():
         print f(10)
         ''')
 
-    rd = example.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefintions(functions['f2'])
     print
     ff = rd.flow_function(blocks['b3'])
 
     assert ff(set([('b2', 0)])) == set([('b3', 4), ('b3', 5), ('b3', 2), ('b3', 0), ('b3', 1), ('b3', 6), ('b3', 7)])
 
-def t_example_flowfunction_finally():
+def t_reachdef_flowfunction_finally():
 
     blocks, functions = cf_analyze('''
         f = func(x) {
@@ -80,7 +80,7 @@ def t_example_flowfunction_finally():
         print f(10)
         ''')
 
-    rd = example.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefintions(functions['f2'])
     ff_if = rd.flow_function(blocks['b2'])
     ff_then = rd.flow_function(blocks['b3'])
     ff_else = rd.flow_function(blocks['b5'])
@@ -91,7 +91,7 @@ def t_example_flowfunction_finally():
     assert ff_else(set([('b2', 1)])) == set([('b5', 0)])
     assert ff_finally(set()) == set()
 
-def t_example_ifthenelse_byhand():
+def t_reachdef_ifthenelse_byhand():
 
     blocks, functions = cf_analyze('''
         f = func(x) {
@@ -106,7 +106,7 @@ def t_example_ifthenelse_byhand():
         print f(10)
         ''')
 
-    rd = example.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefintions(functions['f2'])
     ff_if = rd.flow_function(blocks['b2'])
     ff_then = rd.flow_function(blocks['b3'])
     ff_else = rd.flow_function(blocks['b5'])
@@ -123,7 +123,7 @@ def t_example_ifthenelse_byhand():
     assert set(d for d in _final if d in rd.types[2]) == set([('b3', 4), ('b5', 0)])
 
 
-def t_example_ifthenelse_engine():
+def t_reachdef_ifthenelse_engine():
 
     blocks, functions = cf_analyze('''
         f = func(x) {
@@ -138,9 +138,9 @@ def t_example_ifthenelse_engine():
         print f(10)
         ''')
 
-    df.forward(example.ReachingDefintions, functions, True)
+    df.forward(reachdef.ReachingDefintions, functions, True)
 
-    name = example.ReachingDefintions.name
+    name = reachdef.ReachingDefintions.name
 
     b1_inn = functions['main'].df[name].inn['b1']
     b1_out = functions['main'].df[name].out['b1']
@@ -170,7 +170,7 @@ def t_example_ifthenelse_engine():
     assert b5_out == set([('b2', 3), ('b5', 0), ('b2', 2), ('b2', 0)])
 
 
-def t_example_ifthen_engine():
+def t_reachdef_ifthen_engine():
 
     blocks, functions = cf_analyze('''
         f = func(x) {
@@ -183,9 +183,9 @@ def t_example_ifthen_engine():
         print f(10)
         ''')
 
-    df.forward(example.ReachingDefintions, functions, True)
+    df.forward(reachdef.ReachingDefintions, functions, True)
 
-    name = example.ReachingDefintions.name
+    name = reachdef.ReachingDefintions.name
 
     b1_inn = functions['main'].df[name].inn['b1']
     b1_out = functions['main'].df[name].out['b1']
