@@ -256,4 +256,18 @@ def t_livevar_ifthenelse_engine():
     b5_inn = functions['f2'].df[name].inn['b5']
     b5_out = functions['f2'].df[name].out['b5']
 
-    assert False
+    assert b1_inn == set([0])
+    assert b1_out == set([])
+
+
+    assert b2_inn == set([0])
+    assert b2_out == set([0, 1])
+
+    assert b3_inn == set([0, 1])
+    assert b3_out == set([2])
+
+    assert b4_inn == set([2])
+    assert b4_out == set([])
+
+    assert b5_inn == set([1])
+    assert b5_out == set([2])
