@@ -271,3 +271,43 @@ def t_livevar_ifthenelse_engine():
 
     assert b5_inn == set([1])
     assert b5_out == set([2])
+
+
+def t_livevar_ifthen_engine():
+
+    blocks, functions = cf_analyze('''
+        f = func(x) {
+            c = 3
+            if (x > 0) {
+                c = f(x-1)
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.analyze(livevar.LiveVariable, functions, True)
+
+    name = livevar.LiveVariable.name
+
+    b1_inn = functions['main'].df[name].inn['b1']
+    b1_out = functions['main'].df[name].out['b1']
+    b2_inn = functions['f2'].df[name].inn['b2']
+    b2_out = functions['f2'].df[name].out['b2']
+    b3_inn = functions['f2'].df[name].inn['b3']
+    b3_out = functions['f2'].df[name].out['b3']
+    b4_inn = functions['f2'].df[name].inn['b4']
+    b4_out = functions['f2'].df[name].out['b4']
+
+    assert b1_inn == set([0])
+    assert b1_out == set([])
+
+
+    assert b2_inn == set([0])
+    assert b2_out == set([0, 1, 2])
+
+    assert b3_inn == set([0, 1])
+    assert b3_out == set([2])
+
+    assert b4_inn == set([2])
+    assert b4_out == set([])
