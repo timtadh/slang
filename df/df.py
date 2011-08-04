@@ -91,12 +91,7 @@ def analyze(analyzer, functions, debug=False):
 
             if isinstance(f.tree, il.Block):
                 blk = f.tree
-                ff = A.flow_function(blk)
-                def single_block(inn):
-                    out = ff(inn)
-                    R.save(inn, out, blk)
-                    return out
-                return single_block
+                return flow_function(blk)
             else:
                 return visit(f.tree)
 
@@ -148,8 +143,14 @@ def forward_ff(A, save, node, *kids):
             acc = newacc
         return acc
 
+    def single_block(inn):
+        out = A.flow_function(node)(inn)
+        save(inn, out, node)
+        return out
 
-    if node.region_type == cf.cfs.CHAIN:
+    if isinstance(node, il.Block):
+        return single_block
+    elif node.region_type == cf.cfs.CHAIN:
         return chain
     elif node.region_type == cf.cfs.IF_THEN:
         return if_then
@@ -194,8 +195,14 @@ def backward_ff(A, save, node, *kids):
             acc = newacc
         return acc
 
+    def single_block(out):
+        inn = A.flow_function(node)(out)
+        save(inn, out, node)
+        return inn
 
-    if node.region_type == cf.cfs.CHAIN:
+    if isinstance(node, il.Block):
+        return single_block
+    elif node.region_type == cf.cfs.CHAIN:
         return chain
     elif node.region_type == cf.cfs.IF_THEN:
         return if_then
