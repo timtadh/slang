@@ -138,7 +138,7 @@ def t_reachdef_ifthenelse_engine():
         print f(10)
         ''')
 
-    df.forward(reachdef.ReachingDefintions, functions, True)
+    df.analyze(reachdef.ReachingDefintions, functions, True)
 
     name = reachdef.ReachingDefintions.name
 
@@ -183,7 +183,7 @@ def t_reachdef_ifthen_engine():
         print f(10)
         ''')
 
-    df.forward(reachdef.ReachingDefintions, functions, True)
+    df.analyze(reachdef.ReachingDefintions, functions, True)
 
     name = reachdef.ReachingDefintions.name
 
@@ -241,7 +241,7 @@ def t_livevar_ifthenelse_engine():
         print f(10)
         ''')
 
-    df.backward(livevar.LiveVariable, functions, True)
+    df.analyze(livevar.LiveVariable, functions, True)
 
     name = livevar.LiveVariable.name
 
