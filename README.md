@@ -14,8 +14,7 @@ basics of interpretation and compilation.
 1. Symbol Table [Functional]
 1. IR Generation [Functional]
 1. Simple Code Generation for the SRVM* [Functional]
-1. Complex Code Generation for the SRVM [Not Started]
-1. Simple Code Generation for x86 [Not Started]
+1. Simple Code Generation for x86 [Started]
 1. Complex Code Generation for x86 [Not Started]
 
 [*] SRVM : Simple Register based Virtual Machine <br/>
