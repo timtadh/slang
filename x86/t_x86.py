@@ -16,14 +16,15 @@ import nose
 def run(s):
     #out = cStringIO.StringIO()
     try:
-        code = x86_gen.generate(*il_gen.generate(Parser().parse(s, lexer=Lexer())))
+        code = x86_gen.generate(*il_gen.generate(Parser().parse(s, lexer=Lexer()), debug=True))
         print code
         gas = subprocess.Popen(['as', '--32', '-o', 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         print gas.communicate(code)
         ld = subprocess.Popen(['ld', '-o', 'exe', '-melf_i386', '-dynamic-linker', '/lib/ld-linux.so.2', '/lib32/libc.so.6', 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         print ld.communicate()
-        exe = subprocess.Popen(['./exe'], stdout=subprocess.PIPE)
-        ret = exe.communicate()[0]
+        exe = subprocess.Popen(['./exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret, err = exe.communicate()
+        print ret, err
     except Exception, e:
         print e
         traceback.print_exc(file=sys.stdout)
@@ -32,6 +33,10 @@ def run(s):
         #os.unlink('exe.o')
         #os.unlink('exe')
         pass
+
+    if err:
+        ret = 'fail'
+        print err
 
     print '---->', ret
     return ret
@@ -42,14 +47,14 @@ def t_expr_const():
     #raise Exception
 
 def t_expr_ops():
-    raise nose.SkipTest
+    #raise nose.SkipTest
+    assert '6' == run('print 9-3').rstrip('\n')
     assert '6' == run('print 2*3').rstrip('\n')
     assert '6' == run('print 1+2+3').rstrip('\n')
-    assert '6' == run('print 9-3').rstrip('\n')
     assert '6' == run('print 12/2').rstrip('\n')
 
 def t_expr_compound():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(4*3/2) == run('print 4*3/2').rstrip('\n')
     assert str(4/2*3) == run('print 4/2*3').rstrip('\n')
     assert str((3+9)*4/8) == run('print (3+9)*4/8').rstrip('\n')

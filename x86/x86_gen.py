@@ -344,19 +344,20 @@ class generate(object):
         return code
 
     def Op(self, i):
-        ops = {il.ADD:vm.ADD, il.SUB:vm.SUB, il.MUL:vm.MUL, il.DIV:vm.DIV}
-        code = [
-            (vm.IMM, 3, i.b.type.offset),
-            (vm.ADD, 3, i.b.type.basereg),
-            (vm.LOAD, 3, 3),
-            (vm.IMM, 4, i.a.type.offset),
-            (vm.ADD, 4, i.a.type.basereg),
-            (vm.LOAD, 4, 4),
-            (ops[i.op], 4, 3),
-            (vm.IMM, 3, i.result.type.offset),
-            (vm.ADD, 3, i.result.type.basereg),
-            (vm.SAVE, 3, 4, 'Save in Op'),
-        ]
+        ops = {il.ADD:x.addl, il.SUB:x.subl, il.MUL:x.imull}
+        if i.op == il.DIV:
+            code = [
+                x.movl(x.cint(0), x.edx),
+                x.movl(x.loc(i.a.type), x.eax),
+                x.divl(x.loc(i.b.type)),
+                x.movl(x.eax, x.loc(i.result.type)),
+            ]
+        else:
+            code = [
+                x.movl(x.loc(i.a.type), x.eax),
+                ops[i.op](x.loc(i.b.type), x.eax),
+                x.movl(x.eax, x.loc(i.result.type)),
+            ]
         return code
 
     def CmpOp(self, i):
