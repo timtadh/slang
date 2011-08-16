@@ -7,4 +7,7 @@ gram_parser_tab.py
 .coverage
 env
 imgs
+*.o
+exe
+*.swp
 

@@ -7,8 +7,11 @@
 import sys
 
 def inst(indent, op, *args):
-    line = (' '*indent + '%-5s' % op + ', '.join('%7s' for arg in args))
-    line = line % tuple(str(arg) for arg in args)
+    def string(s, i):
+        if i == len(args) - 1: return str(s)
+        else: return str(s) + ','
+    line = (' '*indent + '%-6s ' % op + ' '.join('%-7s' for arg in args))
+    line = line % tuple(string(arg, i) for i, arg in enumerate(args))
     return line
 
 def __inst(op):
@@ -24,6 +27,9 @@ def label(name):
 def cint(v):
     return '$0x%x' % v
 
+def loc(typ):
+    return '%i(%s)' % (typ.offset, typ.basereg)
+
 ops = dict((op, __inst(op)) for op in (
     'movl', 'popl', 'pushl', 'leal',
     'addl', 'decl', 'incl',
@@ -36,6 +42,8 @@ ops = dict((op, __inst(op)) for op in (
     'je', 'jne', 'jl', 'jnl', 'jnle', 'jle',
         'jg', 'jng', 'jge', 'jnge',
 
+    'push', 'leave', 'call',
+
 
 ))
 sys.modules[__name__].__dict__.update(ops)
@@ -44,5 +52,7 @@ sys.modules[__name__].__dict__.update(ops)
 sys.modules[__name__].__dict__.update(dict((reg, '%'+reg) for reg in (
     'eax', 'ebx', 'ecx', 'edx', 'edi', 'esi',
     'ebp', 'esp', 'eip', 'eflags',
+
+    'rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'r8',
 )))
 

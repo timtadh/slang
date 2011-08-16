@@ -12,6 +12,7 @@ from il.table import SymbolTable
 import il
 from il import il_gen
 import x86
+x = x86
 
 class generate(object):
 
@@ -25,35 +26,34 @@ class generate(object):
         self.code = list()
 
         self.code += self.InitCode()
-        #self.Func('main', main=True)
+        self.Func('main', main=True)
         self.code += self.ExitCode()
 
-        print '\n'.join(self.code)
+        #print '\n'.join(self.code)
 
         #raise Exception
-        return '\n'.join(self.code)
+        return '\n'.join(self.code) + '\n'
 
 
     def InitCode(self):
         return [
             '.section .data',
-            'msg:',
-            r' .ascii "hello world!\n"',
+            'printf_msg:',
+            r'  .ascii "%d\n\0"',
+            'printf_arg:',
+            r'  .long 0',
+            '',
             '.section .text',
             '.global _start',
-            x86.label('_start'),
+            x.label('_start'),
+            #'.global main',
+            #x86.label('main'),
         ]
 
     def ExitCode(self):
         return [
-            x86.movl(x86.cint(4), x86.eax),
-            x86.movl(x86.cint(1), x86.ebx),
-            x86.leal('msg', x86.ecx),
-            x86.movl(x86.cint(len("hello world!\n")), x86.edx),
-            x86.int(x86.cint(0x80)),
-            x86.movl(x86.cint(1), x86.eax),
-            x86.movl(x86.cint(0), x86.ebx),
-            x86.int(x86.cint(0x80)),
+            x.push('$0'),
+            x.call("exit"),
         ]
 
     def gather_syms(self, blks):
@@ -71,8 +71,8 @@ class generate(object):
             #print sym, sym.type
             if issubclass(sym.type.__class__, il.Int):
                 #print 'is subclass int'
-                sym.type.basereg = 1 # set the base reg to the frame pointer
-                sym.type.offset = -1 * i # set the offset
+                sym.type.basereg = x.esp # set the base reg to the frame pointer
+                sym.type.offset = 4 * i # set the offset
                 i += 1
             #if issubclass(sym.type.__class__, il.FuncPointer):
                 #print 'is subclass int'
@@ -98,8 +98,9 @@ class generate(object):
         fp_offset = self.place_symbols(syms)
         #print syms
         self.code += [
-            (vm.IMM, 4, fp_offset, 'start func %s' % (name)),
-            (vm.ADD, 1, 4, 'fp offset add inst'),
+            x.subl(x.cint(fp_offset*4), x.esp)
+            #(vm.IMM, 4, fp_offset, 'start func %s' % (name)),
+            #(vm.ADD, 1, 4, 'fp offset add inst'),
         ]
 
         def block(insts):
@@ -321,10 +322,11 @@ class generate(object):
 
     def Imm(self, i):
         code = [
-            (vm.IMM, 3, i.result.type.offset),
-            (vm.ADD, 3, i.result.type.basereg),
-            (vm.IMM, 4, i.a),
-            (vm.SAVE, 3, 4, 'Save in IMM'),
+            #(vm.IMM, 3, i.result.type.offset),
+            #(vm.ADD, 3, i.result.type.basereg),
+            x.movl(x.cint(i.a), x.loc(i.result.type)),
+            #(vm.IMM, 4, i.a),
+            #(vm.SAVE, 3, 4, 'Save in IMM'),
         ]
         #self.var[i.result] = self.bp_offset
         #self.bp_offset += 1
@@ -377,10 +379,11 @@ class generate(object):
     def Print(self, i):
         print i
         code = [
-            (vm.IMM, 3, i.a.type.offset),
-            (vm.ADD, 3, i.a.type.basereg),
-            (vm.LOAD, 4, 3),
-            (vm.PRNT, 4, 0)
+            #x.movl(x.loc(i.a.type), x.eax),
+            #x.pushl(x.eax),
+            x.pushl(x.loc(i.a.type)),
+            x.pushl('$printf_msg'),
+            x.call("printf"),
         ]
         return code
 

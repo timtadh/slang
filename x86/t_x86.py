@@ -4,7 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import cStringIO, subprocess, os
+import sys, os, cStringIO, subprocess, traceback
 
 from frontend.sl_parser import Parser, Lexer
 #from table import SymbolTable
@@ -18,17 +18,20 @@ def run(s):
     try:
         code = x86_gen.generate(*il_gen.generate(Parser().parse(s, lexer=Lexer())))
         print code
-        gas = subprocess.Popen(['as', '-o', 'exe.o'], stdin=subprocess.PIPE)
+        gas = subprocess.Popen(['as', '--32', '-o', 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         print gas.communicate(code)
-        ld = subprocess.Popen(['ld', 'exe.o', '-o', 'exe'], stdin=subprocess.PIPE)
+        ld = subprocess.Popen(['ld', '-o', 'exe', '-melf_i386', '-dynamic-linker', '/lib/ld-linux.so.2', '/lib32/libc.so.6', 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         print ld.communicate()
         exe = subprocess.Popen(['./exe'], stdout=subprocess.PIPE)
         ret = exe.communicate()[0]
-    except:
+    except Exception, e:
+        print e
+        traceback.print_exc(file=sys.stdout)
         ret = 'fail'
     finally:
-        os.unlink('exe.o')
+        #os.unlink('exe.o')
         #os.unlink('exe')
+        pass
 
     print '---->', ret
     return ret
@@ -36,6 +39,7 @@ def run(s):
 def t_expr_const():
     #raise nose.SkipTest
     assert '2' == run('print 2').rstrip('\n')
+    #raise Exception
 
 def t_expr_ops():
     raise nose.SkipTest
