@@ -24,11 +24,12 @@ def run(s):
         print ld.communicate()
         exe = subprocess.Popen(['./exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ret, err = exe.communicate()
-        print ret, err
+        print '>', (ret, err)
     except Exception, e:
         print e
         traceback.print_exc(file=sys.stdout)
         ret = 'fail'
+        err = e
     finally:
         #os.unlink('exe.o')
         #os.unlink('exe')
@@ -62,12 +63,24 @@ def t_expr_compound():
     assert str(5 * 4 / 2 - 10 + 5 - 2 + 3) == run('print 5 * 4 / 2 - 10 + 5 - 2 + 3').rstrip('\n')
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('print 5 / 4 * 2 + 10 - 5 * 2 / 3').rstrip('\n')
 
+def t_func_call_simple():
+    #raise nose.SkipTest
+    assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
+        f = func() {
+            print 5 / 4 * 2 + 10 - 5 * 2 / 3
+            return
+        }
+        f()
+        ''').rstrip('\n')
+    raise Exception
+
 def t_func_call():
     raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print f()
         ''').rstrip('\n')
+    #raise Exception
 
 def t_func_uppernames():
     raise nose.SkipTest

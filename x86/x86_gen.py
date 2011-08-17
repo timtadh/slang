@@ -29,6 +29,10 @@ class generate(object):
         self.Func('main', main=True)
         self.code += self.ExitCode()
 
+        for f in self.functions.itervalues():
+            if f.name == 'main': continue
+            self.Func(f.name)
+
         #print '\n'.join(self.code)
 
         #raise Exception
@@ -46,6 +50,8 @@ class generate(object):
             '.section .text',
             '.global _start',
             x.label('_start'),
+            x.movl(x.esp, x.ebp),
+            x.movl(x.ebp, '0(%ebp)'),
             #'.global main',
             #x86.label('main'),
         ]
@@ -66,13 +72,13 @@ class generate(object):
         return syms
 
     def place_symbols(self, syms):
-        i = 1
+        i = 6
         for sym in syms:
             #print sym, sym.type
             if issubclass(sym.type.__class__, il.Int):
                 #print 'is subclass int'
-                sym.type.basereg = x.esp # set the base reg to the frame pointer
-                sym.type.offset = 4 * i # set the offset
+                sym.type.basereg = x.ebp # set the base reg to the frame pointer
+                sym.type.offset = -4 * i # set the offset
                 i += 1
             #if issubclass(sym.type.__class__, il.FuncPointer):
                 #print 'is subclass int'
@@ -84,6 +90,10 @@ class generate(object):
         return i-1
 
     def Func(self, name, main=False):
+        self.code += [
+            x.label(name)
+        ]
+
         #print '->', insts
         func = self.functions[name]
         self.floc[func.name] = len(self.code)
@@ -237,9 +247,7 @@ class generate(object):
     def Call(self, i):
         if isinstance(i.a.type, il.Func):
             code = [
-                (vm.IMM,  3, i.a, 'start label function call'),  # load target address (this is a stub for now)
-                (vm.PC,   2, 0),    # save the return program counter
-                (vm.J,    3, 0, 'func call'),    # Jump to the function
+                x.call(i.a.type.entry)
             ]
         else:
             code = [
@@ -261,41 +269,31 @@ class generate(object):
                 #(vm.EXIT, 0, 0, 'DEBUG'),
             #]
         code += [
-            (vm.J, 2, 0),
+            x.ret(),
         ]
         return code
 
     def FramePush(self, param_count):
         code = [
-            (vm.IMM,  4, param_count, 'start frame push'),  # START FUNC
-            (vm.ADD,  4, 1),  # mv fp into reg[4]
-            (vm.SAVE, 4, 0),  # stack save: save bp
-            (vm.IMM,  3, 1),  # $3 = 1
-            (vm.ADD,  4, 3),  # $4 += 1
-            (vm.SAVE, 4, 1),  # stack save: save fp
-            (vm.ADD,  4, 3),  # $4 += 1
-            (vm.SAVE, 4, 2),  # stack save: save ra
-            (vm.ADD,  4, 3),  # $4 += 1
-            (vm.IMM,  0, 0),  # $bp = 0
-            (vm.ADD,  0, 1),  # $bp = $fp
-            (vm.IMM,  1, 0),  # $fp = 0
-            (vm.ADD,  1, 4, 'end frame push'),  # $fp = $4
+            x.pushl(x.ebp), # x.movl(x.ebp, '0(%esp)'), x.esp -= 4
+            x.movl(x.esp, x.ebp), # esp == ebp.   *ebp == old &ebp  0
+            x.pushl(x.ebx),  #                                      1
+            x.pushl(x.edi),  #                                      2
+            x.pushl(x.esi),  #                                      3
+            x.pushl(x.ecx),  # preservation optional                4
+            x.pushl(x.edx),  # preservation optional                5
         ]
         return code
 
     def FramePop(self, param_count):
         code = [
-            (vm.IMM, 4, param_count, 'start frame pop'),
-            (vm.ADD, 4, 0),  # load bp into 4
-            (vm.LOAD, 0, 4), # stack restore: bp
-            (vm.IMM, 3, 1),  # $3 = 1
-            (vm.ADD, 4, 3,), # $4 += 1
-            (vm.ADD, 4, 3,), # $4 += 1
-            (vm.LOAD, 2, 4), # stack restore: ra
-            (vm.SUB, 4, 3,), # $4 -= 1
-            (vm.IMM, 3, 0),
-            (vm.ADD, 3, 1),
-            (vm.LOAD, 1, 4, 'end frame pop'), # stack restore: fp
+            x.movl(x.mem(x.ebp, -5*4), x.edx),
+            x.movl(x.mem(x.ebp, -4*4), x.ecx),
+            x.movl(x.mem(x.ebp, -3*4), x.esi),
+            x.movl(x.mem(x.ebp, -2*4), x.edi),
+            x.movl(x.mem(x.ebp, -1*4), x.ebx),
+            x.movl(x.ebp, x.esp),    # restore stack pointer
+            x.popl(x.ebp),           # restore base(frame) pointer
         ]
         return code
 
@@ -322,14 +320,8 @@ class generate(object):
 
     def Imm(self, i):
         code = [
-            #(vm.IMM, 3, i.result.type.offset),
-            #(vm.ADD, 3, i.result.type.basereg),
             x.movl(x.cint(i.a), x.loc(i.result.type)),
-            #(vm.IMM, 4, i.a),
-            #(vm.SAVE, 3, 4, 'Save in IMM'),
         ]
-        #self.var[i.result] = self.bp_offset
-        #self.bp_offset += 1
         return code
 
     def Mv(self, i):
@@ -385,6 +377,7 @@ class generate(object):
             x.pushl(x.loc(i.a.type)),
             x.pushl('$printf_msg'),
             x.call("printf"),
+            x.addl(x.cint(8), x.esp)
         ]
         return code
 

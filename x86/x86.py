@@ -10,7 +10,7 @@ def inst(indent, op, *args):
     def string(s, i):
         if i == len(args) - 1: return str(s)
         else: return str(s) + ','
-    line = (' '*indent + '%-6s ' % op + ' '.join('%-7s' for arg in args))
+    line = (' '*indent + '%-6s ' % op + ' '.join('%-10s' for arg in args))
     line = line % tuple(string(arg, i) for i, arg in enumerate(args))
     return line
 
@@ -29,6 +29,10 @@ def cint(v):
 
 def loc(typ):
     return '%i(%s)' % (typ.offset, typ.basereg)
+
+def mem(reg, offset):
+    return '%i(%s)' % (offset, reg)
+
 
 ops = dict((op, __inst(op)) for op in (
     'movl', 'popl', 'pushl', 'leal',
