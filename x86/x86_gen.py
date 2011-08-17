@@ -72,7 +72,7 @@ class generate(object):
         return syms
 
     def place_symbols(self, syms):
-        i = 6
+        i = 7
         for sym in syms:
             #print sym, sym.type
             if issubclass(sym.type.__class__, il.Int):
@@ -175,32 +175,16 @@ class generate(object):
 
     def Gprm(self, i):
         code = [
-            (vm.IMM,  3, 0, 'start GPRM'),            # $3 = 0
-            (vm.ADD,  3, 0),                          # $3 = $3 + $bp
-            (vm.IMM,  4, i.a),                        # $
-            (vm.ADD,  3, 4),
-            (vm.LOAD, 4, 3),
-            (vm.IMM,  3, i.result.type.offset),
-            (vm.ADD,  3, i.result.type.basereg),
-            (vm.SAVE, 3, 4, 'save in GPRM'),
-
-
-            #(vm.IMM, 4, 1),
-            #(vm.ADD, 1, 4, 'end GPRM'),
+            x.movl(x.mem(x.ebp, -(1+i.a)*4), x.eax),
+            x.movl(x.eax, x.loc(i.result.type)),
         ]
-        #self.var[i.result] = self.bp_offset
-        #self.bp_offset += 1
-        #print code
         return code
 
     def Oprm(self, i):
+        print i
         code = [
-            (vm.IMM,  4, i.b.type.offset, 'Return Value offset'),  # offset for bp for loading return val
-            (vm.ADD,  3, 4),              # $3 = offset($3) + $fp (which was the old bp)
-            (vm.LOAD, 3, 3, 'Loading Return Value into $3'),              # $3 = *$3
-            (vm.IMM,  4, i.a),            # offset for frame pointer (for saving)
-            (vm.ADD,  4, 1),              # $4 = $4 + $fp
-            (vm.SAVE, 4, 3, 'end Oprm'),              # *$4 = $3
+            x.movl(x.mem(x.esp, i.b.type.offset), x.eax),
+            x.movl(x.eax, x.mem(x.esp, -(1+i.a)*4)),
         ]
         return code
 
@@ -208,37 +192,21 @@ class generate(object):
         if isinstance(i.b.type, il.Func):
             # this is a function param not a value
             code = [
-                (vm.IMM,  3, i.b, 'start put func as arg'),     # $3 = &func
-                (vm.IMM,  4, i.a),                  # $4 = $fp storage offset
-                (vm.ADD,  4, 1),                    # $4 = $4 + $fp
-                (vm.SAVE, 4, 3, 'save in Iprm 1'),  # *$4 = $3
-                #(vm.IMM,  4, 1),                                # $4 = 1
-                #(vm.ADD,  1, 4, 'end put func as arg'),         # $fp += $4
+                x.leal(i.b.type.entry, x.eax),
+                x.movl(x.eax, x.mem(x.esp, -(2+i.a)*4)),
             ]
         else:
             code = [
-                (vm.IMM,  3, i.b.type.offset),      # offset for bp for loading param val
-                (vm.ADD,  3, i.b.type.basereg),     # $3 = offset($3) + $fp
-                (vm.LOAD, 3, 3),                    # $3 = *$3
-                (vm.IMM,  4, i.a),                  # $4 = $fp storage offset
-                (vm.ADD,  4, 1),                    # $4 = $4 + $fp
-                (vm.SAVE, 4, 3, 'save in Iprm 2'),  # *$4 = $3
-                #(vm.IMM,  4, 1),                    # $4 = 1
-                #(vm.ADD,  1, 4),                    # $fp += $4
+                x.movl(x.loc(i.b.type), x.eax),
+                x.movl(x.eax, x.mem(x.esp, -(2+i.a)*4)),
             ]
         return code
 
     def Rprm(self, i):
         print i
         code = [
-            (vm.IMM,  4, 0, 'Start RPRM'),              # $4 = 0
-            (vm.ADD,  4, 1),              # $4 = $fp
-            (vm.LOAD, 4, 4),              # $4 = *$4
-            (vm.IMM,  3, i.result.type.offset),
-            (vm.ADD,  3, i.result.type.basereg),
-            (vm.SAVE, 3, 4, 'save in Rprm'),              # *$3 = $4
-            #(vm.IMM,  1, 0),              # $fp = 0
-            #(vm.ADD,  1, 3, 'End RPRM'),              # $fp += $3
+            x.movl(x.mem(x.esp, -(2+i.a)*4), x.eax),
+            x.movl(x.eax, x.loc(i.result.type)),
         ]
         #self.var[i.result] = self.bp_offset
         #self.bp_offset += 1
@@ -247,15 +215,11 @@ class generate(object):
     def Call(self, i):
         if isinstance(i.a.type, il.Func):
             code = [
-                x.call(i.a.type.entry)
+                x.call(i.a.type.entry),
             ]
         else:
             code = [
-                (vm.IMM,  3, i.a.type.offset, 'Start stack function call'),  # load target address
-                (vm.ADD,  3, i.a.type.basereg),
-                (vm.LOAD, 3, 3),
-                (vm.PC,   2, 0),    # save the return program counter
-                (vm.J,    3, 0, 'func call'),    # Jump to the function
+                x.call('*'+x.loc(i.a.type)),
             ]
         return code
 
@@ -269,31 +233,36 @@ class generate(object):
                 #(vm.EXIT, 0, 0, 'DEBUG'),
             #]
         code += [
-            x.ret(),
+            x.addl(x.cint(4), x.esp),
+            x.jmp('*'+x.mem(x.esp, -4)),
+            #x.ret(),
         ]
         return code
 
     def FramePush(self, param_count):
+        p = param_count
         code = [
-            x.pushl(x.ebp), # x.movl(x.ebp, '0(%esp)'), x.esp -= 4
-            x.movl(x.esp, x.ebp), # esp == ebp.   *ebp == old &ebp  0
-            x.pushl(x.ebx),  #                                      1
-            x.pushl(x.edi),  #                                      2
-            x.pushl(x.esi),  #                                      3
-            x.pushl(x.ecx),  # preservation optional                4
-            x.pushl(x.edx),  # preservation optional                5
+            # 0(ebp) == return address
+            x.movl(x.ebp, x.mem(x.esp, -(1+p)*4)), #     1
+            x.movl(x.esp, x.ebp),
+            x.movl(x.ebx, x.mem(x.ebp, -(2+p)*4)),  # 2
+            x.movl(x.edi, x.mem(x.ebp, -(3+p)*4)),  # 3
+            x.movl(x.esi, x.mem(x.ebp, -(4+p)*4)),  # 4
+            x.movl(x.ecx, x.mem(x.ebp, -(5+p)*4)),  # 5
+            x.movl(x.edx, x.mem(x.ebp, -(6+p)*4)),  # 6
         ]
         return code
 
     def FramePop(self, param_count):
+        p = param_count
         code = [
-            x.movl(x.mem(x.ebp, -5*4), x.edx),
-            x.movl(x.mem(x.ebp, -4*4), x.ecx),
-            x.movl(x.mem(x.ebp, -3*4), x.esi),
-            x.movl(x.mem(x.ebp, -2*4), x.edi),
-            x.movl(x.mem(x.ebp, -1*4), x.ebx),
-            x.movl(x.ebp, x.esp),    # restore stack pointer
-            x.popl(x.ebp),           # restore base(frame) pointer
+            x.movl(x.mem(x.ebp, -(6+p)*4), x.edx),
+            x.movl(x.mem(x.ebp, -(5+p)*4), x.ecx),
+            x.movl(x.mem(x.ebp, -(4+p)*4), x.esi),
+            x.movl(x.mem(x.ebp, -(3+p)*4), x.edi),
+            x.movl(x.mem(x.ebp, -(2+p)*4), x.ebx),
+            x.movl(x.ebp, x.esp),                # restore stack pointer
+            x.movl(x.mem(x.esp, -(1+p)*4), x.ebp),   # restore base(frame) pointer
         ]
         return code
 

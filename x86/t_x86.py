@@ -67,15 +67,45 @@ def t_func_call_simple():
     #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         f = func() {
-            print 5 / 4 * 2 + 10 - 5 * 2 / 3
+            print 9
             return
         }
         f()
         ''').rstrip('\n')
-    raise Exception
+    #raise Exception
+
+def t_func_call_simple_with_1_param():
+    #raise nose.SkipTest
+    assert str(4) == run('''
+        f = func(a) {
+            print a
+            return
+        }
+        f(4)
+        ''').rstrip('\n')
+    #raise Exception
+
+def t_func_call_simple_with_2_params():
+    #raise nose.SkipTest
+    assert str(1) == run('''
+        f = func(a, b) {
+            print a - b
+            return
+        }
+        f(5, 4)
+        ''').rstrip('\n')
+    #raise Exception
+
+def t_func_call_return():
+    #raise nose.SkipTest
+    assert str(1) == run('''
+        f = func() { return 1 }
+        print f()
+        ''').rstrip('\n')
+    #raise Exception
 
 def t_func_call():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print f()
@@ -83,7 +113,7 @@ def t_func_call():
     #raise Exception
 
 def t_func_uppernames():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         g = func() {
             g1 = func() { return g2() }
@@ -97,7 +127,7 @@ def t_func_uppernames():
         ''').rstrip('\n')
 
 def t_func_pointers():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         g = func(h) { return h() }
@@ -105,7 +135,7 @@ def t_func_pointers():
         ''').rstrip('\n')
 
 def t_func_params_simple():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(4) == run('''
         sub = func(a, b) { return a - b }
         print sub(5+7, 8)
