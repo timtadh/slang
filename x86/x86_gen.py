@@ -28,8 +28,11 @@ class generate(object):
         self.Func('main', main=True)
         self.code += self.ExitCode()
 
-        for f in self.functions.itervalues():
-            if f.name == 'main': continue
+
+
+        for fname in sorted(self.functions.keys()):
+            if fname == 'main': continue
+            f = self.functions[fname]
             self.Func(f.name)
 
         #print '\n'.join(self.code)
@@ -50,6 +53,7 @@ class generate(object):
 
             using ebx or ecx is not allowed for either the src or targ.
         '''
+        print inst, src, targ
         if isinstance(src, il.Symbol) and isinstance(targ, il.Symbol):
             raise Exception, 'Cannot emit an instruction with both source and target as symbols'
         elif isinstance(src, il.Symbol) and targ is None:
@@ -71,6 +75,7 @@ class generate(object):
                 inst(x.mem(x.ebx, src.type.offset), targ),
             ]
         elif isinstance(targ, il.Symbol):
+            #print inst, src, targ, targ.type.basereg
             if targ.islocal(self.cfunc):
                 return [ inst(src, x.loc(targ.type)) ]
             return [
@@ -124,7 +129,7 @@ class generate(object):
     def place_symbols(self, syms, func):
         i = 8 + len(func.params)
         for sym in syms:
-            #print sym, sym.type
+            print sym, sym.islocal(func), func.name
             if issubclass(sym.type.__class__, il.Int) and sym.islocal(func):
                 #print 'is subclass int'
                 sym.type.basereg = x.ebp # set the base reg to the frame pointer
@@ -140,6 +145,7 @@ class generate(object):
         return i-1
 
     def Func(self, name, main=False):
+        print name
         self.code += [
             x.label(name)
         ]

@@ -153,6 +153,38 @@ def t_func_params_stack():
         print sub(5+7, 8)
         ''').rstrip('\n')
 
+def t_func_params_stack_modify_upper():
+    #raise nose.SkipTest
+    assert str(4) == run('''
+        sub = func(a, b) {
+            c = 0
+            _sub = func() {
+                c = a - b
+                return
+            }
+            _sub()
+            return c
+        }
+        print sub(5+7, 8)
+        ''').rstrip('\n')
+
+def t_func_params_stack_modify_upper_func_pointer():
+    #raise nose.SkipTest
+    assert str(4) == run('''
+        sub = func(a, b) {
+            c = 0
+            _sub = func() {
+                c = a - b
+                return
+            }
+            _sub()
+            return c
+        }
+        call = func(f, a, b) {
+            return f(a, b)
+        }
+        print call(sub, 5+7, 8)
+        ''').rstrip('\n')
 
 def t_if():
     raise nose.SkipTest
