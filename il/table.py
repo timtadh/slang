@@ -12,7 +12,19 @@ class SymbolTable(MutableMapping):
         self.table = dict()
         self.idindex = dict()
         self.parent = kwargs.pop('parent') if 'parent' in kwargs else dict()
+        if hasattr(self.parent, 'root'):
+            self.root = self.parent.root
+            self.depth = self.parent.depth + 1
+        else:
+            self.root = self
+            self.depth = 1
+            self._max_depth = 1
+        if self.depth > self.root._max_depth:
+            self.root._max_depth = self.depth
         self.update(*args, **kwargs)
+
+    @property
+    def max_depth(self): return self.root._max_depth
 
     def push(self):
         return SymbolTable(parent=self)
@@ -43,6 +55,7 @@ class SymbolTable(MutableMapping):
     def __setitem__(self, name, value):
         self.table[name] = value
         self.idindex[value.id] = value
+        value.scope_depth = self.depth
 
     def __getitem__(self, key):
         if isinstance(key, int) or isinstance(key, long): d = self.idindex
@@ -52,6 +65,7 @@ class SymbolTable(MutableMapping):
         return self.parent[key]
 
     def __delitem__(self, name):
+        raise Exception, "Operation not permitted!"
         item = self[name]
         if item.name in self.table:
             del self.table[item.name]
