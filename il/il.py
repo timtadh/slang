@@ -179,6 +179,7 @@ class Function(object):
         self.oparam_count = 0
         self.tree = None
         self.df = dict()
+        self.scope_depth = None
 
     def __repr__(self): return str(self)
 
