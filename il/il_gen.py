@@ -249,8 +249,7 @@ class generate(object):
                     il.Inst(il.MV, self.objs[c.children[0]], 0, result)
                 ]
             else:
-                result.type = self.objs[c.children[0]].type
-                result.name = self.objs[c.children[0]].name
+                result.clone(self.objs[c.children[0]])
         elif c.label == 'Call':
             blk = self.Call(c, result, blk)
         else:

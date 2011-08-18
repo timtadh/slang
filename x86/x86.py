@@ -33,6 +33,12 @@ def loc(typ):
 def mem(reg, offset):
     return '%i(%s)' % (offset, reg)
 
+def static(lbl, base='', index='', mul=None):
+    if mul is None:
+        return '%s(%s)' % (lbl, base)
+
+    return '%s(%s, %s, %i)' % (lbl, base, index, mul)
+
 
 ops = dict((op, __inst(op)) for op in (
     'movl', 'popl', 'pushl', 'leal',

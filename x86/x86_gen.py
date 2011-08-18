@@ -17,12 +17,12 @@ class generate(object):
 
     def __new__(cls, table, blocks, functions):
         self = super(generate, cls).__new__(cls)
-        self.__init__()
+        self.table = table
         self.blocks = blocks
         self.functions = functions
-        self.bp_offset = 0
-        self.floc = dict()
-        self.code = list()
+        self.__init__()
+
+        print 'max scope depth', table.max_depth
 
         self.code += self.InitCode()
         self.Func('main', main=True)
@@ -37,14 +37,65 @@ class generate(object):
         #raise Exception
         return '\n'.join(self.code) + '\n'
 
+    def __init__(self):
+        self.bp_offset = 0
+        self.floc = dict()
+        self.code = list()
+        self.cfunc = None
+
+    def emit(self, inst, src, targ=None):
+        '''emit the specified instruction with src as source operand and targ
+            as the target operand. Handles requesting the operands from a non-local
+            stack frame as necessary.
+
+            using ebx or ecx is not allowed for either the src or targ.
+        '''
+        if isinstance(src, il.Symbol) and isinstance(targ, il.Symbol):
+            raise Exception, 'Cannot emit an instruction with both source and target as symbols'
+        elif isinstance(src, il.Symbol) and targ is None:
+            if src.islocal(self.cfunc):
+                return [ inst(x.loc(src.type)) ]
+            return [
+                x.movl(x.cint(4*(src.scope_depth-1)), x.ebx),
+                x.movl(x.static('display', x.ebx), x.ebx),
+                inst(x.mem(x.ebx, src.type.offset)),
+            ]
+        elif not isinstance(src, il.Symbol) and targ is None:
+            return [ inst(src), ]
+        elif isinstance(src, il.Symbol) and targ is not None:
+            if src.islocal(self.cfunc):
+                return [ inst(x.loc(src.type), targ) ]
+            return [
+                x.movl(x.cint(4*(src.scope_depth-1)), x.ebx),
+                x.movl(x.static('display', x.ebx), x.ebx),
+                inst(x.mem(x.ebx, src.type.offset), targ),
+            ]
+        elif isinstance(targ, il.Symbol):
+            if targ.islocal(self.cfunc):
+                return [ inst(src, x.loc(targ.type)) ]
+            return [
+                x.movl(x.cint(4*(targ.scope_depth-1)), x.ebx),
+                x.movl(x.static('display', x.ebx), x.ebx),
+                x.movl(x.mem(x.ebx, targ.type.offset), x.ecx),
+                inst(src, x.ecx),
+                x.movl(x.ecx, x.mem(x.ebx, targ.type.offset)),
+            ]
+        else:
+            return [ inst(src, targ) ]
 
     def InitCode(self):
         return [
             '.section .data',
             'printf_msg:',
             r'  .ascii "%d\n\0"',
-            'printf_arg:',
-            r'  .long 0',
+            'push_msg:',
+            r'  .ascii "push 0x%x\n\0"',
+            'pop1_msg:',
+            r'  .ascii "pop1 0x%x\n\0"',
+            'pop2_msg:',
+            r'  .ascii "pop2 0x%x\n\0"',
+            'display:',
+            r'  .long %s' % ', '.join('0' for x in xrange(self.table.max_depth)),
             '',
             '.section .text',
             '.global _start',
@@ -70,11 +121,11 @@ class generate(object):
                 if isinstance(i.result, il.Symbol): syms.add(i.result)
         return syms
 
-    def place_symbols(self, syms):
-        i = 7
+    def place_symbols(self, syms, func):
+        i = 8 + len(func.params)
         for sym in syms:
             #print sym, sym.type
-            if issubclass(sym.type.__class__, il.Int):
+            if issubclass(sym.type.__class__, il.Int) and sym.islocal(func):
                 #print 'is subclass int'
                 sym.type.basereg = x.ebp # set the base reg to the frame pointer
                 sym.type.offset = -4 * i # set the offset
@@ -95,17 +146,17 @@ class generate(object):
 
         #print '->', insts
         func = self.functions[name]
-        self.floc[func.name] = len(self.code)
+        self.cfunc = func
         #insts = self.blocks[func.entry.name].insts
 
         self.bp_offset = 3
 
         if not main:
-            self.code += self.FramePush(len(func.params))
+            self.code += self.FramePush(len(func.params), func.scope_depth)
         syms = self.gather_syms(func.blks)
         #print syms
-        fp_offset = self.place_symbols(syms)
-        #print syms
+        fp_offset = self.place_symbols(syms, func)
+        #print name, 'fp_offset', fp_offset
         self.code += [
             x.subl(x.cint(fp_offset*4), x.esp)
             #(vm.IMM, 4, fp_offset, 'start func %s' % (name)),
@@ -124,7 +175,7 @@ class generate(object):
                     self.code += self.Iprm(i)
                 elif i.op == il.OPRM:
                     if not main and func.oparam_count > 0:
-                        self.code += self.FramePop(len(func.params))
+                        self.code += self.FramePop(len(func.params), func.scope_depth)
                     if func.oparam_count == 0:
                         raise Exception, "expected no return paramters got at least 1."
                     self.code += self.Oprm(i)
@@ -134,7 +185,7 @@ class generate(object):
                     self.code += self.Call(i)
                 elif i.op == il.RTRN:
                     if not main and func.oparam_count == 0:
-                        self.code += self.FramePop(len(func.params))
+                        self.code += self.FramePop(len(func.params), func.scope_depth)
                     self.code += self.Return(i)
                 elif i.op == il.MV:
                     self.code += self.Mv(i)
@@ -180,7 +231,7 @@ class generate(object):
         return code
 
     def Oprm(self, i):
-        print i
+        #print i
         code = [
             x.movl(x.mem(x.esp, i.b.type.offset), x.eax),
             x.movl(x.eax, x.mem(x.esp, -(1+i.a)*4)),
@@ -202,7 +253,7 @@ class generate(object):
         return code
 
     def Rprm(self, i):
-        print i
+        #print i
         code = [
             x.movl(x.mem(x.esp, -(2+i.a)*4), x.eax),
             x.movl(x.eax, x.loc(i.result.type)),
@@ -238,7 +289,7 @@ class generate(object):
         ]
         return code
 
-    def FramePush(self, param_count):
+    def FramePush(self, param_count, scope_depth):
         p = param_count
         code = [
             # 0(ebp) == return address
@@ -249,12 +300,46 @@ class generate(object):
             x.movl(x.esi, x.mem(x.ebp, -(4+p)*4)),  # 4
             x.movl(x.ecx, x.mem(x.ebp, -(5+p)*4)),  # 5
             x.movl(x.edx, x.mem(x.ebp, -(6+p)*4)),  # 6
+            x.movl(x.cint(4*(scope_depth-1)), x.ebx),
+            x.movl(x.static('display', x.ebx), x.eax),
+            x.movl(x.eax, x.mem(x.ebp, -(7+p)*4)), #7
+
+
+            #x.subl(x.cint(8*4), x.esp),
+            #x.movl(x.cint(4*(scope_depth-1)), x.ebx),
+            #x.pushl(x.static('display', x.ebx)),
+            #x.pushl('$push_msg'),
+            #x.call("printf"),
+            #x.addl(x.cint(8*4 + 8), x.esp),
+
+
+            x.movl(x.cint(4*(scope_depth-1)), x.ebx),
+            x.movl(x.ebp, x.static('display', x.ebx)),
+            '',
+
         ]
         return code
 
-    def FramePop(self, param_count):
+    def FramePop(self, param_count, scope_depth):
         p = param_count
         code = [
+            '',
+            #x.movl(x.cint(4*(scope_depth-1)), x.ebx),
+            #x.pushl(x.static('display', x.ebx)),
+            #x.pushl('$pop1_msg'),
+            #x.call("printf"),
+            #x.addl(x.cint(8), x.esp),
+
+            x.movl(x.cint(4*(scope_depth-1)), x.ebx),
+            x.movl(x.mem(x.ebp, -(7+p)*4), x.eax),
+            x.movl(x.eax, x.static('display', x.ebx)),
+
+            #x.movl(x.cint(4*(scope_depth-1)), x.ebx),
+            #x.pushl(x.static('display', x.ebx)),
+            #x.pushl('$pop2_msg'),
+            #x.call("printf"),
+            #x.addl(x.cint(8), x.esp),
+
             x.movl(x.mem(x.ebp, -(6+p)*4), x.edx),
             x.movl(x.mem(x.ebp, -(5+p)*4), x.ecx),
             x.movl(x.mem(x.ebp, -(4+p)*4), x.esi),
@@ -287,9 +372,7 @@ class generate(object):
         return code
 
     def Imm(self, i):
-        code = [
-            x.movl(x.cint(i.a), x.loc(i.result.type)),
-        ]
+        code = self.emit(x.movl, x.cint(i.a), i.result)
         return code
 
     def Mv(self, i):
@@ -304,20 +387,18 @@ class generate(object):
         return code
 
     def Op(self, i):
+        print i
         ops = {il.ADD:x.addl, il.SUB:x.subl, il.MUL:x.imull}
+        code = []
         if i.op == il.DIV:
-            code = [
-                x.movl(x.cint(0), x.edx),
-                x.movl(x.loc(i.a.type), x.eax),
-                x.divl(x.loc(i.b.type)),
-                x.movl(x.eax, x.loc(i.result.type)),
-            ]
+            code += [ x.movl(x.cint(0), x.edx), ]
+            code += self.emit(x.movl, i.a, x.eax)
+            code += self.emit(x.divl, i.b)
+            code += self.emit(x.movl, x.eax, i.result)
         else:
-            code = [
-                x.movl(x.loc(i.a.type), x.eax),
-                ops[i.op](x.loc(i.b.type), x.eax),
-                x.movl(x.eax, x.loc(i.result.type)),
-            ]
+            code += self.emit(x.movl, i.a, x.eax)
+            code += self.emit(ops[i.op], i.b, x.eax)
+            code += self.emit(x.movl, x.eax, i.result)
         return code
 
     def CmpOp(self, i):
@@ -338,14 +419,11 @@ class generate(object):
         return code
 
     def Print(self, i):
-        print i
-        code = [
-            #x.movl(x.loc(i.a.type), x.eax),
-            #x.pushl(x.eax),
-            x.pushl(x.loc(i.a.type)),
+        code = self.emit(x.pushl, i.a)
+        code += [
             x.pushl('$printf_msg'),
             x.call("printf"),
-            x.addl(x.cint(8), x.esp)
+            x.addl(x.cint(8), x.esp),
         ]
         return code
 

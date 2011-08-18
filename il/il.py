@@ -210,15 +210,26 @@ class Symbol(object):
         Symbol.IDC += 1
         self.name = name
         self.type = type
+        self.scope_depth = None
+
+    def clone(self, b):
+        self.name = b.name
+        self.type = b.type
+        self.scope_depth = b.scope_depth
+
+    def islocal(self, func):
+        print self, self.scope_depth, '?', func.scope_depth
+        if self.scope_depth is None: return True
+        return func.scope_depth == self.scope_depth
 
     @property
     def id(self):
         return self._id
 
     def __repr__(self):
-        return '[sym %d - %s%s]' % (self.id, self.name, self.type)
+        return '[sym %d - %s%s (%s)]' % (self.id, self.name, self.type, str(self.scope_depth))
 
-    def __str__(self): return '[sym %s%s]' % (self.name, self.type)
+    def __str__(self): return '[sym %s%s (%s)]' % (self.name, self.type, str(self.scope_depth))
 
 class Type(object):
 

@@ -142,7 +142,7 @@ def t_func_params_simple():
         ''').rstrip('\n')
 
 def t_func_params_stack():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(4) == run('''
         sub = func(a, b) {
             _sub = func() {
