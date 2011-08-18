@@ -16,6 +16,7 @@ class generate(object):
         self.__init__()
 
         self.push_func('main')
+        self.cfunc.scope_depth = 1
         entry = self.block()
         blk = self.Stmts(root, entry)
         main = self.pop_func()
@@ -79,6 +80,7 @@ class generate(object):
         if name is None: name = 'f%i' % self.fcount
         self.functions[name] = il.Function(name)
         self.fstack.append(self.functions[name])
+        self.cfunc.scope_depth = self.objs.depth + 1
 
     def pop_func(self):
         return self.fstack.pop()
