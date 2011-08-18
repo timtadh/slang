@@ -15,7 +15,7 @@ import vm
 
 class generate(object):
 
-    def __new__(cls, entry, blocks, functions):
+    def __new__(cls, table, blocks, functions):
         self = super(generate, cls).__new__(cls)
         self.__init__()
         self.blocks = blocks

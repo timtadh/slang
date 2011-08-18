@@ -17,8 +17,8 @@ GEN_IMGS = False
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
-    entry, blocks, functions = il_gen.generate(Parser().parse(s, lexer=Lexer()))
-    cf.analyze(entry, blocks, functions)
+    table, blocks, functions = il_gen.generate(Parser().parse(s, lexer=Lexer()))
+    cf.analyze(table, blocks, functions)
     return functions
 
 def mock():

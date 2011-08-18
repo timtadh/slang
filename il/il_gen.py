@@ -43,7 +43,7 @@ class generate(object):
             print
             print
 
-        return entry.name, self.blocks, self.functions
+        return self.objs, self.blocks, self.functions
 
     def __init__(self):
         il.Symbol.IDC = 0

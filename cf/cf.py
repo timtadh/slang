@@ -21,7 +21,7 @@ class analyze(object):
         self.__init__()
         return self
 
-    def __new__(cls, entry, blocks, functions, stdout=None):
+    def __new__(cls, table, blocks, functions, stdout=None):
         self = super(analyze, cls).__new__(cls)
         self.__init__()
         if stdout is None: self.stdout = sys.stdout

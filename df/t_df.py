@@ -12,8 +12,8 @@ import abstract, reachdef, livevar
 import nose
 
 def cf_analyze(s):
-    entry, blocks, functions = il.il_gen.generate(Parser().parse(s, lexer=Lexer()), True)
-    cf.analyze(entry, blocks, functions)
+    table, blocks, functions = il.il_gen.generate(Parser().parse(s, lexer=Lexer()), True)
+    cf.analyze(table, blocks, functions)
     return blocks, functions
 
 @nose.tools.raises(TypeError)

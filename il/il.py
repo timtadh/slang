@@ -14,7 +14,10 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-def run(entry, blocks, functions, params=None, var=None, stdout=None):
+def run(table, blocks, functions, *args, **kwargs):
+    return _run(functions['main'].entry.name, blocks, functions, *args, **kwargs)
+
+def _run(entry, blocks, functions, params=None, var=None, stdout=None):
     if stdout == None: stdout = sys.stdout
     if not var: var = dict()
     nparams = list()
@@ -63,10 +66,10 @@ def run(entry, blocks, functions, params=None, var=None, stdout=None):
         elif i.op == CALL:
             if isinstance(i.a.type, Func):
                 _entry = functions[i.a.type.name].entry.name
-                params = run(_entry, blocks, functions, nparams, var, stdout=stdout)
+                params = _run(_entry, blocks, functions, nparams, var, stdout=stdout)
             else:
                 _entry = functions[var[i.a.name].type.name].entry.name
-                params = run(_entry, blocks, functions, nparams, var, stdout=stdout)
+                params = _run(_entry, blocks, functions, nparams, var, stdout=stdout)
             nparams = list()
         elif i.op == RTRN:
             return rparams
