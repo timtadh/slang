@@ -8,8 +8,10 @@ import sys, collections
 
 opsr = (
     'MV', 'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
-    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT',
-    'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'BEQZ', 'NOP', 'J'
+    'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT', 'NOP', 'J',
+    'IFEQ', 'IFNE', 'IFLT', 'IFLE', 'IFGT', 'IFGE',
+    #'IFNEQ', 'IFNNE', 'IFNLT', 'IFNLE', 'IFNGT', 'IFNGE',
+    # 'EQ', 'NE', 'LT', 'LE', 'GT', 'GE', 'BEQZ',
 )
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
@@ -38,18 +40,18 @@ def _run(entry, blocks, functions, params=None, var=None, stdout=None):
             var[i.result.name] = var[i.a.name] + var[i.b.name]
         elif i.op == MV:
             var[i.result.name] = var[i.a.name]
-        elif i.op == EQ:
-            var[i.result.name] = 1 - int(var[i.a.name] == var[i.b.name])
-        elif i.op == NE:
-            var[i.result.name] = 1 - int(var[i.a.name] != var[i.b.name])
-        elif i.op == LT:
-            var[i.result.name] = 1 - int(var[i.a.name] < var[i.b.name])
-        elif i.op == LE:
-            var[i.result.name] = 1 - int(var[i.a.name] <= var[i.b.name])
-        elif i.op == GT:
-            var[i.result.name] = 1 - int(var[i.a.name] > var[i.b.name])
-        elif i.op == GE:
-            var[i.result.name] = 1 - int(var[i.a.name] >= var[i.b.name])
+        #elif i.op == EQ:
+            #var[i.result.name] = 1 - int(var[i.a.name] == var[i.b.name])
+        #elif i.op == NE:
+            #var[i.result.name] = 1 - int(var[i.a.name] != var[i.b.name])
+        #elif i.op == LT:
+            #var[i.result.name] = 1 - int(var[i.a.name] < var[i.b.name])
+        #elif i.op == LE:
+            #var[i.result.name] = 1 - int(var[i.a.name] <= var[i.b.name])
+        #elif i.op == GT:
+            #var[i.result.name] = 1 - int(var[i.a.name] > var[i.b.name])
+        #elif i.op == GE:
+            #var[i.result.name] = 1 - int(var[i.a.name] >= var[i.b.name])
         elif i.op == PRNT:
             print >>stdout, var[i.a.name]
         elif i.op == IPRM:
@@ -73,10 +75,18 @@ def _run(entry, blocks, functions, params=None, var=None, stdout=None):
             nparams = list()
         elif i.op == RTRN:
             return rparams
-        elif i.op == BEQZ:
-            if var[i.a.name] == 0:
-                #raise Exception, "go to label %s" % (i.b)
-                il = blocks[i.b.name].insts
+        elif i.op in [IFEQ, IFNE, IFLT, IFLE, IFGT, IFGE]:
+            ops = {
+                IFEQ : (lambda a,b: 1 - int(var[a.name] == var[b.name])),
+                IFNE : (lambda a,b: 1 - int(var[a.name] != var[b.name])),
+                IFLT : (lambda a,b: 1 - int(var[a.name] < var[b.name])),
+                IFLE : (lambda a,b: 1 - int(var[a.name] <= var[b.name])),
+                IFGT : (lambda a,b: 1 - int(var[a.name] > var[b.name])),
+                IFGE : (lambda a,b: 1 - int(var[a.name] >= var[b.name])),
+            }
+            if ops[i.op](i.a, i.b) == 0:
+                ##raise Exception, "go to label %s" % (i.b)
+                il = blocks[i.result.name].insts
                 c = 0
                 continue;
         elif i.op == J:

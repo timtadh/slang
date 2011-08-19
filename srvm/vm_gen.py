@@ -173,10 +173,8 @@ class generate(object):
                     self.code += self.Mv(i)
                 elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
                     self.code += self.Op(i)
-                elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
-                    self.code += self.CmpOp(i)
-                elif i.op == il.BEQZ:
-                    self.code += self.Beqt(i)
+                elif i.op in [il.IFEQ, il.IFNE, il.IFLT, il.IFLE, il.IFGT, il.IFGE]:
+                    self.code += self.BranchOp(i)
                 elif i.op == il.J:
                     self.code += self.J(i)
                 elif i.op == il.NOP:
@@ -261,7 +259,7 @@ class generate(object):
         return code
 
     def Rprm(self, i):
-        print i
+        #print i
         code = [
             (vm.IMM,  4, 0, 'Start RPRM'),              # $4 = 0
             (vm.ADD,  4, 1),              # $4 = $fp
@@ -341,14 +339,19 @@ class generate(object):
         ]
         return code
 
-    def Beqt(self, i):
-        #self.labels[i.b] = None
+    def BranchOp(self, i):
+        ops = {il.IFEQ:vm.EQ, il.IFNE:vm.NE, il.IFLT:vm.LT, il.IFLE:vm.LE,
+               il.IFGT:vm.GT, il.IFGE:vm.GE}
         code = [
-            (vm.IMM, 3, i.a.type.offset, 'start beqt'),
-            (vm.ADD, 3, i.a.type.basereg),
+            (vm.IMM, 3, i.b.type.offset, 'start branch op'),
+            (vm.ADD, 3, i.b.type.basereg),
             (vm.LOAD, 3, 3),
-            (vm.IMM, 4, i.b),
-            (vm.BEQT, 3, 4, 'end beqt'),
+            (vm.IMM, 4, i.a.type.offset),
+            (vm.ADD, 4, i.a.type.basereg),
+            (vm.LOAD, 4, 4),
+            (ops[i.op], 4, 3),
+            (vm.IMM, 3, i.result),
+            (vm.BEQT, 4, 3, 'end branch op'),
         ]
         #for i in code:
             #print i
@@ -418,7 +421,7 @@ class generate(object):
         return code
 
     def Print(self, i):
-        print i
+        #print i
         code = [
             (vm.IMM, 3, i.a.type.offset),
             (vm.ADD, 3, i.a.type.basereg),

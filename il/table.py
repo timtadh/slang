@@ -60,7 +60,7 @@ class SymbolTable(MutableMapping):
         self.idindex[value.id] = value
         if value.scope_depth is None:
             value.scope_depth = self.depth
-        print name, self.depth, value.id, value.__class__, value.scope_depth, id(value)
+        #print name, self.depth, value.id, value.__class__, value.scope_depth, id(value)
 
     def __getitem__(self, key):
         if isinstance(key, int) or isinstance(key, long): d = self.idindex

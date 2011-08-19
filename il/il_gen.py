@@ -97,7 +97,7 @@ class generate(object):
             elif c.label == 'Var':
                 self.PreVar(c)
         for c in node.children:
-            print c.label
+            #print c.label
             if c.label == 'Assign':
                 blk = self.Assign(c, blk)
             elif c.label == 'Var':
@@ -117,10 +117,13 @@ class generate(object):
 
         thenblk = self.block(blk)
         finalblk = self.block()
+        elseblk = None
 
-        cmpr = il.Symbol('r'+self.tmp(), il.Int())
-        blk = self.CmpOp(node.children[0].children[0], cmpr, blk)
-        blk.insts += [ il.Inst(il.BEQZ, cmpr, thenblk, 0) ]
+        if len(node.children) == 3:
+            elseblk = self.block(blk)
+            blk = self.BooleanExpr(node.children[0], blk, thenblk, elseblk)
+        else:
+            blk = self.BooleanExpr(node.children[0], blk, thenblk, finalblk)
 
         thenblk = self.Stmts(node.children[1], thenblk)
         thenblk.next.append(finalblk)
@@ -128,14 +131,13 @@ class generate(object):
         thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         if len(node.children) == 3:
-            elseblk = self.block(blk)
-            blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ] ## This line must go here. subtle bug
+            #blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ] ## This line must go here. subtle bug
             elseblk = self.Stmts(node.children[2], elseblk)
             elseblk.next.append(finalblk)
             finalblk.prev.append(elseblk)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
         else:
-            blk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
+            #blk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
             blk.next.append(finalblk)
             finalblk.prev.append(blk)
 
@@ -307,19 +309,56 @@ class generate(object):
 
         return blk
 
-    def CmpOp(self, node, result, blk):
-        ops = {'==':il.EQ, '!=':il.NE, '<':il.LT, '<=':il.LE, '>':il.GT, '>=':il.GE}
-        Ar = il.Symbol('r'+self.tmp(), il.Int())
-        Br = il.Symbol('r'+self.tmp(), il.Int())
-        blk = self.Expr(node.children[0], Ar, blk)
-        blk = self.Expr(node.children[1], Br, blk)
-        blk.insts += [
-            il.Inst(ops[node.label],
-            Ar,
-            Br,
-            result)
-        ]
+    def BooleanExpr(self, node, blk, thenblk, elseblk):
+        assert node.label == 'BooleanExpr'
+        c = node.children[0]
+        return self.BooleanOp(c, blk, thenblk, elseblk)
+
+    def BooleanOp(self, c, blk, thenblk, elseblk, negate=False):
+
+        if c.label in ['==', '!=', '<', '<=', '>', '>=']:
+            Ar = il.Symbol('r'+self.tmp(), il.Int())
+            Br = il.Symbol('r'+self.tmp(), il.Int())
+            blk = self.Expr(c.children[0], Ar, blk)
+            blk = self.Expr(c.children[1], Br, blk)
+            inst = self.CmpOp(c, negate)
+            blk.insts += [
+                il.Inst(inst, Ar, Br, thenblk),
+                il.Inst(il.J, elseblk, 0, 0),
+            ]
+        elif c.label == 'Or':
+            raise Exception, NotImplemented
+        elif c.label == 'And':
+            raise Exception, NotImplemented
+        elif c.label == 'Not':
+            raise Exception, NotImplemented
+        else:
+            raise Exception, 'Unexpected Node %s' % c.label
+
         return blk
+
+
+    def CmpOp(self, node, negate=False):
+        ops = {
+            '==':il.IFEQ,
+            '!=':il.IFNE,
+            '<':il.IFLT,
+            '<=':il.IFLE,
+            '>':il.IFGT,
+            '>=':il.IFGE
+        }
+        ops_ = {
+            '==':il.IFNE,
+            '!=':il.IFEQ,
+            '<':il.IFGE,
+            '<=':il.IFGT,
+            '>':il.IFLE,
+            '>=':il.IFLT
+        }
+        if negate:
+            return ops_[node.label]
+        else:
+            return ops[node.label]
 
     def Op(self, node, result, blk):
         ops = {'/':'DIV', '*':'MUL', '-':'SUB', '+':'ADD'}
