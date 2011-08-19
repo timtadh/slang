@@ -94,9 +94,13 @@ class generate(object):
         for c in node.children:
             if c.label == 'Assign':
                 self.PreAssign(c)
+            elif c.label == 'Var':
+                self.PreVar(c)
         for c in node.children:
             if c.label == 'Assign':
                 blk = self.Assign(c, blk)
+            elif c.label == 'Var':
+                blk = self.Var(c, blk)
             elif c.label == 'Call':
                 blk = self.Call(c, None, blk)
             elif c.label == 'Print':
@@ -156,7 +160,23 @@ class generate(object):
         c = node.children[1]
         if c.label == 'Func':
             s = il.Symbol(name, il.Func(None))
-            self.objs.add(s)
+            if name in self.objs.myscope:
+                self.objs.add(s)
+            elif name in self.objs:
+                raise TypeError, "Cannot assign a function to a non local var."
+            else:
+                raise TypeError, "Variable name %s not declared." % (name)
+
+    def PreVar(self, node):
+        assert node.label == 'Var'
+        name = node.children[0]
+        if len(node.children) == 1:
+            self.objs.add(il.Symbol(name, il.Null()))
+        else:
+            c = node.children[1]
+            if c.label == 'Func':
+                s = il.Symbol(name, il.Func(None))
+                self.objs.add(s)
 
     def Assign(self, node, blk):
         assert node.label == 'Assign'
@@ -166,15 +186,40 @@ class generate(object):
         if name in self.objs:
             result = self.objs[name]
         else:
-            result = il.Symbol('r'+self.tmp(), il.Int())
+            raise TypeError, 'Use of name %s without prior declaration' % name
 
         if c.label == 'Expr':
+            if isinstance(result.type, il.Null):
+                result.type = il.Int()
             blk = self.Expr(c, result, blk, toplevel=True)
             self.objs[name] = result
         elif c.label == 'Func':
+            if isinstance(result.type, il.Null):
+                result.type = il.Func(None)
             blk = self.Func(c, name, blk)
         else:
             raise Exception, c.label
+
+        return blk
+
+    def Var(self, node, blk):
+        assert node.label == 'Var'
+        name = node.children[0]
+
+        if len(node.children) == 1:
+            # No action need, name was added to sym table in pre-var
+            pass
+        else:
+            c = node.children[1]
+
+            if c.label == 'Expr':
+                result = il.Symbol('r'+self.tmp(), il.Int())
+                blk = self.Expr(c, result, blk, toplevel=True)
+                self.objs[name] = result
+            elif c.label == 'Func':
+                blk = self.Func(c, name, blk)
+            else:
+                raise Exception, c.label
 
         return blk
 
@@ -219,8 +264,8 @@ class generate(object):
     def DParams(self, node, blk):
         assert node.label == 'DParams'
         for i, c in enumerate(node.children):
-            t = il.Symbol(self.tmp(), il.Int())
-            self.objs[c] = t
+            t = il.Symbol(c, il.Int())
+            self.objs.add(t)
             self.cfunc.params.append(c)
             blk.insts += [ il.Inst(il.GPRM, i, 0, t) ]
         return blk

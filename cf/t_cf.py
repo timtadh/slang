@@ -208,7 +208,7 @@ def t_acyclic_ifthenelse_chain():
 def t_none():
     #raise nose.SkipTest
     tree = analyze('''
-        f = func(x) {
+        var f = func(x) {
             return x
         }
         print f(10)
@@ -219,7 +219,7 @@ def t_none():
 def t_it():
     #raise nose.SkipTest
     tree = analyze('''
-        f = func(x) {
+        var f = func(x) {
             if (x > 0) {
                 x = f(x-1)
             }
@@ -234,7 +234,8 @@ def t_it():
 def t_ite():
     #raise nose.SkipTest
     tree = analyze('''
-        f = func(x) {
+        var f = func(x) {
+            var c
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -252,7 +253,8 @@ def t_ite():
 def t_ite_it():
     #raise nose.SkipTest
     tree = analyze('''
-        f = func(x) {
+        var f = func(x) {
+            var c
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -275,7 +277,8 @@ def t_ite_it():
 def t_nest_ite():
     #raise nose.SkipTest
     f = analyze('''
-        f = func(x) {
+        var f = func(x) {
+            var c
             if (x > 0) {
                 if (x/2 + x/2 == x) { // then it is even
                     c = f(x+1)

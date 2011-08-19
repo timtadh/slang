@@ -26,6 +26,9 @@ class SymbolTable(MutableMapping):
     @property
     def max_depth(self): return self.root._max_depth
 
+    @property
+    def myscope(self): return self.table.keys()
+
     def push(self):
         return SymbolTable(parent=self)
 

@@ -28,7 +28,8 @@ def t_reachdef_instantiate():
 
 def t_reachdef_init():
     blocks, functions = cf_analyze('''
-        f = func(x) {
+        var f = func(x) {
+            var c
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -43,12 +44,14 @@ def t_reachdef_init():
         ''')
 
     rd = reachdef.ReachingDefintions(functions['f2'])
-    assert set(t for t in rd.types.keys()) == set([1, 2, 4, 5, 6, 8, 9, 11])
+    print set(t for t in rd.types.keys())
+    assert set(t for t in rd.types.keys()) == set([1, 3, 5, 6, 7, 9, 10, 12])
     assert set(itertools.chain(*rd.types.values())) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
 
 def t_reachdef_flowfunction():
     blocks, functions = cf_analyze('''
-        f = func(x) {
+        var f = func(x) {
+            var c
             if (x > 0) {
                 x = x + 5 - 3
                 x = x - 4
@@ -68,8 +71,8 @@ def t_reachdef_flowfunction():
 def t_reachdef_flowfunction_finally():
 
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -94,8 +97,8 @@ def t_reachdef_flowfunction_finally():
 def t_reachdef_ifthenelse_byhand():
 
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -126,8 +129,8 @@ def t_reachdef_ifthenelse_byhand():
 def t_reachdef_ifthenelse_engine():
 
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -173,8 +176,8 @@ def t_reachdef_ifthenelse_engine():
 def t_reachdef_ifthen_engine():
 
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             }
@@ -212,8 +215,8 @@ def t_reachdef_ifthen_engine():
 
 def t_livevar_flowfunction():
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             }
@@ -229,8 +232,8 @@ def t_livevar_flowfunction():
 def t_livevar_ifthenelse_engine():
 
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -276,8 +279,8 @@ def t_livevar_ifthenelse_engine():
 def t_livevar_ifthen_engine():
 
     blocks, functions = cf_analyze('''
-        f = func(x) {
-            c = 3
+        var f = func(x) {
+            var c = 3
             if (x > 0) {
                 c = f(x-1)
             }

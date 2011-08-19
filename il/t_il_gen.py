@@ -38,7 +38,7 @@ def t_expr_compound():
 def t_func_call():
     #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
-        f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
+        var f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print f()
         ''').rstrip('\n')
     #assert False
@@ -46,14 +46,14 @@ def t_func_call():
 def t_func_uppernames():
     #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
-        g = func() {
-            g1 = func() { return g2() }
-            g2 = func() { return g3() }
-            g3 = func() { return h() }
+        var g = func() {
+            var g1 = func() { return g2() }
+            var g2 = func() { return g3() }
+            var g3 = func() { return h() }
             return g1()
         }
-        h = func() { return f() }
-        f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
+        var h = func() { return f() }
+        var f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
         print g()
         ''').rstrip('\n')
     #assert False
@@ -61,23 +61,23 @@ def t_func_uppernames():
 def t_func_pointers():
     #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
-        f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
-        g = func(h) { return h() }
+        var f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
+        var g = func(h) { return h() }
         print g(f)
         ''').rstrip('\n')
 
 def t_func_params_simple():
     #raise nose.SkipTest
     assert str(4) == run('''
-        sub = func(a, b) { return a - b }
+        var sub = func(a, b) { return a - b }
         print sub(5+7, 8)
         ''').rstrip('\n')
 
 def t_func_params_stack():
     #raise nose.SkipTest
     assert str(4) == run('''
-        sub = func(a, b) {
-            _sub = func() {
+        var sub = func(a, b) {
+            var _sub = func() {
                 return a - b
             }
             return _sub()
@@ -106,6 +106,7 @@ def t_if():
 def t_if_set():
     #raise nose.SkipTest
     assert str(2) == run('''
+        var a
         if (1 > 2) {
             a = 1
         } else {
@@ -114,6 +115,7 @@ def t_if_set():
         print a
         ''').rstrip('\n')
     assert str(1) == run('''
+        var a
         if (1 < 2) {
             a = 1
         } else {
@@ -122,7 +124,7 @@ def t_if_set():
         print a
         ''').rstrip('\n')
     assert str(1) == run('''
-        a = 2
+        var a = 2
         if (1 < 2) {
             a = 1
         }
@@ -130,10 +132,11 @@ def t_if_set():
         ''').rstrip('\n')
 
 def t_lone_expr():
+    #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
-        a = func() {
-            f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
-            g = func(h) { return h() }
+        var a = func() {
+            var f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
+            var g = func(h) { return h() }
             print g(f)
             return
         }
@@ -143,7 +146,8 @@ def t_lone_expr():
 def t_bb():
     #raise nose.SkipTest
     assert str(5) == run('''
-        f = func(a, b) {
+        var f = func(a, b) {
+            var c
             if (a > b) {
                 c = a
             } else {
@@ -155,7 +159,8 @@ def t_bb():
         ''').rstrip('\n')
     #assert False
     assert str(10) == run('''
-        f = func(a, b) {
+        var f = func(a, b) {
+            var c
             if (a > b) {
                 c = a
             } else {
@@ -170,7 +175,8 @@ def t_bb():
 def t_recursive():
     #raise nose.SkipTest
     assert str(0) == run('''
-        f = func(x) {
+        var f = func(x) {
+            var c
             if (x > 0) {
                 c = f(x-1)
             } else {
@@ -185,8 +191,9 @@ def t_recursive():
 def t_nested_if():
     #raise nose.SkipTest
     print run('''
-        f = func(x) {
+        var f = func(x) {
             print x
+            var c
             if (x > 0) {
                 if (x/2 + x/2 == x) { // then it is even
                     c = f(x+1)

@@ -63,54 +63,14 @@ class Parser(object):
         t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
 
     def p_Stmt3(self, t):
-        'Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Return RCURLY'
+        'Stmt : NAME EQUAL FuncDecl'
         t[0] = (
             Node('Assign')
                 .addkid(t[1])
-                .addkid(
-                    Node('Func')
-                        .addkid(t[7])
-                )
+                .addkid(t[3])
         )
 
     def p_Stmt4(self, t):
-        'Stmt : NAME EQUAL FUNC LPAREN RPAREN LCURLY Stmts Return RCURLY'
-        t[0] = (
-            Node('Assign')
-                .addkid(t[1])
-                .addkid(
-                    Node('Func')
-                        .addkid(t[7])
-                        .addkid(t[8])
-                )
-        )
-
-    def p_Stmt5(self, t):
-        'Stmt : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Return RCURLY'
-        t[0] = (
-            Node('Assign')
-                .addkid(t[1])
-                .addkid(
-                    Node('Func')
-                        .addkid(t[5])
-                        .addkid(t[8])
-                )
-        )
-
-    def p_Stmt6(self, t):
-        'Stmt : NAME EQUAL FUNC LPAREN DParams RPAREN LCURLY Stmts Return RCURLY'
-        t[0] = (
-            Node('Assign')
-                .addkid(t[1])
-                .addkid(
-                    Node('Func')
-                        .addkid(t[5])
-                        .addkid(t[8])
-                        .addkid(t[9])
-                )
-        )
-
-    def p_Stmt7(self, t):
         'Stmt : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY'
         t[0] = (
             Node('If')
@@ -118,13 +78,54 @@ class Parser(object):
                 .addkid(t[6])
         )
 
-    def p_Stmt8(self, t):
+    def p_Stmt5(self, t):
         'Stmt : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY'
         t[0] = (
             Node('If')
                 .addkid(t[3])
                 .addkid(t[6])
                 .addkid(t[10])
+        )
+
+    def p_Stmt6(self, t):
+        'Stmt : VAR NAME'
+        t[0] = Node('Var').addkid(t[2])
+
+    def p_Stmt7(self, t):
+        'Stmt : VAR NAME EQUAL Expr'
+        t[0] = Node('Var').addkid(t[2]).addkid(t[4])
+
+    def p_Stmt8(self, t):
+        'Stmt : VAR NAME EQUAL FuncDecl'
+        t[0] = Node('Var').addkid(t[2]).addkid(t[4])
+
+
+    def p_FuncDecl1(self, t):
+        'FuncDecl : FUNC LPAREN RPAREN LCURLY Return RCURLY'
+        t[0] = Node('Func').addkid(t[5])
+
+    def p_FuncDecl2(self, t):
+        'FuncDecl : FUNC LPAREN RPAREN LCURLY Stmts Return RCURLY'
+        t[0] = (
+            Node('Func')
+                .addkid(t[5])
+                .addkid(t[6])
+        )
+
+    def p_FuncDecl3(self, t):
+        'FuncDecl : FUNC LPAREN DParams RPAREN LCURLY Return RCURLY'
+        t[0] = (
+            Node('Func')
+                .addkid(t[3])
+                .addkid(t[6])
+        )
+    def p_FuncDecl4(self, t):
+        'FuncDecl : FUNC LPAREN DParams RPAREN LCURLY Stmts Return RCURLY'
+        t[0] = (
+            Node('Func')
+                .addkid(t[3])
+                .addkid(t[6])
+                .addkid(t[7])
         )
 
     def p_Return1(self, t):

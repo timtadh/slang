@@ -246,6 +246,12 @@ class Type(object):
     def cast(self, cls):
         raise TypeError, "invalid cast"
 
+class Null(Type):
+
+    def __repr__(self):
+        return '{Null}'
+
+
 class Int(Type):
 
     def __init__(self, basereg=None, offset=None):
