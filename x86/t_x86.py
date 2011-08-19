@@ -186,6 +186,31 @@ def t_func_params_stack_modify_upper_func_pointer():
         print call(sub, 5+7, 8)
         ''').rstrip('\n')
 
+def t_func_params_stack_modify_upper_func_pointer_var_redecl():
+    #raise nose.SkipTest
+    assert ['4', '4', '0'] == run('''
+        var sub = func(a, b) {
+            var c = 0
+            var _sub = func() {
+                // c = 1 // would modify upper c. however it also causes a
+                         // redeclare error since we then declare c in the next
+                         // line
+                var c = a - b // creates a new c.
+                print c
+                // var c = 5 // causes type error do to var redeclare in same scope
+                print c
+                return
+            }
+            _sub()
+            return c
+        }
+        var call = func(f, a, b) {
+            return f(a, b)
+        }
+        print call(sub, 5+7, 8)
+        ''').rstrip('\n').split('\n')
+    #assert False
+
 def t_if():
     raise nose.SkipTest
     assert str(2) == run('''

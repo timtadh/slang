@@ -170,12 +170,14 @@ class generate(object):
     def PreVar(self, node):
         assert node.label == 'Var'
         name = node.children[0]
-        if len(node.children) == 1:
-            self.objs.add(il.Symbol(name, il.Null()))
-        else:
+
+
+        if len(node.children) == 2:
             c = node.children[1]
             if c.label == 'Func':
                 s = il.Symbol(name, il.Func(None))
+                if name in self.objs.myscope:
+                    raise TypeError, "Name '%s' redeclared in same scope." % name
                 self.objs.add(s)
 
     def Assign(self, node, blk):
@@ -207,12 +209,15 @@ class generate(object):
         name = node.children[0]
 
         if len(node.children) == 1:
-            # No action need, name was added to sym table in pre-var
-            pass
+            if name in self.objs.myscope:
+                raise TypeError, "Name '%s' redeclared in same scope." % name
+            self.objs.add(il.Symbol(name, il.Null()))
         else:
             c = node.children[1]
 
             if c.label == 'Expr':
+                if name in self.objs.myscope:
+                    raise TypeError, "Name '%s' redeclared in same scope." % name
                 result = il.Symbol('r'+self.tmp(), il.Int())
                 blk = self.Expr(c, result, blk, toplevel=True)
                 self.objs[name] = result
