@@ -97,6 +97,7 @@ class generate(object):
             elif c.label == 'Var':
                 self.PreVar(c)
         for c in node.children:
+            print c.label
             if c.label == 'Assign':
                 blk = self.Assign(c, blk)
             elif c.label == 'Var':
@@ -194,7 +195,6 @@ class generate(object):
             if isinstance(result.type, il.Null):
                 result.type = il.Int()
             blk = self.Expr(c, result, blk, toplevel=True)
-            self.objs[name] = result
         elif c.label == 'Func':
             if isinstance(result.type, il.Null):
                 result.type = il.Func(None)
@@ -218,9 +218,9 @@ class generate(object):
             if c.label == 'Expr':
                 if name in self.objs.myscope:
                     raise TypeError, "Name '%s' redeclared in same scope." % name
-                result = il.Symbol('r'+self.tmp(), il.Int())
+                result = il.Symbol(name, il.Int())
+                self.objs.add(result)
                 blk = self.Expr(c, result, blk, toplevel=True)
-                self.objs[name] = result
             elif c.label == 'Func':
                 blk = self.Func(c, name, blk)
             else:

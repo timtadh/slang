@@ -188,13 +188,11 @@ def t_func_params_stack_modify_upper_func_pointer():
 
 def t_func_params_stack_modify_upper_func_pointer_var_redecl():
     #raise nose.SkipTest
-    assert ['4', '4', '0'] == run('''
+    assert ['4', '4', '1'] == run('''
         var sub = func(a, b) {
             var c = 0
             var _sub = func() {
-                // c = 1 // would modify upper c. however it also causes a
-                         // redeclare error since we then declare c in the next
-                         // line
+                c = 1 // modifies upper c.
                 var c = a - b // creates a new c.
                 print c
                 // var c = 5 // causes type error do to var redeclare in same scope
