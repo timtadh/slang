@@ -45,8 +45,10 @@ def t_reachdef_init():
 
     rd = reachdef.ReachingDefintions(functions['f2'])
     print set(t for t in rd.types.keys())
-    assert set(t for t in rd.types.keys()) == set([1, 3, 5, 6, 7, 9, 10, 12])
-    assert set(itertools.chain(*rd.types.values())) == set([('b3', 4), ('b2', 2), ('b5', 0), ('b4', 1), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
+    print set(itertools.chain(*rd.types.values()))
+    assert set(t for t in rd.types.keys()) == set([1, 4, 5, 6, 8, 10])
+    assert set(itertools.chain(*rd.types.values())) == set([('b3', 4), ('b5', 0), ('b4', 0), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
+
 
 def t_reachdef_flowfunction():
     blocks, functions = cf_analyze('''
@@ -69,7 +71,7 @@ def t_reachdef_flowfunction():
     assert ff(set([('b2', 0)])) == set([('b3', 4), ('b3', 5), ('b3', 2), ('b3', 0), ('b3', 1), ('b3', 6), ('b3', 7)])
 
 def t_reachdef_flowfunction_finally():
-
+    #raise nose.SkipTest()
     blocks, functions = cf_analyze('''
         var f = func(x) {
             var c = 3
@@ -89,7 +91,11 @@ def t_reachdef_flowfunction_finally():
     ff_else = rd.flow_function(blocks['b5'])
     ff_finally = rd.flow_function(blocks['b4'])
 
-    assert ff_if(set([('b4', 1)])) == set([('b4', 1), ('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    print ff_if(set([('b4', 1)]))
+    print ff_then(set([('b2', 1)]))
+    print ff_else(set([('b2', 1)]))
+    print ff_finally(set())
+    assert ff_if(set([('b4', 1)])) == set([('b4', 1), ('b2', 1), ('b2', 2), ('b2', 0)])
     assert ff_then(set([('b2', 1)])) == set([('b3', 4), ('b3', 0), ('b3', 1)])
     assert ff_else(set([('b2', 1)])) == set([('b5', 0)])
     assert ff_finally(set()) == set()
@@ -128,6 +134,7 @@ def t_reachdef_ifthenelse_byhand():
 
 def t_reachdef_ifthenelse_engine():
 
+    #raise nose.SkipTest()
     blocks, functions = cf_analyze('''
         var f = func(x) {
             var c = 3
@@ -161,20 +168,21 @@ def t_reachdef_ifthenelse_engine():
 
 
     assert b2_inn == set()
-    assert b2_out == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b2_out == set([('b2', 1), ('b2', 2), ('b2', 0)])
 
-    assert b3_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
-    assert b3_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 0)])
+    assert b3_inn == set([('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b3_out == set([('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 0)])
 
-    assert b4_inn == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b5', 0), ('b2', 0)])
-    assert b4_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b5', 0), ('b3', 0), ('b3', 1), ('b2', 0)])
+    assert b4_inn == set([('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b5', 0), ('b2', 0)])
+    assert b4_out == set([('b3', 4), ('b2', 2), ('b5', 0), ('b3', 0), ('b3', 1), ('b2', 0)])
 
-    assert b5_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
-    assert b5_out == set([('b2', 3), ('b5', 0), ('b2', 2), ('b2', 0)])
+    assert b5_inn == set([('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b5_out == set([('b5', 0), ('b2', 2), ('b2', 0)])
 
 
 def t_reachdef_ifthen_engine():
 
+    #raise nose.SkipTest()
     blocks, functions = cf_analyze('''
         var f = func(x) {
             var c = 3
@@ -204,16 +212,17 @@ def t_reachdef_ifthen_engine():
 
 
     assert b2_inn == set()
-    assert b2_out == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b2_out == set([('b2', 1), ('b2', 2), ('b2', 0)])
 
-    assert b3_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
-    assert b3_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 0)])
+    assert b3_inn == set([('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b3_out == set([('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 0)])
 
-    assert b4_inn == set([('b2', 3), ('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
-    assert b4_out == set([('b2', 3), ('b3', 4), ('b2', 2), ('b2', 1), ('b3', 0), ('b3', 1), ('b2', 0)])
+    assert b4_inn == set([('b3', 4), ('b2', 2), ('b3', 0), ('b3', 1), ('b2', 1), ('b2', 0)])
+    assert b4_out == set([('b3', 4), ('b2', 2), ('b2', 1), ('b3', 0), ('b3', 1), ('b2', 0)])
 
 
 def t_livevar_flowfunction():
+
     blocks, functions = cf_analyze('''
         var f = func(x) {
             var c = 3
@@ -225,8 +234,8 @@ def t_livevar_flowfunction():
         print f(10)
         ''')
     lv = livevar.LiveVariable(functions['f2'])
-    assert lv.flow_function(blocks['b2'])(set([1, 2, 3, 5])) == set()
-    assert lv.flow_function(blocks['b3'])(set([8, 6, 2])) == set([0, 1])
+    assert lv.flow_function(blocks['b2'])(set([1, 2, 4])) == set()
+    assert lv.flow_function(blocks['b3'])(set([2, 5, 7])) == set([0, 1])
     assert lv.flow_function(blocks['b4'])(set()) == set([2])
 
 def t_livevar_ifthenelse_engine():

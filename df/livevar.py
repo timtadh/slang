@@ -30,6 +30,8 @@ class LiveVariable(abstract.DataFlowAnalyzer):
 
         def flowfunc(useb, defb, flow):
             print 'flow function for', blk.name
+            print ' '*4, 'use', useb
+            print ' '*4, 'def', defb
             result = useb | (flow - defb)
             return result
 

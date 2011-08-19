@@ -237,9 +237,9 @@ class Symbol(object):
         return self._id
 
     def __repr__(self):
-        return '[sym %d - %s%s (%s)]' % (self.id, self.name, self.type, str(self.scope_depth))
+        return '[sym %d - %s%s]' % (self.id, self.name, self.type)
 
-    def __str__(self): return '[sym %s%s (%s)]' % (self.name, self.type, str(self.scope_depth))
+    def __str__(self): return '[sym %s%s]' % (self.name, self.type)
 
 class Type(object):
 
