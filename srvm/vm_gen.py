@@ -403,23 +403,6 @@ class generate(object):
         ]
         return code
 
-    def CmpOp(self, i):
-        ops = {il.EQ:vm.EQ, il.NE:vm.NE, il.LT:vm.LT, il.LE:vm.LE,
-               il.GT:vm.GT, il.GE:vm.GE}
-        code = [
-            (vm.IMM, 3, i.b.type.offset, 'start comparison'),
-            (vm.ADD, 3, i.b.type.basereg),
-            (vm.LOAD, 3, 3),
-            (vm.IMM, 4, i.a.type.offset),
-            (vm.ADD, 4, i.a.type.basereg),
-            (vm.LOAD, 4, 4),
-            (ops[i.op], 4, 3),
-            (vm.IMM, 3, i.result.type.offset),
-            (vm.ADD, 3, i.result.type.basereg),
-            (vm.SAVE, 3, 4, 'end comparison'),
-        ]
-        return code
-
     def Print(self, i):
         #print i
         code = [
