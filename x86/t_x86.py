@@ -210,7 +210,7 @@ def t_func_params_stack_modify_upper_func_pointer_var_redecl():
     #assert False
 
 def t_if():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(2) == run('''
         if (1 > 2) {
             print 1
@@ -228,7 +228,7 @@ def t_if():
 
 
 def t_if_set():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(2) == run('''
         var a
         if (1 > 2) {
@@ -256,7 +256,7 @@ def t_if_set():
         ''').rstrip('\n')
 
 def t_lone_expr():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5 / 4 * 2 + 10 - 5 * 2 / 3) == run('''
         var a = func() {
             var f = func() { return 5 / 4 * 2 + 10 - 5 * 2 / 3 }
@@ -268,7 +268,7 @@ def t_lone_expr():
         ''').rstrip('\n')
 
 def t_bb():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(5) == run('''
         var f = func(a, b) {
             var c
@@ -296,7 +296,7 @@ def t_bb():
 
 
 def t_recursive():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(0) == run('''
         var f = func(x) {
             var c
@@ -311,7 +311,7 @@ def t_recursive():
         ''').rstrip('\n')
 
 def t_nested_if():
-    raise nose.SkipTest
+    #raise nose.SkipTest
     assert str(0) ==  run('''
         var f = func(x) {
             var c

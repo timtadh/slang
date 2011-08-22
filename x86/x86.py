@@ -53,6 +53,7 @@ ops = dict((op, __inst(op)) for op in (
         'jg', 'jng', 'jge', 'jnge',
 
     'push', 'leave', 'call',
+    'nop',
 
 
 ))

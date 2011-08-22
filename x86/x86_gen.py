@@ -197,10 +197,8 @@ class generate(object):
                     self.code += self.Mv(i)
                 elif i.op in [il.ADD, il.SUB, il.MUL, il.DIV]:
                     self.code += self.Op(i)
-                elif i.op in [il.EQ, il.NE, il.LT, il.LE, il.GT, il.GE]:
-                    self.code += self.CmpOp(i)
-                elif i.op == il.BEQZ:
-                    self.code += self.Beqt(i)
+                elif i.op in [il.IFEQ, il.IFNE, il.IFLT, il.IFLE, il.IFGT, il.IFGE]:
+                    self.code += self.BranchOp(i)
                 elif i.op == il.J:
                     self.code += self.J(i)
                 elif i.op == il.NOP:
@@ -210,17 +208,20 @@ class generate(object):
                 #if i.label is not None:
                     #print code[l]
                     #code[l] = (code[l][0], code[l][1], code[l][2], i.label)
+        self.code += [ x.label(func.entry.name) ]
         block(self.blocks[func.entry.name].insts)
         for b in func.blks:
             if b.name == func.entry.name: continue
             if b.name == func.exit.name: continue
+            self.code += [ x.label(b.name) ]
             self.floc[b.name] = len(self.code)
-            self.code += [ (vm.NOP, 0, 0, 'start of block %s' % b.name) ]
+            self.code += [ x.nop() ]
             block(self.blocks[b.name].insts)
         if func.entry.name != func.exit.name:
+            self.code += [ x.label(func.exit.name) ]
             b = func.exit
             self.floc[b.name] = len(self.code)
-            self.code += [ (vm.NOP, 0, 0, 'start of block %s' % b.name) ]
+            self.code += [ x.nop() ]
             block(self.blocks[b.name].insts)
 
     def Nop(self, i):
@@ -356,14 +357,13 @@ class generate(object):
         ]
         return code
 
-    def Beqt(self, i):
-        #self.labels[i.b] = None
+    def BranchOp(self, i):
+        ops = {il.IFEQ:x.je, il.IFNE:x.jne, il.IFLT:x.jl, il.IFLE:x.jle,
+               il.IFGT:x.jg, il.IFGE:x.jge}
         code = [
-            (vm.IMM, 3, i.a.type.offset, 'start beqt'),
-            (vm.ADD, 3, i.a.type.basereg),
-            (vm.LOAD, 3, 3),
-            (vm.IMM, 4, i.b),
-            (vm.BEQT, 3, 4, 'end beqt'),
+            x.movl(x.loc(i.a.type), x.eax),
+            x.cmpl(x.loc(i.b.type), x.eax),
+            ops[i.op](i.result.name)
         ]
         #for i in code:
             #print i
@@ -372,8 +372,7 @@ class generate(object):
     def J(self, i):
         #self.labels[i.a] = None
         code = [
-            (vm.IMM, 4, i.a),
-            (vm.J, 4, 0),
+            x.jmp(i.a.name)
         ]
         return code
 
@@ -383,12 +382,8 @@ class generate(object):
 
     def Mv(self, i):
         code = [
-            (vm.IMM, 3, i.a.type.offset, 'start MV'),
-            (vm.ADD, 3, i.a.type.basereg),
-            (vm.LOAD, 3, 3),
-            (vm.IMM, 4, i.result.type.offset),
-            (vm.ADD, 4, i.result.type.basereg),
-            (vm.SAVE, 4, 3, 'Save in MV'),
+            x.movl(x.loc(i.a.type), x.eax),
+            x.movl(x.eax, x.loc(i.result.type))
         ]
         return code
 
@@ -405,23 +400,6 @@ class generate(object):
             code += self.emit(x.movl, i.a, x.eax)
             code += self.emit(ops[i.op], i.b, x.eax)
             code += self.emit(x.movl, x.eax, i.result)
-        return code
-
-    def CmpOp(self, i):
-        ops = {il.EQ:vm.EQ, il.NE:vm.NE, il.LT:vm.LT, il.LE:vm.LE,
-               il.GT:vm.GT, il.GE:vm.GE}
-        code = [
-            (vm.IMM, 3, i.b.type.offset, 'start comparison'),
-            (vm.ADD, 3, i.b.type.basereg),
-            (vm.LOAD, 3, 3),
-            (vm.IMM, 4, i.a.type.offset),
-            (vm.ADD, 4, i.a.type.basereg),
-            (vm.LOAD, 4, 4),
-            (ops[i.op], 4, 3),
-            (vm.IMM, 3, i.result.type.offset),
-            (vm.ADD, 3, i.result.type.basereg),
-            (vm.SAVE, 3, 4, 'end comparison'),
-        ]
         return code
 
     def Print(self, i):
