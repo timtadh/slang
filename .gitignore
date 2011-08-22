@@ -10,4 +10,5 @@ imgs
 *.o
 exe
 *.swp
+fib
 
