@@ -35,7 +35,15 @@ regs = dict((reg, i) for i, reg in enumerate(regsr))
 sys.modules[__name__].__dict__.update(ops)
 sys.modules[__name__].__dict__.update(regs)
 
-class Inst(object):
+class label(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return '%s:' % (self.name)
+
+class inst(object):
 
     INDENT = 4
 
@@ -43,7 +51,7 @@ class Inst(object):
         '''Create an instruction argument representing the x86 instruction
         @param op : The integer (defined in "oprs" and "_ops")
         @param x  : The first arg. Can be anything that has a proper __str__
-                    and represents the argument
+                    and represents the argument.
         @param y  : The second arg.
 
         op is required. If y exists then so must x.
@@ -80,16 +88,7 @@ class Inst(object):
         ## conditionally inserts the ','.
         line = line % tuple(string(arg, i) for i, arg in enumerate(args))
 
-        return '%(indt)s%(op)s '
-
-def inst(indent, op, x=None, y=None):
-    args = [arg for arg in [x, y] if arg]
-    def string(s, i):
-        if i == len(args) - 1: return str(s)
-        else: return str(s) + ','
-    line = (' '*indent + '%-6s ' % op + ' '.join('%-10s' for arg in args))
-    line = line % tuple(string(arg, i) for i, arg in enumerate(args))
-    return line
+        return line
 
 def __inst(op):
     def wrap(*args):
@@ -102,8 +101,6 @@ def __inst(op):
     wrap.func_doc = 'generating function for x86 inst %s' % op
     return wrap
 
-def label(name):
-    return '%s:' % (name)
 
 def cint(v):
     return '$0x%x' % v
