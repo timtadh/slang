@@ -50,17 +50,15 @@ class analyze(object):
         '''Produces a post order depth-first-search traversal of the graph of the function f.'''
         visited = set()
         order = list()
-        stack = list()
 
-        stack.append(f.entry)
-        while stack:
-            blk = stack.pop()
+        def visit(blk):
             visited.add(blk.name)
             for b in blk.next:
                 if b.name not in visited:
-                    stack.append(b)
+                    visit(b)
             order.append(blk)
 
+        visit(f.entry)
         return order
 
     def structure(self, f):
@@ -69,13 +67,15 @@ class analyze(object):
 
         #postmax = len(blks)-1
         postctr = 0
-        while len(blks) > 1 and postctr <= len(blks):
+        while len(blks) > 1 and postctr < len(blks):
+            print blks, postctr
             cblk = blks[postctr]
 
             ok, rtype, nset = self.acyclic(blks, cblk)
             if ok:
                 ## Then we have an acyclic region. reduce the graph.
                 newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
+                print 'acyclic', postctr
                 #if f.entry in nset:
                     #f.entry = newnode
             elif False:
@@ -84,6 +84,7 @@ class analyze(object):
                 ## right now, I only have if-statements and functions
                 ## so there are no inter-block cycles.
             else:
+                print 'not acyclic'
                 postctr += 1
 
         if len(blks) != 1:
@@ -163,6 +164,8 @@ class analyze(object):
         ## the current blk is part of the chain as well.
         if s:
             nset.add(n)
+
+        print nset
 
         ## END CHAIN CHECK
         if len(nset) > 1:  # chain
