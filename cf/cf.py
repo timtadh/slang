@@ -8,6 +8,7 @@
 ## Muchnick, S. "Advanced Compiler Design & Implementation" Academic Press. 1997. Pg. 202-215
 
 import sys
+import textwrap
 
 import struct as cfs
 
@@ -68,14 +69,25 @@ class analyze(object):
         #postmax = len(blks)-1
         postctr = 0
         while len(blks) > 1 and postctr < len(blks):
-            print blks, postctr
             cblk = blks[postctr]
+
+            print
+            print '-'*80
+            print cblk, postctr
+            print ' '*8, '\n'.join(
+                textwrap.TextWrapper(
+                    width=75, subsequent_indent=' '*8, break_long_words=False,
+                ).wrap(str(blks)))
+
+            if cblk.name == 'b5':
+                print '----->', 'b5'
+                print cblk.next
 
             ok, rtype, nset = self.acyclic(blks, cblk)
             if ok:
                 ## Then we have an acyclic region. reduce the graph.
                 newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
-                print 'acyclic', postctr
+                #print 'acyclic', postctr
                 #if f.entry in nset:
                     #f.entry = newnode
             elif False:
@@ -84,11 +96,21 @@ class analyze(object):
                 ## right now, I only have if-statements and functions
                 ## so there are no inter-block cycles.
             else:
-                print 'not acyclic'
+                #print 'not acyclic'
                 postctr += 1
 
+            print
+            print ' '*8, '\n'.join(
+                textwrap.TextWrapper(
+                    width=75, subsequent_indent=' '*8, break_long_words=False,
+                ).wrap(str(blks)))
+            print '-'*80
+
         if len(blks) != 1:
-            raise Exception, 'Construction of control tree failed'
+            print 'Construction of control tree failed'
+            print
+            pass
+            #raise Exception, 'Construction of control tree failed'
 
         return blks[0]
 
@@ -165,12 +187,13 @@ class analyze(object):
         if s:
             nset.add(n)
 
-        print nset
-
         ## END CHAIN CHECK
         if len(nset) > 1:  # chain
-            return True, cfs.CHAIN, nset
+            print ' '*12, 'Found Chain'
+            return True, cfs.CHAIN, list(blk for blk in blks[::-1] if blk in nset)
         elif len(cblk.next) == 2: # if-then, if-then-else, ...
+            print ' '*12, 'Found ITE'
+            print ' '*12, cblk, cblk.next
             r = cblk.next[0]
             q = cblk.next[1]
 
@@ -178,6 +201,12 @@ class analyze(object):
                 return True, cfs.IF_THEN_ELSE, [cblk, r, q]
             elif r.next[0] == q: # this is an IF-THEN
                 return True, cfs.IF_THEN, [cblk, r]
+            elif q.next[0] == r: # this is an IF-THEN
+                return True, cfs.IF_THEN, [cblk, q]
+            else:
+                print ' '*12, 'Except Not'
+                print ' '*12, r, r.next
+                print ' '*12, q, q.next
 
         return False, None, None
 

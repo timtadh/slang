@@ -13,7 +13,7 @@ import il
 from il import il_gen
 import nose
 
-GEN_IMGS = True
+GEN_IMGS = False
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
@@ -291,13 +291,12 @@ def t_nest_ite():
                     c = f(x-3)
                 }
             } else {
+                c = 10
                 if (x < 5) {
                     if (x != 0) {
                         x = x - 1
                     }
                     c = x
-                } else {
-                    c = 10
                 }
             }
             return c
@@ -312,6 +311,6 @@ def t_nest_ite():
     assert tree.children[0].children[1].region_type == cfs.CHAIN
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[1].children[0].region_type == cfs.IF_THEN_ELSE
-    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
-    assert tree.children[0].children[2].children[0].children[2].region_type == cfs.CHAIN
-    assert tree.children[0].children[2].children[0].children[2].children[0].region_type == cfs.IF_THEN
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN
+    assert tree.children[0].children[2].children[0].children[1].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].children[1].children[0].region_type == cfs.IF_THEN
