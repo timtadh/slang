@@ -6,7 +6,8 @@
 
 import sys
 
-def inst(indent, op, *args):
+def inst(indent, op, x=None, y=None):
+    args = [arg for arg in [x, y] if arg]
     def string(s, i):
         if i == len(args) - 1: return str(s)
         else: return str(s) + ','
@@ -16,7 +17,11 @@ def inst(indent, op, *args):
 
 def __inst(op):
     def wrap(*args):
-        return inst(2, op, *args)
+        try:
+            return inst(2, op, *args)
+        except Exception as e:
+            e.args = [arg for arg in e.args] + [ op ]
+            raise e
     wrap.func_name = 'op'
     wrap.func_doc = 'generating function for x86 inst %s' % op
     return wrap

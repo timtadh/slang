@@ -22,7 +22,7 @@ class generate(object):
         self.functions = functions
         self.__init__()
 
-        print 'max scope depth', table.max_depth
+        #print 'max scope depth', table.max_depth
 
         self.code += self.InitCode()
         self.Func('main', main=True)
@@ -36,6 +36,8 @@ class generate(object):
             self.Func(f.name)
 
         #print '\n'.join(self.code)
+        for line in self.code:
+            print line
 
         #raise Exception
         return '\n'.join(self.code) + '\n'
@@ -53,7 +55,7 @@ class generate(object):
 
             using ebx or ecx is not allowed for either the src or targ.
         '''
-        print inst, src, targ
+        #print inst, src, targ
         if isinstance(src, il.Symbol) and isinstance(targ, il.Symbol):
             raise Exception, 'Cannot emit an instruction with both source and target as symbols'
         elif isinstance(src, il.Symbol) and targ is None:
@@ -129,7 +131,7 @@ class generate(object):
     def place_symbols(self, syms, func):
         i = 8 + len(func.params)
         for sym in syms:
-            print sym, sym.islocal(func), func.name
+            #print sym, sym.islocal(func), func.name
             if issubclass(sym.type.__class__, il.Int) and sym.islocal(func):
                 #print 'is subclass int'
                 sym.type.basereg = x.ebp # set the base reg to the frame pointer
@@ -145,7 +147,7 @@ class generate(object):
         return i-1
 
     def Func(self, name, main=False):
-        print name
+        #print name
         self.code += [
             x.label(name)
         ]
@@ -388,7 +390,7 @@ class generate(object):
         return code
 
     def Op(self, i):
-        print i
+        #print i
         ops = {il.ADD:x.addl, il.SUB:x.subl, il.MUL:x.imull}
         code = []
         if i.op == il.DIV:
