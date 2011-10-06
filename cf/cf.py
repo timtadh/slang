@@ -147,7 +147,7 @@ class analyze(object):
                         if node not in u.next: u.next.append(node)
             return blks, postctr
 
-        node = cfs.Node(rtype, blks, nset)
+        node = cfs.Node(rtype, nset)
         blks, postctr = replace(blks, node, nset, postctr)
         return node, blks, postctr
 

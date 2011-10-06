@@ -314,3 +314,41 @@ def t_nest_ite():
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN
     assert tree.children[0].children[2].children[0].children[1].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].children[1].children[0].region_type == cfs.IF_THEN
+
+def t_nest_ite_org():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (x > 0) {
+                if (x/2 + x/2 == x) { // then it is even
+                    c = f(x+1)
+                } else {
+                    c = f(x-3)
+                }
+            } else {
+                if (x < 5) {
+                    if (x != 0) {
+                        x = x - 1
+                    }
+                    c = x
+                } else {
+                    c = 10
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    dot('cf.nest_ite', tree.dotty())
+    dot('blks.nest_ite', f.entry.dotty())
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[1].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[1].children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[2].children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].children[2].children[0].region_type == cfs.IF_THEN
+
