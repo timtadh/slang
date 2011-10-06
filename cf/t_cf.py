@@ -13,11 +13,11 @@ import il
 from il import il_gen
 import nose
 
-GEN_IMGS = False
+GEN_IMGS = True
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
-    table, blocks, functions = il_gen.generate(Parser().parse(s, lexer=Lexer()))
+    table, blocks, functions = il_gen.generate(Parser().parse(s, lexer=Lexer()), debug=False)
     cf.analyze(table, blocks, functions)
     return functions
 
@@ -170,6 +170,8 @@ def t_acyclic_ifthen():
     i = I()
     blks, cblk, postmax, postctr = if_then(i)
     ok, rtype, nset = mock().acyclic(blks, cblk)
+    print ok, rtype
+    print nset
     assert ok == True
     assert rtype == cfs.IF_THEN
     assert set(nset) == set(blks[:2])
@@ -218,7 +220,7 @@ def t_none():
 
 def t_it():
     #raise nose.SkipTest
-    tree = analyze('''
+    f2 = analyze('''
         var f = func(x) {
             if (x > 0) {
                 x = f(x-1)
@@ -226,8 +228,11 @@ def t_it():
             return x
         }
         print f(10)
-        ''')['f2'].tree
+        ''')['f2']
+    tree = f2.tree
+    entry = f2.entry
     dot('cf.it', tree.dotty())
+    dot('cf.it_cfg', entry.dotty())
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.IF_THEN
 

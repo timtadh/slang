@@ -42,6 +42,10 @@ def run(s):
     print '---->', ret
     return ret
 
+def t_version():
+    print sys.version
+    #assert False
+
 def t_expr_const():
     #raise nose.SkipTest
     assert '2' == run('print 2').rstrip('\n')

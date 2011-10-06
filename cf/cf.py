@@ -50,15 +50,17 @@ class analyze(object):
         '''Produces a post order depth-first-search traversal of the graph of the function f.'''
         visited = set()
         order = list()
+        stack = list()
 
-        def visit(blk):
+        stack.append(f.entry)
+        while stack:
+            blk = stack.pop()
             visited.add(blk.name)
             for b in blk.next:
                 if b.name not in visited:
-                    visit(b)
+                    stack.append(b)
             order.append(blk)
 
-        visit(f.entry)
         return order
 
     def structure(self, f):
@@ -107,7 +109,7 @@ class analyze(object):
             ## TODO: refactor this method to have compact set postctr
             blks = compact(blks, node, nset)
             for i, b in enumerate(blks):
-                if b is node: postctr = i
+                if b is node: postctr = i; break
 
             for n in nset:
                 for v in n.next:
@@ -122,7 +124,7 @@ class analyze(object):
                         if node not in u.next: u.next.append(node)
             return blks, postctr
 
-        node = cfs.Node(rtype, nset)
+        node = cfs.Node(rtype, blks, nset)
         blks, postctr = replace(blks, node, nset, postctr)
         return node, blks, postctr
 

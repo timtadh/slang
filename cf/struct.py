@@ -16,9 +16,9 @@ sys.modules[__name__].__dict__.update(types)
 
 class Node(object):
 
-    def __init__(self, rtype, blks):
+    def __init__(self, rtype, blks, nset):
         self.region_type = rtype
-        self.children = list(blks)
+        self.children = list(blk for blk in blks[::-1] if blk in nset)
         self.next = list()
         self.prev = list()
 

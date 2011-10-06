@@ -12,3 +12,4 @@ var fib = func(x) {
     return c
 }
 print fib(10)
+
