@@ -109,7 +109,17 @@ class mem(arg):
             return '%i(%s)' % (self.offset, self.reg)
         else:
             return '*%i(%s)' % (self.offset, self.reg)
-        
+
+class loc(mem):
+    '''Represents a memory location located by a Symbol.'''
+    
+    def __init__(self, type, deref=False):
+        '''Creates a mem object representing a memory location.
+        @param type : the symbol type
+        @param deref : Should the location be deref'd (treated as a *pointer)
+        '''
+        super(loc, self).__init__(type.basereg, type.offset, deref)
+    
 
 class inst(object):
     '''Represents any x86 instruction.'''
@@ -175,9 +185,6 @@ def __inst(op):
     wrap.func_name = 'op_%s' % op
     wrap.func_doc = 'generating function for x86 inst %s' % op
     return wrap
-
-def loc(typ):
-    return '%i(%s)' % (typ.offset, typ.basereg)
 
 def static(lbl, base='', index='', mul=None):
     if mul is None:

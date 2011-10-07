@@ -278,7 +278,7 @@ class generate(object):
             ]
         else:
             code = [
-                x.call('*'+x.loc(i.a.type)),
+                x.call(x.loc(i.a.type, True)),
             ]
         return code
 
