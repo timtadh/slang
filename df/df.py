@@ -47,7 +47,7 @@
 #
 #------------------------------------------------------------------------#
 
-import functools
+import types, functools
 
 import il, cf, abstract
 
@@ -100,6 +100,10 @@ def analyze(analyzer, functions, debug=False, attach_method=False):
         ff(A.newelement())
         f.df[A.name] = R
 
+        if attach_method:
+            name, m = A.get_result_method()
+            setattr(f, name, types.MethodType(m, f, il.Function))
+
         if debug:
             print f.name
             for blk in f.blks:
@@ -110,9 +114,6 @@ def analyze(analyzer, functions, debug=False, attach_method=False):
 
     for f in functions.itervalues():
         compute(f)
-        if attach_method:
-            name, m = analyzer.get_result_method()
-            setattr(f, name, types.MethodType(m, il.Function, f))
 
 def forward_ff(A, save, node, *kids):
 

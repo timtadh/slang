@@ -14,7 +14,17 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     name = 'livevar'
     direction = 'backward'
 
-    def __init__(self, f): pass
+    def __init__(self, f):
+        self.types = dict()
+        def add(id, sym):
+            if id not in self.types: self.types[id] = set()
+            self.types[id].add(sym)
+        for blk in f.blks:
+            for inst in blk.insts:
+                if isinstance(inst.a, il.Symbol): add(inst.a.type.id, inst.a)
+                if isinstance(inst.b, il.Symbol): add(inst.b.type.id, inst.b)
+                if isinstance(inst.result, il.Symbol):
+                    add(inst.result.type.id, inst.result)
 
     def flow_function(self, blk):
         defb = set()
@@ -45,3 +55,16 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     def star(self, f):
         def h(x):
             return self.meet(self.id(x), f(x))
+
+    @staticmethod
+    def has_result_method(): return True
+
+    def get_result_method(analyzer):
+        def result(self, blk_name):
+            print self
+            r = self.df[analyzer.name]
+            return (
+                dict((id, analyzer.types[id]) for id in r.inn[blk_name]),
+                dict((id, analyzer.types[id]) for id in r.out[blk_name])
+            )
+        return 'live', result

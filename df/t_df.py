@@ -326,7 +326,7 @@ def t_livevar_ifthen_engine():
 
 
 def t_livevar_ifthen_engine_attach():
-    raise nose.SkipTest
+    #raise nose.SkipTest
 
     blocks, functions = cf_analyze('''
         var f = func(x) {
@@ -340,3 +340,7 @@ def t_livevar_ifthen_engine_attach():
         ''')
 
     df.analyze(livevar.LiveVariable, functions, True, True)
+    f2 = functions['f2']
+
+    print f2.live('b2')
+    #assert False
