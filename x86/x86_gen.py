@@ -9,7 +9,7 @@ from collections import deque
 
 from frontend.sl_parser import Parser, Lexer
 from il.table import SymbolTable
-import il
+import il, cf, df
 from il import il_gen
 import x86 as x
 
@@ -20,6 +20,7 @@ class generate(object):
         self.table = table
         self.blocks = blocks
         self.functions = functions
+        cf.analyze(table, blocks, functions)
         self.__init__()
 
         #print 'max scope depth', table.max_depth
