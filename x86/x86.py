@@ -5,6 +5,7 @@
 #For licensing see the LICENSE file in the top level directory.
 
 import sys
+Int = int
 
 ## Supported x86 Operators
 opsr = (
@@ -45,8 +46,13 @@ class label(object):
     def __str__(self):
         return '%s:' % (self.name)
 
-class reg(object):
+class arg(object):
+    type = None
+
+class reg(arg):
     '''Represents an x86 register. For a list of registers see regsr.'''
+
+    type = 'reg'
 
     def __init__(self, rnum):
         '''Create a reg object.
@@ -62,6 +68,24 @@ class reg(object):
 
     def __str__(self):
         return ''.join(['%', regsr[self.rnum]])
+
+class cint(arg):
+    '''Represents a constant int.'''
+    
+    type = 'cint'
+    
+    def __init__(self, value):
+        '''Creates a cint object
+        @param value : The value of the constant integer. Must be between
+                       0x00000000 - 0xffffffff
+        '''
+        ## TODO: Write assert for the value being 32 bit.
+        self.value = Int(value) # I had to alias int to Int because of the x86
+                                # instruction int
+    
+    def __str__(self):
+        #print self.value, type(self.value)
+        return '$0x%x' % self.value
 
 class inst(object):
     '''Represents any x86 instruction.'''
@@ -120,16 +144,13 @@ def __inst(op):
             return inst(op, *args)
         except Exception as e:
             e.args = [arg for arg in e.args] + [
-                "Could not instantiate Inst for '%s' with %s" % (opsr[op], str(args))
+                "Could not instantiate Inst for '%s' with %s" \
+                    % (opsr[op], str(args))
             ]
             raise e
     wrap.func_name = 'op_%s' % op
     wrap.func_doc = 'generating function for x86 inst %s' % op
     return wrap
-
-
-def cint(v):
-    return '$0x%x' % v
 
 def loc(typ):
     return '%i(%s)' % (typ.offset, typ.basereg)

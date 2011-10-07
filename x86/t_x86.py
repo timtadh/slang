@@ -10,7 +10,7 @@ from frontend.sl_parser import Parser, Lexer
 #from table import SymbolTable
 import il
 from il import il_gen
-import x86_gen
+import x86_gen, x86
 import nose
 
 def run(s):
@@ -44,6 +44,7 @@ def run(s):
 
 def t_version():
     print sys.version
+    print x86.reg.type
     #assert False
 
 def t_expr_const():
