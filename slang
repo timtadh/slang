@@ -12,12 +12,16 @@ extended_message = usage_message
 
 import sys, os, subprocess
 from getopt import getopt, GetoptError
+
+import conf.conf
 from frontend.sl_parser import Parser, Lexer
 from il import il_gen
 from x86 import x86_gen
 
 CWD = os.environ.get('PWD', os.getcwd())
 RELEASE = 'slang 0.01'
+
+print conf.conf
 
 error_codes = {
     'usage':1,
@@ -81,10 +85,5 @@ def main():
     ld = subprocess.Popen(['ld', '-o', ofile, '-melf_i386', '-dynamic-linker', '/lib/ld-linux.so.2', '/lib32/libc.so.6', '%s.o' % ofile], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     print ld.communicate()
 
-
-
-
 if __name__ == '__main__':
     main()
-
-
