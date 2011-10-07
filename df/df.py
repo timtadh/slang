@@ -66,6 +66,7 @@ class results(object):
 def analyze(analyzer, functions, debug=False, attach_method=False):
 
     assert issubclass(analyzer, abstract.DataFlowAnalyzer)
+    assert (not attach_method) or hasattr('get_result_method', analyzer)
 
     def compute(f):
 
@@ -109,6 +110,9 @@ def analyze(analyzer, functions, debug=False, attach_method=False):
 
     for f in functions.itervalues():
         compute(f)
+        if attach_method:
+            name, m = analyzer.get_result_method()
+            setattr(f, name, types.MethodType(m, il.Function, f))
 
 def forward_ff(A, save, node, *kids):
 
