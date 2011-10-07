@@ -30,26 +30,42 @@ regsr = (
     'rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'r8',
 )
 
-_ops = dict(("_"+op, __inst(op)) for i, op in enumerate(oprs))
-regs = dict((reg, i) for i, reg in enumerate(regsr))
-sys.modules[__name__].__dict__.update(ops)
-sys.modules[__name__].__dict__.update(regs)
+_ops = dict(("_"+op, i) for i, op in enumerate(opsr))
+_regs = dict(("_"+reg, i) for i, reg in enumerate(regsr))
+sys.modules[__name__].__dict__.update(_ops)
+sys.modules[__name__].__dict__.update(_regs)
 
 class label(object):
+    '''Represents a label in the asm.'''
 
     def __init__(self, name):
+        '''@param name : the name of the label.'''
         self.name = name
 
     def __str__(self):
         return '%s:' % (self.name)
 
-class inst(object):
+class reg(object):
+    '''Represents an x86 register. For a list of registers see regsr.'''
 
-    INDENT = 4
+    def __init__(self, rnum):
+        '''Create a reg object.
+        @param rnum : The number representing the register. The registers are
+                      defined in regsr. The rnum corresponds to the index in
+                      regsr.
+        '''
+
+    def __str__(self):
+        return ''.join(['%', regsr[self.rnum]])
+
+class inst(object):
+    '''Represents any x86 instruction.'''
+
+    INDENT = 2
 
     def __init__(op, x=None, y=None):
-        '''Create an instruction argument representing the x86 instruction
-        @param op : The integer (defined in "oprs" and "_ops")
+        '''Create an instruction object representing the x86 instruction
+        @param op : The integer (defined in "opsr" and "_ops")
         @param x  : The first arg. Can be anything that has a proper __str__
                     and represents the argument.
         @param y  : The second arg.
@@ -91,13 +107,18 @@ class inst(object):
         return line
 
 def __inst(op):
+    '''A "decorator" for x86 operators so we can type x86.movl(...) instead of
+    x86.inst(x86.movl, ...). Generates a function which instantiates the inst.
+    '''
     def wrap(*args):
         try:
-            return inst(2, op, *args)
+            return inst(op, *args)
         except Exception as e:
-            e.args = [arg for arg in e.args] + [ op ]
+            e.args = [arg for arg in e.args] + [
+                "Could not instantiate Inst for '%s' with %s" % (opsr[op], str(args))
+            ]
             raise e
-    wrap.func_name = 'op'
+    wrap.func_name = 'op_%s' % op
     wrap.func_doc = 'generating function for x86 inst %s' % op
     return wrap
 
@@ -118,3 +139,5 @@ def static(lbl, base='', index='', mul=None):
     return '%s(%s, %s, %i)' % (lbl, base, index, mul)
 
 
+ops = dict((op, __inst(i)) for i, op in enumerate(opsr))
+sys.modules[__name__].__dict__.update(ops)
