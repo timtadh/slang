@@ -87,6 +87,30 @@ class cint(arg):
         #print self.value, type(self.value)
         return '$0x%x' % self.value
 
+class mem(arg):
+    '''Represents a memory location indexed by a register and offset.'''
+    
+    type = 'mem'
+    
+    def __init__(self, r, offset, deref=False):
+        '''Creates a mem object representing a memory location.
+        @param r : A reg object.
+        @param offset : The value of the constant integer. Must be between
+                        0x00000000 - 0xffffffff
+        @param deref : Should the location be deref'd (treated as a *pointer)
+        '''
+        assert isinstance(r, reg)
+        self.reg = r
+        self.offset = Int(offset)
+        self.deref = deref
+
+    def __str__(self):
+        if not self.deref:
+            return '%i(%s)' % (self.offset, self.reg)
+        else:
+            return '*%i(%s)' % (self.offset, self.reg)
+        
+
 class inst(object):
     '''Represents any x86 instruction.'''
 
@@ -154,9 +178,6 @@ def __inst(op):
 
 def loc(typ):
     return '%i(%s)' % (typ.offset, typ.basereg)
-
-def mem(reg, offset):
-    return '%i(%s)' % (offset, reg)
 
 def static(lbl, base='', index='', mul=None):
     if mul is None:

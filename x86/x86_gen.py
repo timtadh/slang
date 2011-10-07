@@ -293,7 +293,7 @@ class generate(object):
             #]
         code += [
             x.addl(x.cint(4), x.esp),
-            x.jmp('*'+x.mem(x.esp, -4)),
+            x.jmp(x.mem(x.esp, -4, True)),
             #x.ret(),
         ]
         return code
