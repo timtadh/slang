@@ -63,7 +63,7 @@ class results(object):
             self.inn[node.name] = inn
             self.out[node.name] = out
 
-def analyze(analyzer, functions, debug=False):
+def analyze(analyzer, functions, debug=False, attach_method=False):
 
     assert issubclass(analyzer, abstract.DataFlowAnalyzer)
 

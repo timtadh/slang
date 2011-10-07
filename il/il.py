@@ -181,15 +181,16 @@ class Function(object):
 
     def __init__(self, name):
         self.name = name
-        self.entry = None
-        self.exit = None
-        self.blks = list()
-        self.next = list()
-        self.params = list()
-        self.oparam_count = 0
-        self.tree = None
-        self.df = dict()
-        self.scope_depth = None
+        self.entry = None            # the entry to the func, a basic block
+        self.exit = None             # the exit from the func, a basic block
+        self.blks = list()           # the basic blocks in the func as a list
+        self.next = list()           # the functions called by this function
+        self.params = list()         # the params this function takes
+        self.oparam_count = 0        # the number of output parameters
+        self.tree = None             # the structure C.F. representation
+        self.df = dict()             # dataflow results.
+        self.scope_depth = None      # what the scope depth the function was
+                                     # declared at
 
     def __repr__(self): return str(self)
 
