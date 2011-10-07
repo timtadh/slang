@@ -1,0 +1,4 @@
+{
+    "libc32": "/lib32/libc.so.6", 
+    "dynlinker": "/lib/ld-linux.so.2"
+}
