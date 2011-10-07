@@ -5,6 +5,10 @@
 #For licensing see the LICENSE file in the top level directory.
 
 import sys
+
+## int alias to Int as int will be overwritten by the x86 instruction int (for
+## interrupt, as in make a software interrupt). See the end of the file where
+## the overwrite happens.
 Int = int
 
 ## Supported x86 Operators
@@ -31,6 +35,7 @@ regsr = (
     'rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'r8',
 )
 
+## Add names these to the module.
 _ops = dict(("_"+op, i) for i, op in enumerate(opsr))
 _regs = dict(("_"+reg, i) for i, reg in enumerate(regsr))
 sys.modules[__name__].__dict__.update(_ops)
@@ -182,8 +187,8 @@ def __inst(op):
                     % (opsr[op], str(args))
             ]
             raise e
-    wrap.func_name = 'op_%s' % op
-    wrap.func_doc = 'generating function for x86 inst %s' % op
+    wrap.func_name = 'op_%s' % opsr[op]
+    wrap.func_doc = 'generating function for x86 inst %s' % opsr[op]
     return wrap
 
 def static(lbl, base='', index='', mul=None):
@@ -192,7 +197,7 @@ def static(lbl, base='', index='', mul=None):
 
     return '%s(%s, %s, %i)' % (lbl, base, index, mul)
 
-
+## Finally add the actual instructions to the module.
 ops = dict((op, __inst(i)) for i, op in enumerate(opsr))
 regs = dict((r, reg(i)) for i, r in enumerate(regsr))
 sys.modules[__name__].__dict__.update(ops)
