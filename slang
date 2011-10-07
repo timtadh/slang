@@ -8,6 +8,7 @@
 usage_message = \
 '''usage: slang -o executable source.sl '''
 
+extended_message = usage_message
 
 import sys, os, subprocess
 from getopt import getopt, GetoptError
@@ -41,12 +42,13 @@ def main():
 
     ## getopt setup
     try:
-        opts, args = getopt(sys.argv[1:], 'hvo:', ['help', 'version', 'output='])
+        opts, args = getopt(sys.argv[1:], 'hvo:s', ['help', 'version', 'output=', 'asm'])
     except GetoptError, err:
         log(err)
         usage(error_codes['option'])
 
     ofile = 'a.out'
+    asm = False
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             usage()
@@ -55,6 +57,8 @@ def main():
             sys.exit(error_codes['version'])
         elif opt in ('-o', '--output'):
             ofile = arg
+        elif opt in ('-s', '--asm'):
+            asm = True
 
     if len(args) != 1:
         log('exactly 1 source file is required.')
@@ -67,6 +71,10 @@ def main():
     f.close()
 
     code = x86_gen.generate(*il_gen.generate(Parser().parse(source, lexer=Lexer()), debug=True))
+    if asm:
+        f = open(ofile + '.s', 'w')
+        f.write(code)
+        f.close()
     print code
     gas = subprocess.Popen(['as', '--32', '-o', '%s.o' % ofile], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     print gas.communicate(code)
