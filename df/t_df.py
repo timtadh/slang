@@ -323,3 +323,20 @@ def t_livevar_ifthen_engine():
 
     assert b4_inn == set([2])
     assert b4_out == set([])
+
+
+def t_livevar_ifthen_engine_attach():
+    raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var f = func(x) {
+            var c = 3
+            if (x > 0) {
+                c = f(x-1)
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.analyze(livevar.LiveVariable, functions, True, True)

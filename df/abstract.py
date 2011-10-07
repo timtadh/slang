@@ -47,3 +47,14 @@ class DataFlowAnalyzer(object):
     @abc.abstractmethod
     def star(self, a, b):
         '''the kleene star on the induced lattice of the flow functions'''
+
+    @staticmethod
+    def has_result_method():
+        '''Has a custom result function been defined to attach to "function"
+        objs?'''
+        return False
+
+    def get_result_method(self):
+        '''Get the custom result function to attach to the function object.'''
+        return None
+

@@ -66,7 +66,7 @@ class results(object):
 def analyze(analyzer, functions, debug=False, attach_method=False):
 
     assert issubclass(analyzer, abstract.DataFlowAnalyzer)
-    assert (not attach_method) or hasattr('get_result_method', analyzer)
+    assert (not attach_method) or analyzer.has_result_method()
 
     def compute(f):
 
