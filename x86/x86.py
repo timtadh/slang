@@ -54,6 +54,11 @@ class reg(object):
                       defined in regsr. The rnum corresponds to the index in
                       regsr.
         '''
+        self.rnum = rnum
+    
+    @property
+    def reg(self):
+        return regsr[self.rnum]
 
     def __str__(self):
         return ''.join(['%', regsr[self.rnum]])
@@ -63,7 +68,7 @@ class inst(object):
 
     INDENT = 2
 
-    def __init__(op, x=None, y=None):
+    def __init__(self, op, x=None, y=None):
         '''Create an instruction object representing the x86 instruction
         @param op : The integer (defined in "opsr" and "_ops")
         @param x  : The first arg. Can be anything that has a proper __str__
@@ -71,14 +76,14 @@ class inst(object):
         @param y  : The second arg.
 
         op is required. If y exists then so must x.
-        ie. (op is not None) and ((y is not None) or (x is None))
+        ie. (op is not None) and (y is not None --> x is not None)
         '''
 
         # assert  y is None --> x is None        logical implication
         # all logical implications can be rewritten
         #      X --> Y
         #      ~X or Y
-        assert (op is not None) and ((y is not None) or (x is None))
+        assert (op is not None) and ((y is None) or (x is not None))
         self.op = op
         self.x  = x
         self.y  = y
@@ -140,4 +145,6 @@ def static(lbl, base='', index='', mul=None):
 
 
 ops = dict((op, __inst(i)) for i, op in enumerate(opsr))
+regs = dict((r, reg(i)) for i, r in enumerate(regsr))
 sys.modules[__name__].__dict__.update(ops)
+sys.modules[__name__].__dict__.update(regs)

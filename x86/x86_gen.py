@@ -40,7 +40,7 @@ class generate(object):
             print line
 
         #raise Exception
-        return '\n'.join(self.code) + '\n'
+        return '\n'.join(str(line) for line in self.code) + '\n'
 
     def __init__(self):
         self.bp_offset = 0
