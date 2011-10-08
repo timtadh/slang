@@ -18,7 +18,7 @@ class DataFlowAnalyzer(object):
         '''the name of this analyzer'''
 
     @abc.abstractmethod
-    def __init__(self, f):
+    def __init__(self, f, debug):
         '''collect and initialize the analyzer.'''
 
     @abc.abstractmethod

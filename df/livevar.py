@@ -14,7 +14,8 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     name = 'livevar'
     direction = 'backward'
 
-    def __init__(self, f):
+    def __init__(self, f, debug):
+        self.debug = debug
         self.types = dict()
         def add(id, sym):
             if id not in self.types:
@@ -40,9 +41,10 @@ class LiveVariable(abstract.DataFlowAnalyzer):
                 if inst.result.type.id not in useb: defb.add(inst.result.type.id)
 
         def flowfunc(useb, defb, flow):
-            print 'flow function for', blk.name
-            print ' '*4, 'use', useb
-            print ' '*4, 'def', defb
+            if self.debug:
+                print 'flow function for', blk.name
+                print ' '*4, 'use', useb
+                print ' '*4, 'def', defb
             result = useb | (flow - defb)
             return result
 

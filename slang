@@ -72,19 +72,25 @@ def main():
     source = f.read()
     f.close()
 
-    code = x86_gen.generate(*il_gen.generate(Parser().parse(source, lexer=Lexer()), debug=True))
+    code = x86_gen.generate(*il_gen.generate(Parser().parse(source, lexer=Lexer()), debug=False))
     if asm:
         f = open(ofile + '.s', 'w')
         f.write(code)
         f.close()
-    #print code
-    gas = subprocess.Popen(['as', '--32', '-o', '%s.o' % ofile], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    print gas.communicate(code)
+
+    ascmd = ['as', '--32', '-o', '%s.o' % ofile]
+    print
+    print '[running]', ' '.join(ascmd)
+    gas = subprocess.Popen(ascmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    for o in gas.communicate(code):
+        if o: print '>', ' '*4, o
+
     ldcmd = ['ld', '-o', ofile, '-melf_i386', '-dynamic-linker', conf.dynlinker,
          conf.libc32, '%s.o' % ofile]
-    print ' '.join(ldcmd)
+    print '[running]', ' '.join(ldcmd)
     ld = subprocess.Popen(ldcmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    print ld.communicate()
+    for o in ld.communicate():
+        if o: print '>', ' '*4, o
 
 if __name__ == '__main__':
     main()

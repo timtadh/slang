@@ -22,9 +22,10 @@ class analyze(object):
         self.__init__()
         return self
 
-    def __new__(cls, table, blocks, functions, stdout=None):
+    def __new__(cls, table, blocks, functions, stdout=None, debug=False):
         self = super(analyze, cls).__new__(cls)
         self.__init__()
+        self.debug = debug
         if stdout is None: self.stdout = sys.stdout
         self.functions = functions
 
@@ -71,17 +72,14 @@ class analyze(object):
         while len(blks) > 1 and postctr < len(blks):
             cblk = blks[postctr]
 
-            print
-            print '-'*80
-            print cblk, postctr
-            print ' '*8, '\n'.join(
-                textwrap.TextWrapper(
-                    width=75, subsequent_indent=' '*8, break_long_words=False,
-                ).wrap(str(blks)))
-
-            if cblk.name == 'b5':
-                print '----->', 'b5'
-                print cblk.next
+            if self.debug:
+                print
+                print '-'*80
+                print cblk, postctr
+                print ' '*8, '\n'.join(
+                    textwrap.TextWrapper(
+                        width=75, subsequent_indent=' '*8, break_long_words=False,
+                    ).wrap(str(blks)))
 
             ok, rtype, nset = self.acyclic(blks, cblk)
             if ok:
@@ -99,18 +97,16 @@ class analyze(object):
                 #print 'not acyclic'
                 postctr += 1
 
-            print
-            print ' '*8, '\n'.join(
-                textwrap.TextWrapper(
-                    width=75, subsequent_indent=' '*8, break_long_words=False,
-                ).wrap(str(blks)))
-            print '-'*80
+            if self.debug:
+                print
+                print ' '*8, '\n'.join(
+                    textwrap.TextWrapper(
+                        width=75, subsequent_indent=' '*8, break_long_words=False,
+                    ).wrap(str(blks)))
+                print '-'*80
 
         if len(blks) != 1:
-            print 'Construction of control tree failed'
-            print
-            pass
-            #raise Exception, 'Construction of control tree failed'
+            raise Exception, 'Construction of control tree failed'
 
         return blks[0]
 
@@ -189,11 +185,13 @@ class analyze(object):
 
         ## END CHAIN CHECK
         if len(nset) > 1:  # chain
-            print ' '*12, 'Found Chain'
+            if self.debug:
+                print ' '*12, 'Found Chain'
             return True, cfs.CHAIN, list(blk for blk in blks[::-1] if blk in nset)
         elif len(cblk.next) == 2: # if-then, if-then-else, ...
-            print ' '*12, 'Found ITE'
-            print ' '*12, cblk, cblk.next
+            if self.debug:
+                print ' '*12, 'Found ITE'
+                print ' '*12, cblk, cblk.next
             r = cblk.next[0]
             q = cblk.next[1]
 
@@ -204,9 +202,10 @@ class analyze(object):
             elif q.next[0] == r: # this is an IF-THEN
                 return True, cfs.IF_THEN, [cblk, q]
             else:
-                print ' '*12, 'Except Not'
-                print ' '*12, r, r.next
-                print ' '*12, q, q.next
+                if self.debug:
+                    print ' '*12, 'Except Not'
+                    print ' '*12, r, r.next
+                    print ' '*12, q, q.next
 
         return False, None, None
 

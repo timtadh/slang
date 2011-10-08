@@ -15,7 +15,8 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
     name = 'reachdef'
     direction = 'forward'
 
-    def __init__(self, f):
+    def __init__(self, f, debug):
+        self.debug = debug
         self.types = dict()
         for blk in f.blks:
             for i, inst in enumerate(blk.insts):
