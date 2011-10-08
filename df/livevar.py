@@ -56,6 +56,7 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     def star(self, f):
         def h(x):
             return self.meet(self.id(x), f(x))
+        return h
 
     @staticmethod
     def has_result_method(): return True

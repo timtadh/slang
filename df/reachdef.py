@@ -62,3 +62,4 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
     def star(self, f):
         def h(x):
             return self.meet(self.id(x), f(x))
+        return h
