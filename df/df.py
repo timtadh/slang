@@ -101,8 +101,8 @@ def analyze(analyzer, functions, debug=False, attach_method=False):
         f.df[A.name] = R
 
         if attach_method:
-            name, m = A.get_result_method()
-            setattr(f, name, types.MethodType(m, f, il.Function))
+            for name, m in A.get_result_method():
+                setattr(f, name, types.MethodType(m, f, il.Function))
 
         if debug:
             print f.name

@@ -21,6 +21,7 @@ class generate(object):
         self.blocks = blocks
         self.functions = functions
         cf.analyze(table, blocks, functions)
+
         self.__init__()
 
         #print 'max scope depth', table.max_depth

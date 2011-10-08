@@ -17,8 +17,9 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     def __init__(self, f):
         self.types = dict()
         def add(id, sym):
-            if id not in self.types: self.types[id] = set()
-            self.types[id].add(sym)
+            if id not in self.types:
+                self.types[id] = {'syms':set(), 'type':sym.type}
+            self.types[id]['syms'].add(sym)
         for blk in f.blks:
             for inst in blk.insts:
                 if isinstance(inst.a, il.Symbol): add(inst.a.type.id, inst.a)
@@ -60,11 +61,12 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     def has_result_method(): return True
 
     def get_result_method(analyzer):
-        def result(self, blk_name):
-            print self
+        def live(self, blk_name):
             r = self.df[analyzer.name]
-            return (
-                dict((id, analyzer.types[id]) for id in r.inn[blk_name]),
-                dict((id, analyzer.types[id]) for id in r.out[blk_name])
-            )
-        return 'live', result
+            return {
+                'inn':dict((id, analyzer.types[id]) for id in r.inn[blk_name]),
+                'out':dict((id, analyzer.types[id]) for id in r.out[blk_name])
+            }
+        def livetypes(self, blk_name, dir='inn'):
+            return [blk['type'] for blk in live(self, blk_name)[dir].itervalues()]
+        return ('live', live), ('livetypes', livetypes)

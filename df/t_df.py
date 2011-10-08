@@ -343,4 +343,6 @@ def t_livevar_ifthen_engine_attach():
     f2 = functions['f2']
 
     print f2.live('b2')
-    #assert False
+    print
+    print f2.livetypes('b2', 'out')
+    assert False
