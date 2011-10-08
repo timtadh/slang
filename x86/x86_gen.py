@@ -321,6 +321,7 @@ class generate(object):
         return code
 
     def Gprm(self, i):
+        '''Generator code for GPRM : Get Input Param i'''
         code = [
             x.movl(x.mem(x.ebp, -(1+i.a)*4), x.eax),
             x.movl(x.eax, x.loc(i.result.type)),
@@ -328,6 +329,7 @@ class generate(object):
         return code
 
     def Oprm(self, i):
+        '''Generator code for OPRM : Output a param'''
         #print i
         code = [
             x.movl(x.mem(x.esp, i.b.type.offset), x.eax),
@@ -336,6 +338,7 @@ class generate(object):
         return code
 
     def Iprm(self, i):
+        '''Generator code for IPRM : Put an Input Param on the Stack'''
         if isinstance(i.b.type, il.Func):
             # this is a function param not a value
             code = [
@@ -350,6 +353,7 @@ class generate(object):
         return code
 
     def Rprm(self, i):
+        '''Generate code for RPRM : Get a Return Param'''
         code = [
             x.movl(x.mem(x.esp, -(2+i.a)*4), x.eax),
             x.movl(x.eax, x.loc(i.result.type)),
@@ -357,33 +361,29 @@ class generate(object):
         return code
 
     def Call(self, i):
+        '''Generate code to Call a function'''
         if isinstance(i.a.type, il.Func):
             code = [
                 x.call(i.a.type.entry),
             ]
-        else:
+        else: # Otherwise it is a function pointer.
             code = [
-                x.call(x.loc(i.a.type, True)),
+                x.call(x.loc(i.a.type, deref=True)),
             ]
         return code
 
     def Return(self, i):
-        code = list()
-        #if len(self.code) >= 90 and len(self.code) < 110:
-            #code = [
-                #(vm.IMM,  3, len(self.code), 'DEBUG'),
-                #(vm.PRNT, 3, 0, 'DEBUG'),
-                #(vm.PRNT, 2, 0, 'DEBUG'),
-                #(vm.EXIT, 0, 0, 'DEBUG'),
-            #]
-        code += [
+        '''Generate code to return from the current function'''
+        return [
             x.addl(x.cint(4), x.esp),
             x.jmp(x.mem(x.esp, -4, True)),
-            #x.ret(),
         ]
-        return code
 
     def FramePush(self, param_count, scope_depth):
+        '''Generate a framepush.
+        @param param_count : the number of params the function recieves.
+        @param scope_depth : the scope the depth the function was declared at.
+        '''
         p = param_count
         code = [
             # 0(ebp) == return address
@@ -415,6 +415,10 @@ class generate(object):
         return code
 
     def FramePop(self, param_count, scope_depth):
+        '''Generate a framepop.
+        @param param_count : the number of params the function recieves.
+        @param scope_depth : the scope the depth the function was declared at.
+        '''
         p = param_count
         code = [
             '',
