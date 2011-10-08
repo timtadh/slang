@@ -21,7 +21,7 @@ class generate(object):
         self.blocks = blocks
         self.functions = functions
         cf.analyze(table, blocks, functions)
-
+        df.analyze(df.livevar.LiveVariable, functions, False, True)
         self.__init__()
 
         #print 'max scope depth', table.max_depth
@@ -52,21 +52,66 @@ class generate(object):
 
     def emit(self, inst, src, targ=None):
         '''emit the specified instruction with src as source operand and targ
-            as the target operand. Handles requesting the operands from a non-local
-            stack frame as necessary.
+            as the target operand. Handles requesting the operands from a
+            non-local stack frame as necessary.
 
             using ebx or ecx is not allowed for either the src or targ.
         '''
-        #print inst, src, targ
+
+        ## We have several choices to make in order to emit the right inst.
+        ## (1) does the inst only refer to symbols local to the current scope?
+        ##      (a) if yes: emit the instruction with no changes
+        ##      (b) if no: detirmine what changes have to be made.
+        ## (2) We now know the instruction is not local. One (but not both) of
+        ##     the symbols does not come from this stack frame. That means they
+        ##     have to be fetched from the appropriate stack frame. We detirmine
+        ##     the appropriate frame to fetch (or put) the sym from(to) by
+        ##     consulting the display.
+        ## (3) The display is a static array:
+        ##
+        ##               +------------+------------+------------+------------+
+        ##   scope depth | 0          | 1          | 2          | 3          |
+        ##               +------------+------------+------------+------------+
+        ## frame address | 0x???????? | 0x???????? | 0x???????? | 0x???????? |
+        ##               +------------+------------+------------+------------+
+        ##
+        ##     The 'frame address' contains the address of the the stack frame
+        ##     most recently seen function. When that function returns it will
+        ##     update the display with the previous address it contained. When
+        ##     A new function is called at that scope depth a new address will
+        ##     be placed in the display and the old will be saved.
+        ##
+        ## (4) Therefore to get the non-local symbols we simply need to consult
+        ##     the display to find the appropriate frame. Each symbol knows what
+        ##     scope-depth it was declared at.
+        ##
+        ## NB: The symbols store there scope depths starting at 1. Therefore, in
+        ##     order to index into the display one must subtract 1 from the
+        ##     stored scope depth.
+        ##
+        ## NB: We multiply by 4 because each address is 4 bytes wide.
+
+
         if isinstance(src, il.Symbol) and isinstance(targ, il.Symbol):
-            raise Exception, 'Cannot emit an instruction with both source and target as symbols'
+            raise Exception, (
+                'Cannot emit an instruction with both source and target as '
+                'symbols'
+            )
         elif isinstance(src, il.Symbol) and targ is None:
             if src.islocal(self.cfunc):
                 return [ inst(x.loc(src.type)) ]
             return [
-                x.movl(x.cint(4*(src.scope_depth-1)), x.ebx),
-                x.movl(x.static('display', x.ebx), x.ebx),
-                inst(x.mem(x.ebx, src.type.offset)),
+                x.movl(x.cint(4*(src.scope_depth-1)), x.ebx), # compute the
+                                                              # index into the
+                                                              # display and
+                                                              # store in ebx
+
+                x.movl(x.static('display', x.ebx), x.ebx),    # get the non-
+                                                              # local stack
+                                                              # pointer and
+                                                              # store in ebx
+
+                inst(x.mem(x.ebx, src.type.offset)),          # emit the inst.
             ]
         elif not isinstance(src, il.Symbol) and targ is None:
             return [ inst(src), ]
@@ -83,6 +128,9 @@ class generate(object):
             if targ.islocal(self.cfunc):
                 return [ inst(src, x.loc(targ.type)) ]
             return [
+                ## This version is slightly tricky we have to fetch and store
+                ## the contents of the variable stored in the non-local stack
+                ## frame.
                 x.movl(x.cint(4*(targ.scope_depth-1)), x.ebx),
                 x.movl(x.static('display', x.ebx), x.ebx),
                 x.movl(x.mem(x.ebx, targ.type.offset), x.ecx),
