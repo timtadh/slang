@@ -88,12 +88,10 @@ def process_input():
     return ofile, asm, source, images, debug
 
 def compile(source, ofile, asm=False, images=False, debug=False):
-    code = x86_gen.generate(
-        *il_gen.generate(
-            Parser().parse(source, lexer=Lexer()),
-            debug=debug
-        )
-    )
+
+    AST = Parser().parse(source, lexer=Lexer())
+    table, blocks, functions = il_gen.generate(AST, debug=debug)
+    code = x86_gen.generate(table, blocks, functions)
 
     if asm:
         f = open(ofile + '.s', 'w')
