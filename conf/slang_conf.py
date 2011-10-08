@@ -27,7 +27,32 @@ class SlangConfig(conf.BaseConfig):
 
 
     def __init__(self, *args, **kwargs):
+        self.__check_defaults()
         super(SlangConfig, self).__init__(*args, **kwargs)
+
+    def __check_defaults(self):
+        if not self._d['dynlinker'] or not self._d['libc32']:
+            print
+            print (
+                "You don't seem to have Slang configured yet! I have \n"
+                "automatically created a configuration file for you so no \n"
+                "sweat. But, you need to enter some values for me."
+            )
+            print
+            while not self._d['dynlinker']:
+                dlink = raw_input('Where is your dynamic linker located? ')
+                if os.path.exists(dlink):
+                    self._d['dynlinker'] = dlink
+                else:
+                    print ' '*4, 'No it is not. I checked, there is nothing there.'
+            if not self._d['dynlinker']: print
+            while not self._d['libc32']:
+                libc = raw_input('Where is your *32 bit* libc located? ')
+                if os.path.exists(libc):
+                    self._d['libc32'] = libc
+                else:
+                    print ' '*4, 'No it is not. I checked, there is nothing there.'
+            if not self._d['libc32']: print
 
 
 valid_locs = [loc for loc in [HOME_LOC, DEFAULT_LOC] if os.path.exists(loc)]
