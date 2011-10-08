@@ -316,7 +316,7 @@ class generate(object):
 
     def Nop(self, i):
         code = [
-            (vm.NOP, 0, 0)
+            x.nop()
         ]
         return code
 
