@@ -8,9 +8,12 @@
 usage_message = \
 '''usage: slang -o executable source.sl '''
 
+extended_message = usage_message
 
 import sys, os, subprocess
 from getopt import getopt, GetoptError
+
+from conf import conf
 from frontend.sl_parser import Parser, Lexer
 from il import il_gen
 from x86 import x86_gen
@@ -41,12 +44,13 @@ def main():
 
     ## getopt setup
     try:
-        opts, args = getopt(sys.argv[1:], 'hvo:', ['help', 'version', 'output='])
+        opts, args = getopt(sys.argv[1:], 'hvo:s', ['help', 'version', 'output=', 'asm'])
     except GetoptError, err:
         log(err)
         usage(error_codes['option'])
 
     ofile = 'a.out'
+    asm = False
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             usage()
@@ -55,6 +59,8 @@ def main():
             sys.exit(error_codes['version'])
         elif opt in ('-o', '--output'):
             ofile = arg
+        elif opt in ('-s', '--asm'):
+            asm = True
 
     if len(args) != 1:
         log('exactly 1 source file is required.')
@@ -66,17 +72,25 @@ def main():
     source = f.read()
     f.close()
 
-    code = x86_gen.generate(*il_gen.generate(Parser().parse(source, lexer=Lexer()), debug=True))
-    print code
-    gas = subprocess.Popen(['as', '--32', '-o', '%s.o' % ofile], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    print gas.communicate(code)
-    ld = subprocess.Popen(['ld', '-o', ofile, '-melf_i386', '-dynamic-linker', '/lib/ld-linux.so.2', '/lib32/libc.so.6', '%s.o' % ofile], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    print ld.communicate()
+    code = x86_gen.generate(*il_gen.generate(Parser().parse(source, lexer=Lexer()), debug=False))
+    if asm:
+        f = open(ofile + '.s', 'w')
+        f.write(code)
+        f.close()
 
+    ascmd = ['as', '--32', '-o', '%s.o' % ofile]
+    print
+    print '[running]', ' '.join(ascmd)
+    gas = subprocess.Popen(ascmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    for o in gas.communicate(code):
+        if o: print '>', ' '*4, o
 
-
+    ldcmd = ['ld', '-o', ofile, '-melf_i386', '-dynamic-linker', conf.dynlinker,
+         conf.libc32, '%s.o' % ofile]
+    print '[running]', ' '.join(ldcmd)
+    ld = subprocess.Popen(ldcmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    for o in ld.communicate():
+        if o: print '>', ' '*4, o
 
 if __name__ == '__main__':
     main()
-
-

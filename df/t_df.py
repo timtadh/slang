@@ -342,5 +342,13 @@ def t_livevar_ifthen_engine_attach():
     df.analyze(livevar.LiveVariable, functions, True, True)
     f2 = functions['f2']
 
-    print f2.livetypes('b2', 'out')
-    assert False
+    def ids(types): return set(typ.id for typ in types)
+
+    assert ids(f2.livetypes('b2', 'inn')) == set([0])
+    assert ids(f2.livetypes('b2', 'out')) == set([0, 1, 2])
+
+    assert ids(f2.livetypes('b3', 'inn')) == set([0, 1])
+    assert ids(f2.livetypes('b3', 'out')) == set([2])
+
+    assert ids(f2.livetypes('b4', 'inn')) == set([2])
+    assert ids(f2.livetypes('b4', 'out')) == set([])

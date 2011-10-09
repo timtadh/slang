@@ -6,6 +6,7 @@
 
 import sys, os, cStringIO, subprocess, traceback
 
+from conf import conf
 from frontend.sl_parser import Parser, Lexer
 #from table import SymbolTable
 import il
@@ -20,7 +21,8 @@ def run(s):
         print code
         gas = subprocess.Popen(['as', '--32', '-o', 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         print gas.communicate(code)
-        ld = subprocess.Popen(['ld', '-o', 'exe', '-melf_i386', '-dynamic-linker', '/lib/ld-linux.so.2', '/lib32/libc.so.6', 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        ld = subprocess.Popen(['ld', '-o', 'exe', '-melf_i386', '-dynamic-linker', conf.dynlinker,
+             conf.libc32, 'exe.o'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         print ld.communicate()
         exe = subprocess.Popen(['./exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ret, err = exe.communicate()

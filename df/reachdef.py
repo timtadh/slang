@@ -15,7 +15,8 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
     name = 'reachdef'
     direction = 'forward'
 
-    def __init__(self, f):
+    def __init__(self, f, debug=False):
+        self.debug = debug
         self.types = dict()
         for blk in f.blks:
             for i, inst in enumerate(blk.insts):
@@ -62,3 +63,4 @@ class ReachingDefintions(abstract.DataFlowAnalyzer):
     def star(self, f):
         def h(x):
             return self.meet(self.id(x), f(x))
+        return h

@@ -14,10 +14,11 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     name = 'livevar'
     direction = 'backward'
 
-    def __init__(self, f):
+    def __init__(self, f, debug=False):
+        self.debug = debug
         self.types = dict()
         def add(id, sym):
-            if id not in self.types: 
+            if id not in self.types:
                 self.types[id] = {'syms':set(), 'type':sym.type}
             self.types[id]['syms'].add(sym)
         for blk in f.blks:
@@ -40,9 +41,10 @@ class LiveVariable(abstract.DataFlowAnalyzer):
                 if inst.result.type.id not in useb: defb.add(inst.result.type.id)
 
         def flowfunc(useb, defb, flow):
-            print 'flow function for', blk.name
-            print ' '*4, 'use', useb
-            print ' '*4, 'def', defb
+            if self.debug:
+                print 'flow function for', blk.name
+                print ' '*4, 'use', useb
+                print ' '*4, 'def', defb
             result = useb | (flow - defb)
             return result
 
@@ -56,6 +58,7 @@ class LiveVariable(abstract.DataFlowAnalyzer):
     def star(self, f):
         def h(x):
             return self.meet(self.id(x), f(x))
+        return h
 
     @staticmethod
     def has_result_method(): return True

@@ -14,13 +14,22 @@ from il import il_gen
 import x86 as x
 
 class generate(object):
+    '''Generates 32bit x86 assembly for `as` from the output of the Parser. Acts
+    like a function even though it is a declared as a class.'''
 
     def __new__(cls, table, blocks, functions):
+        '''Generates x86 asm.
+        @param table : The symbol table.
+        @param blocks : The basic blocks.
+        @param functions : The functions.
+        @returns : A string, the x86 assembly. Suitable for input into `as`
+        '''
         self = super(generate, cls).__new__(cls)
         self.table = table
         self.blocks = blocks
         self.functions = functions
         cf.analyze(table, blocks, functions)
+        df.analyze(df.livevar.LiveVariable, functions, False, True)
         self.__init__()
 
         #print 'max scope depth', table.max_depth
@@ -28,8 +37,6 @@ class generate(object):
         self.code += self.InitCode()
         self.Func('main', main=True)
         self.code += self.ExitCode()
-
-
 
         for fname in sorted(self.functions.keys()):
             if fname == 'main': continue
@@ -44,28 +51,72 @@ class generate(object):
         return '\n'.join(str(line) for line in self.code) + '\n'
 
     def __init__(self):
-        self.bp_offset = 0
-        self.floc = dict()
+        '''Initializes state instance variables.'''
         self.code = list()
         self.cfunc = None
 
     def emit(self, inst, src, targ=None):
         '''emit the specified instruction with src as source operand and targ
-            as the target operand. Handles requesting the operands from a non-local
-            stack frame as necessary.
+            as the target operand. Handles requesting the operands from a
+            non-local stack frame as necessary.
 
             using ebx or ecx is not allowed for either the src or targ.
         '''
-        #print inst, src, targ
+
+        ## We have several choices to make in order to emit the right inst.
+        ## (1) does the inst only refer to symbols local to the current scope?
+        ##      (a) if yes: emit the instruction with no changes
+        ##      (b) if no: detirmine what changes have to be made.
+        ## (2) We now know the instruction is not local. One (but not both) of
+        ##     the symbols does not come from this stack frame. That means they
+        ##     have to be fetched from the appropriate stack frame. We detirmine
+        ##     the appropriate frame to fetch (or put) the sym from(to) by
+        ##     consulting the display.
+        ## (3) The display is a static array:
+        ##
+        ##               +------------+------------+------------+------------+
+        ##   scope depth | 0          | 1          | 2          | 3          |
+        ##               +------------+------------+------------+------------+
+        ## frame address | 0x???????? | 0x???????? | 0x???????? | 0x???????? |
+        ##               +------------+------------+------------+------------+
+        ##
+        ##     The 'frame address' contains the address of the the stack frame
+        ##     most recently seen function. When that function returns it will
+        ##     update the display with the previous address it contained. When
+        ##     A new function is called at that scope depth a new address will
+        ##     be placed in the display and the old will be saved.
+        ##
+        ## (4) Therefore to get the non-local symbols we simply need to consult
+        ##     the display to find the appropriate frame. Each symbol knows what
+        ##     scope-depth it was declared at.
+        ##
+        ## NB: The symbols store there scope depths starting at 1. Therefore, in
+        ##     order to index into the display one must subtract 1 from the
+        ##     stored scope depth.
+        ##
+        ## NB: We multiply by 4 because each address is 4 bytes wide.
+
+
         if isinstance(src, il.Symbol) and isinstance(targ, il.Symbol):
-            raise Exception, 'Cannot emit an instruction with both source and target as symbols'
+            raise Exception, (
+                'Cannot emit an instruction with both source and target as '
+                'symbols'
+            )
         elif isinstance(src, il.Symbol) and targ is None:
             if src.islocal(self.cfunc):
                 return [ inst(x.loc(src.type)) ]
             return [
-                x.movl(x.cint(4*(src.scope_depth-1)), x.ebx),
-                x.movl(x.static('display', x.ebx), x.ebx),
-                inst(x.mem(x.ebx, src.type.offset)),
+                x.movl(x.cint(4*(src.scope_depth-1)), x.ebx), # compute the
+                                                              # index into the
+                                                              # display and
+                                                              # store in ebx
+
+                x.movl(x.static('display', x.ebx), x.ebx),    # get the non-
+                                                              # local stack
+                                                              # pointer and
+                                                              # store in ebx
+
+                inst(x.mem(x.ebx, src.type.offset)),          # emit the inst.
             ]
         elif not isinstance(src, il.Symbol) and targ is None:
             return [ inst(src), ]
@@ -82,6 +133,9 @@ class generate(object):
             if targ.islocal(self.cfunc):
                 return [ inst(src, x.loc(targ.type)) ]
             return [
+                ## This version is slightly tricky we have to fetch and store
+                ## the contents of the variable stored in the non-local stack
+                ## frame.
                 x.movl(x.cint(4*(targ.scope_depth-1)), x.ebx),
                 x.movl(x.static('display', x.ebx), x.ebx),
                 x.movl(x.mem(x.ebx, targ.type.offset), x.ecx),
@@ -92,16 +146,24 @@ class generate(object):
             return [ inst(src, targ) ]
 
     def InitCode(self):
+        '''The pre-amble to the generated code. Contains data and the _start
+        label. Creates a new stack frame.'''
         return [
             '.section .data',
             'printf_msg:',
             r'  .ascii "%d\n\0"',
+
+            ## START DEBUG MESSAGES ##
             'push_msg:',
             r'  .ascii "push 0x%x\n\0"',
             'pop1_msg:',
             r'  .ascii "pop1 0x%x\n\0"',
             'pop2_msg:',
             r'  .ascii "pop2 0x%x\n\0"',
+            ## END DEBUG MESSAGES ##
+
+            ## The display stores the location of non-local stack frames
+            ## see. def emit(...)
             'display:',
             r'  .long %s' % ', '.join('0' for x in xrange(self.table.max_depth)),
             '',
@@ -115,12 +177,18 @@ class generate(object):
         ]
 
     def ExitCode(self):
+        '''Exits the program and returns to the OS. Currently implemented by
+        calling into the libc exit function. In the past it directly generated
+        the syscall.'''
         return [
             x.push('$0'),
             x.call("exit"),
         ]
 
     def gather_syms(self, blks):
+        '''Gather the symbols used through out the function.
+        @param blks: The blks that make up the function under consideration.
+        @returns : the symbols as a set()'''
         syms = set()
         for b in blks:
             for i in b.insts:
@@ -130,49 +198,62 @@ class generate(object):
         return syms
 
     def place_symbols(self, syms, func):
+        '''Determines the location of the symbols in the stack frame for the
+        function. Eg. it sets sym.type.basereg and sym.type.offset for each
+        symbol.
+        @param syms : the set of symbols (generated by gather_syms)
+        @param func : the current function (need to place params).
+        @returns : The size of the stack frame in machine words.'''
+
+        ## 8 is a constant, depicting the number of registers we (the callee)
+        ## are storing for the caller. This should probably be refactored. It
+        ## is a magic number right now.
         i = 8 + len(func.params)
         for sym in syms:
-            #print sym, sym.islocal(func), func.name
+            ## We only need to place symbols that are sub-classes of integers.
+            ## Why? Because the only other type we current have are Functions,
+            ## functions do not need to be placed in the stack frame. Function
+            ## pointers are sub-classes of integers so they are handled by this
+            ## code.
             if issubclass(sym.type.__class__, il.Int) and sym.islocal(func):
-                #print 'is subclass int'
                 sym.type.basereg = x.ebp # set the base reg to the frame pointer
-                sym.type.offset = -4 * i # set the offset
+                sym.type.offset = -4 * i # set the offset (since we index from
+                                         # the frame (base) pointer we need to
+                                         # subtract (not add) therefore the
+                                         # offset is negative.
                 i += 1
-            #if issubclass(sym.type.__class__, il.FuncPointer):
-                #print 'is subclass int'
-                #sym.type.basereg = 1 # set the base reg to the frame pointer
-                #sym.type.offset = -1 * i # set the offset
-                #i += 1
-            #if issubclass(sym.type.__class__, il.Func):
-                #self.funcs.append(sym)
         return i-1
 
     def Func(self, name, main=False):
-        #print name
+        '''Generates x86 code for the function given by name. This is the entry
+        point for all code generation.'''
+
+        ## Get the function.
+        func = self.functions[name]
+        self.cfunc = func
+
+        ## Generate a label for the function
         self.code += [
             x.label(name)
         ]
 
-        #print '->', insts
-        func = self.functions[name]
-        self.cfunc = func
-        #insts = self.blocks[func.entry.name].insts
-
-        self.bp_offset = 3
-
+        ## If this is not the `main` function generate a stack push
         if not main:
             self.code += self.FramePush(len(func.params), func.scope_depth)
+
+        ## Move the stack pointer down. This creates the stack frame.
         syms = self.gather_syms(func.blks)
-        #print syms
-        fp_offset = self.place_symbols(syms, func)
-        #print name, 'fp_offset', fp_offset
+        sp_offset = self.place_symbols(syms, func)
         self.code += [
-            x.subl(x.cint(fp_offset*4), x.esp)
-            #(vm.IMM, 4, fp_offset, 'start func %s' % (name)),
-            #(vm.ADD, 1, 4, 'fp offset add inst'),
+            x.subl(x.cint(sp_offset*4), x.esp)
         ]
 
         def block(insts):
+            '''Generate the x86 instruction for the given block of instructions.
+            '''
+
+            ## We could do something more clever than switch case here, but I
+            ## (for now) perfer the simplicity.
             for i in insts:
                 if i.op == il.PRNT:
                     self.code += self.Print(i)
@@ -183,6 +264,10 @@ class generate(object):
                 elif i.op == il.IPRM:
                     self.code += self.Iprm(i)
                 elif i.op == il.OPRM:
+                    ## OPRMs always appear directly before RTRN instructions.
+                    ## Based on the way the stack frame pop is generated the pop
+                    ## must be generated before the OPRM instruction. So the
+                    ## output params can be properly returned.
                     if not main and func.oparam_count > 0:
                         self.code += self.FramePop(len(func.params), func.scope_depth)
                     if func.oparam_count == 0:
@@ -208,32 +293,35 @@ class generate(object):
                     self.code += self.Nop(i)
                 else:
                     raise Exception, il.opsr[i.op]
-                #if i.label is not None:
-                    #print code[l]
-                    #code[l] = (code[l][0], code[l][1], code[l][2], i.label)
+
+        ## generate a label for the entry block of the function.
         self.code += [ x.label(func.entry.name) ]
-        block(self.blocks[func.entry.name].insts)
+        block(self.blocks[func.entry.name].insts) # generate the function.
+
+        ## for each block in the function (excluding entry and exit) generate
+        ## the code.
         for b in func.blks:
             if b.name == func.entry.name: continue
             if b.name == func.exit.name: continue
             self.code += [ x.label(b.name) ]
-            self.floc[b.name] = len(self.code)
             self.code += [ x.nop() ]
             block(self.blocks[b.name].insts)
+
+        ## If there a distinct exit block, generate it.
         if func.entry.name != func.exit.name:
             self.code += [ x.label(func.exit.name) ]
             b = func.exit
-            self.floc[b.name] = len(self.code)
             self.code += [ x.nop() ]
             block(self.blocks[b.name].insts)
 
     def Nop(self, i):
         code = [
-            (vm.NOP, 0, 0)
+            x.nop()
         ]
         return code
 
     def Gprm(self, i):
+        '''Generator code for GPRM : Get Input Param i'''
         code = [
             x.movl(x.mem(x.ebp, -(1+i.a)*4), x.eax),
             x.movl(x.eax, x.loc(i.result.type)),
@@ -241,6 +329,7 @@ class generate(object):
         return code
 
     def Oprm(self, i):
+        '''Generator code for OPRM : Output a param'''
         #print i
         code = [
             x.movl(x.mem(x.esp, i.b.type.offset), x.eax),
@@ -249,6 +338,7 @@ class generate(object):
         return code
 
     def Iprm(self, i):
+        '''Generator code for IPRM : Put an Input Param on the Stack'''
         if isinstance(i.b.type, il.Func):
             # this is a function param not a value
             code = [
@@ -263,43 +353,37 @@ class generate(object):
         return code
 
     def Rprm(self, i):
-        #print i
+        '''Generate code for RPRM : Get a Return Param'''
         code = [
             x.movl(x.mem(x.esp, -(2+i.a)*4), x.eax),
             x.movl(x.eax, x.loc(i.result.type)),
         ]
-        #self.var[i.result] = self.bp_offset
-        #self.bp_offset += 1
         return code
 
     def Call(self, i):
+        '''Generate code to Call a function'''
         if isinstance(i.a.type, il.Func):
             code = [
                 x.call(i.a.type.entry),
             ]
-        else:
+        else: # Otherwise it is a function pointer.
             code = [
-                x.call(x.loc(i.a.type, True)),
+                x.call(x.loc(i.a.type, deref=True)),
             ]
         return code
 
     def Return(self, i):
-        code = list()
-        #if len(self.code) >= 90 and len(self.code) < 110:
-            #code = [
-                #(vm.IMM,  3, len(self.code), 'DEBUG'),
-                #(vm.PRNT, 3, 0, 'DEBUG'),
-                #(vm.PRNT, 2, 0, 'DEBUG'),
-                #(vm.EXIT, 0, 0, 'DEBUG'),
-            #]
-        code += [
+        '''Generate code to return from the current function'''
+        return [
             x.addl(x.cint(4), x.esp),
             x.jmp(x.mem(x.esp, -4, True)),
-            #x.ret(),
         ]
-        return code
 
     def FramePush(self, param_count, scope_depth):
+        '''Generate a framepush.
+        @param param_count : the number of params the function recieves.
+        @param scope_depth : the scope the depth the function was declared at.
+        '''
         p = param_count
         code = [
             # 0(ebp) == return address
@@ -331,6 +415,10 @@ class generate(object):
         return code
 
     def FramePop(self, param_count, scope_depth):
+        '''Generate a framepop.
+        @param param_count : the number of params the function recieves.
+        @param scope_depth : the scope the depth the function was declared at.
+        '''
         p = param_count
         code = [
             '',
