@@ -52,7 +52,7 @@ def process_input():
     try:
         opts, args = getopt(sys.argv[1:],
             'hvo:sdi',
-            ['help', 'version', 'output=', 'asm', 'debug', 'images'])
+            ['help', 'version', 'output=', 'asm', 'debug', 'images', 'stdin'])
     except GetoptError, err:
         log(err)
         usage(error_codes['option'])
@@ -61,6 +61,7 @@ def process_input():
     asm = False
     images = False
     debug = False
+    stdin = False
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             usage()
@@ -75,16 +76,21 @@ def process_input():
             images = True
         elif opt in ('-d', '--debug'):
             debug = True
+        elif opt in ('--stdin',):
+            stdin = True
 
-    if len(args) != 1:
+    if len(args) != 1 and not stdin:
         log('exactly 1 source file is required.')
         usage(error_codes['option'])
 
-    infile = args[0]
+    if not stdin:
+      infile = args[0]
+      f = open(infile, 'r')
+      source = f.read()
+      f.close()
+    else:
+      source = sys.stdin.read()
 
-    f = open(infile, 'r')
-    source = f.read()
-    f.close()
     return ofile, asm, source, images, debug
 
 def compile(source, ofile, asm=False, images=False, debug=False):
