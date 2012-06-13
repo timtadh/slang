@@ -43,10 +43,6 @@ class generate(object):
             f = self.functions[fname]
             self.Func(f.name)
 
-        #print '\n'.join(self.code)
-        for line in self.code:
-            print line
-
         #raise Exception
         return '\n'.join(str(line) for line in self.code) + '\n'
 

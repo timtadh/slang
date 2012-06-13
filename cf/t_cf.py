@@ -4,7 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import os, subprocess
+import os, subprocess, traceback
 
 from frontend.sl_parser import Parser, Lexer
 import cf
@@ -13,21 +13,30 @@ import il
 from il import il_gen
 import nose
 
-GEN_IMGS = False
+GEN_IMGS = True
 img_dir = os.path.abspath('./imgs')
 
 def analyze(s):
-    table, blocks, functions = il_gen.generate(Parser().parse(s, lexer=Lexer()), debug=False)
+    name = traceback.extract_stack()[-2][2]
+    ast = Parser().parse(s, lexer=Lexer())
+    table, blocks, functions = il_gen.generate(ast, debug=False)
     cf.analyze(table, blocks, functions)
+    dot(name, ast.dotty(), str(ast))
     return functions
 
 def mock():
     return cf.analyze.__mock__()
 
-def dot(name, dotty):
+def dot(name, dotty, AST=None):
     if not GEN_IMGS: return
     if not os.path.exists(img_dir):
         os.mkdir(img_dir)
+    if AST:
+        ast = os.path.join(img_dir, name) + '.ast'
+        f = open(ast, 'w')
+        f.write(AST)
+        f.close()
+     
     dot = os.path.join(img_dir, name) + '.dot'
     plain = os.path.join(img_dir, name) + '.plain'
     png = os.path.join(img_dir, name) + '.png'
