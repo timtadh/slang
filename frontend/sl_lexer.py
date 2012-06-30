@@ -51,6 +51,10 @@ class Lexer(object):
     t_DASH = r'\-'
     t_PLUS = r'\+'
 
+    t_NOT = r'\!'
+    t_AND = r'\&\&'
+    t_OR  = r'\|\|'
+
     t_DOT = r'\.'
     t_SEMI = r'\;'
     t_EQUAL = r'='
