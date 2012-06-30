@@ -272,6 +272,62 @@ def t_if_and_nest_or():
             print 2
         }
         ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 < 4 || 5 < 6) && 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 < 4 || 5 > 6) && 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 > 4 || 5 < 6) && 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 > 4 || 5 > 6) && 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 < 4 || 5 < 6) && 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 < 4 || 5 > 6) && 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 > 4 || 5 < 6) && 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 > 4 || 5 > 6) && 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
 
 def t_if_or_nest_and():
     #raise nose.SkipTest
@@ -326,6 +382,62 @@ def t_if_or_nest_and():
         ''').rstrip('\n')
     assert str(2) == run('''
         if (1 > 2 || (3 > 4 && 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 < 4 && 5 < 6) || 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 < 4 && 5 > 6) || 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 > 4 && 5 < 6) || 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 > 4 && 5 > 6) || 1 < 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if ((3 < 4 && 5 < 6) || 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 < 4 && 5 > 6) || 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 > 4 && 5 < 6) || 1 > 2) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if ((3 > 4 && 5 > 6) || 1 > 2) {
             print 1
         } else {
             print 2
