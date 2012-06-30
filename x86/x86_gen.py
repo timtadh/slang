@@ -28,8 +28,10 @@ class generate(object):
         self.table = table
         self.blocks = blocks
         self.functions = functions
-        cf.analyze(table, blocks, functions)
-        df.analyze(df.livevar.LiveVariable, functions, False, True)
+        ## TODO: and and or expressions causing control tree construction to
+        ##       fail when not expressions are involved.
+        #cf.analyze(table, blocks, functions)
+        #df.analyze(df.livevar.LiveVariable, functions, False, True)
         self.__init__()
 
         #print 'max scope depth', table.max_depth
