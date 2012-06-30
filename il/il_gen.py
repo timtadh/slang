@@ -331,7 +331,7 @@ class generate(object):
         elif c.label == 'And':
             raise Exception, NotImplemented
         elif c.label == 'Not':
-            raise Exception, NotImplemented
+            blk = self.BooleanOp(c.children[0], blk, thenblk, elseblk, True)
         else:
             raise Exception, 'Unexpected Node %s' % c.label
 
