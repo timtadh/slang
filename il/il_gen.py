@@ -326,10 +326,19 @@ class generate(object):
                 il.Inst(inst, Ar, Br, thenblk),
                 il.Inst(il.J, elseblk, 0, 0),
             ]
-        elif c.label == 'Or':
-            raise Exception, NotImplemented
-        elif c.label == 'And':
-            raise Exception, NotImplemented
+        elif c.label in ('Or', 'And'):
+            ## the blk become the A expressions block
+            ## we allocate a new blk for B, the previous block is blk
+            a = c.children[0]
+            b = c.children[1]
+            ablk = blk
+            bblk = self.block(blk)
+            bresult = self.BooleanOp(b, bblk, thenblk, elseblk)
+            if c.label == 'Or':
+                aresult = self.BooleanOp(a, ablk, thenblk, bresult)
+            elif c.label == 'And':
+                aresult = self.BooleanOp(a, ablk, bresult, elseblk)
+            blk = aresult
         elif c.label == 'Not':
             blk = self.BooleanOp(c.children[0], blk, thenblk, elseblk, True)
         else:
