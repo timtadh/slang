@@ -16,6 +16,10 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
+branch_typesr = ('UNCONDITIONAL', 'TRUE', 'FALSE')
+branch_types = dict((k, i) for i, k in enumerate(branch_typesr))
+sys.modules[__name__].__dict__.update(branch_types)
+
 def run(table, blocks, functions, *args, **kwargs):
     return _run(functions['main'].entry.name, blocks, functions, *args, **kwargs)
 
@@ -99,6 +103,28 @@ def _run(entry, blocks, functions, params=None, var=None, stdout=None):
             raise Exception, opsr[i.op]
         c += 1
 
+class Branch(object):
+
+    __slots__ = ['type', 'target']
+
+    def __init__(self, type, target):
+        assert type in branch_types.values()
+        self.type = type
+        self.target = target
+
+    def __eq__(self, other):
+        if isinstance(other, Branch):
+            return self.type == other.type and self.target == other.target
+        elif isinstance(other, Block):
+            return self.target == other.target
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __str__(self):
+        return '<Branch %s %s>' % (branch_typesr[self.type], str(self.target))
+
 class Block(object):
 
     def __init__(self, name):
@@ -130,6 +156,11 @@ class Block(object):
         self.prev = old['prev']
         return next, prev
 
+    def link(self, blk, branch_type):
+        if blk in self.next: return
+        self.next.append(Branch(branch_type, blk))
+        blk.prev.append(self)
+
     def dotty(self):
         def string(n):
             #if isinstance(s, Node): return str(s.label)
@@ -151,7 +182,7 @@ class Block(object):
         def add_node(nodes, name, label):
             nodes.append(node % locals())
         node = '%(name)s [shape=rect, fontname="Courier", label=<<table border="0">%(label)s</table>>];'
-        edge = '%s -> %s;'
+        edge = '%s -> %s [label="%s"];'
         nodes = list()
         edges = list()
 
@@ -169,15 +200,18 @@ class Block(object):
                 visited[n.name] = name
                 add_node(nodes, name, string(n))
             for v in n.next:
-                if v.name in visited:
-                    vname = visited[v.name]
+                if v.target.name in visited:
+                    vname = visited[v.target.name]
                 else:
                     vname = 'n%d' % i
-                    visited[v.name] = vname
-                    queue.append((i, v))
-                    add_node(nodes, vname, string(v))
+                    visited[v.target.name] = vname
+                    queue.append((i, v.target))
+                    add_node(nodes, vname, string(v.target))
                     i += 1
-                edges.append(edge % (name, vname))
+                edge_label = ''
+                if v.type != UNCONDITIONAL:
+                    edge_label = branch_typesr[v.type][0]
+                edges.append(edge % (name, vname, edge_label))
         return 'digraph G {\nrankdir=LR;\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
 
     def __repr__(self): return str(self)

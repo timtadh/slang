@@ -65,15 +65,12 @@ class generate(object):
         self.tcount += 1
         return 't%i' % self.tcount
 
-    def block(self, prev=None):
+    def block(self):
         self.bcount += 1
         name = 'b%i' % self.bcount
         blk = il.Block(name)
         self.blocks[name] = blk
         self.cfunc.blks.append(blk)
-        if prev is not None:
-            prev.next.append(blk)
-            blk.prev.append(prev)
         return blk
 
     def push_func(self, name=None):
@@ -121,21 +118,19 @@ class generate(object):
         elseblk = None
 
         if len(node.children) == 3:
-            elseblk = self.block(blk)
+            elseblk = self.block()
             blk = self.BooleanExpr(node.children[0], blk, thenblk, elseblk)
         else:
             blk = self.BooleanExpr(node.children[0], blk, thenblk, finalblk)
 
         thenblk = self.Stmts(node.children[1], thenblk)
-        thenblk.next.append(finalblk)
-        finalblk.prev.append(thenblk)
+        thenblk.link(finalblk, il.UNCONDITIONAL)
         thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         if len(node.children) == 3:
             #blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ] ## This line must go here. subtle bug
             elseblk = self.Stmts(node.children[2], elseblk)
-            elseblk.next.append(finalblk)
-            finalblk.prev.append(elseblk)
+            elseblk.link(finalblk, il.UNCONDITIONAL)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         return finalblk
@@ -329,12 +324,8 @@ class generate(object):
                 il.Inst(inst, Ar, Br, thenblk),
                 il.Inst(il.J, elseblk, 0, 0),
             ]
-            if thenblk not in blk.next:
-                blk.next.append(thenblk)
-                thenblk.prev.append(blk)
-            if elseblk not in blk.next:
-                blk.next.append(elseblk)
-                elseblk.prev.append(blk)
+            blk.link(thenblk, il.TRUE)
+            blk.link(elseblk, il.FALSE)
         elif c.label in ('Or', 'And'):
             ## the blk become the A expressions block
             ## we allocate a new blk for B, the previous block is blk
