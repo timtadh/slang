@@ -315,8 +315,9 @@ class generate(object):
         return self.BooleanOp(c, blk, thenblk, elseblk)
 
     def BooleanOp(self, c, blk, thenblk, elseblk, negate=False):
-
-        if c.label in ['==', '!=', '<', '<=', '>', '>=']:
+        if c.label == 'BooleanExpr':
+            return self.BooleanOp(c.children[0], blk, thenblk, elseblk, negate)
+        elif c.label in ['==', '!=', '<', '<=', '>', '>=']:
             Ar = il.Symbol('r'+self.tmp(), il.Int())
             Br = il.Symbol('r'+self.tmp(), il.Int())
             blk = self.Expr(c.children[0], Ar, blk)
@@ -333,14 +334,18 @@ class generate(object):
             b = c.children[1]
             ablk = blk
             bblk = self.block(blk)
-            bresult = self.BooleanOp(b, bblk, thenblk, elseblk)
-            if c.label == 'Or':
-                aresult = self.BooleanOp(a, ablk, thenblk, bresult)
-            elif c.label == 'And':
-                aresult = self.BooleanOp(a, ablk, bresult, elseblk)
+            op = c.label
+            bresult = self.BooleanOp(b, bblk, thenblk, elseblk, negate)
+            if negate:
+                if op == 'Or': op = 'And'
+                elif op == 'And': op = 'Or'
+            if op == 'Or':
+                aresult = self.BooleanOp(a, ablk, thenblk, bresult, negate)
+            elif op == 'And':
+                aresult = self.BooleanOp(a, ablk, bresult, elseblk, negate)
             blk = aresult
         elif c.label == 'Not':
-            blk = self.BooleanOp(c.children[0], blk, thenblk, elseblk, True)
+            blk = self.BooleanOp(c.children[0], blk, thenblk, elseblk, not negate)
         else:
             raise Exception, 'Unexpected Node %s' % c.label
 

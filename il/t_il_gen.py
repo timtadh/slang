@@ -11,6 +11,10 @@ from table import SymbolTable
 import il_gen, il
 import nose
 
+def blocks(s):
+    objs, blocks, funcs = il_gen.generate(Parser().parse(s, lexer=Lexer()))
+    return blocks
+
 def run(s):
     out = cStringIO.StringIO()
     il.run(*il_gen.generate(Parser().parse(s, lexer=Lexer())), stdout=out)
@@ -204,6 +208,186 @@ def t_if_or():
         ''').rstrip('\n')
     assert str(2) == run('''
         if (1 > 2 || 3 > 4) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+
+def t_if_and_nest_or():
+    #raise nose.SkipTest
+    assert str(1) == run('''
+        if (1 < 2 && (3 < 4 || 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2 && (3 > 4 || 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2 && (3 < 4 || 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 < 2 && (3 > 4 || 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 && (3 < 4 || 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 && (3 > 4 || 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 && (3 < 4 || 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 && (3 > 4 || 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+
+def t_if_or_nest_and():
+    #raise nose.SkipTest
+    assert str(1) == run('''
+        if (1 < 2 || (3 < 4 && 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2 || (3 > 4 && 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2 || (3 < 4 && 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 < 2 || (3 > 4 && 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (1 > 2 || (3 < 4 && 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 || (3 > 4 && 5 < 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 || (3 < 4 && 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (1 > 2 || (3 > 4 && 5 > 6)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+
+def t_if_not_and():
+    #raise nose.SkipTest
+    assert str(1) == run('''
+        if (!(1 > 2 && 3 > 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (!(1 < 2 && 3 > 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(1) == run('''
+        if (!(1 > 2 && 3 < 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (!(1 < 2 && 3 < 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+
+def t_if_not_or():
+    #raise nose.SkipTest
+    assert str(1) == run('''
+        if (!(1 > 2 || 3 > 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (!(1 < 2 || 3 > 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (!(1 > 2 || 3 < 4)) {
+            print 1
+        } else {
+            print 2
+        }
+        ''').rstrip('\n')
+    assert str(2) == run('''
+        if (!(1 < 2 || 3 < 4)) {
             print 1
         } else {
             print 2
