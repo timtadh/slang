@@ -14,6 +14,7 @@ class generate(object):
     def __new__(cls, root, debug=False):
         self = super(generate, cls).__new__(cls)
         self.__init__()
+        self.debug = debug
 
         self.push_func('main')
         self.cfunc.scope_depth = 1
@@ -115,7 +116,7 @@ class generate(object):
     def If(self, node, blk):
         assert node.label == 'If'
 
-        thenblk = self.block(blk)
+        thenblk = self.block()
         finalblk = self.block()
         elseblk = None
 
@@ -136,10 +137,6 @@ class generate(object):
             elseblk.next.append(finalblk)
             finalblk.prev.append(elseblk)
             elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
-        else:
-            #blk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
-            blk.next.append(finalblk)
-            finalblk.prev.append(blk)
 
         return finalblk
 
@@ -315,6 +312,11 @@ class generate(object):
         return self.BooleanOp(c, blk, thenblk, elseblk)
 
     def BooleanOp(self, c, blk, thenblk, elseblk, negate=False):
+        if self.debug:
+            print '+'*80
+            print blk
+            print 'next:', blk.next
+            print 'prev:', blk.prev
         if c.label == 'BooleanExpr':
             return self.BooleanOp(c.children[0], blk, thenblk, elseblk, negate)
         elif c.label in ['==', '!=', '<', '<=', '>', '>=']:
@@ -327,13 +329,19 @@ class generate(object):
                 il.Inst(inst, Ar, Br, thenblk),
                 il.Inst(il.J, elseblk, 0, 0),
             ]
+            if thenblk not in blk.next:
+                blk.next.append(thenblk)
+                thenblk.prev.append(blk)
+            if elseblk not in blk.next:
+                blk.next.append(elseblk)
+                elseblk.prev.append(blk)
         elif c.label in ('Or', 'And'):
             ## the blk become the A expressions block
             ## we allocate a new blk for B, the previous block is blk
             a = c.children[0]
             b = c.children[1]
             ablk = blk
-            bblk = self.block(blk)
+            bblk = self.block()
             op = c.label
             bresult = self.BooleanOp(b, bblk, thenblk, elseblk, negate)
             if negate:

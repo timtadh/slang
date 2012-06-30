@@ -109,6 +109,14 @@ class Block(object):
         self.all_pred = set()
         self.link_stack = list()
 
+    def __eq__(self, other):
+        if isinstance(other, Block):
+            return self.name == other.name
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def push_links(self):
         self.link_stack.append({'next':self.next, 'prev':self.prev})
         self.next = list(self.next)
