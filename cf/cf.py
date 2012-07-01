@@ -245,16 +245,16 @@ class analyze(object):
                 r = cblk.next[0]
                 q = cblk.next[1]
 
-            r_index = blks.index(r)
-            q_index = blks.index(q)
             print cblk, r, q
+            r_next = getnext(r)
+            q_next = getnext(q)
 
-            if r.next[0] == q: # this is an IF-THEN
+            if len(r_next) == 1 and r_next[0] == q: # this is an IF-THEN
                 return True, cfs.IF_THEN, [cblk, r]
-            elif q.next[0] == r: # this is an IF-THEN
+            elif len(q_next) == 1 and q_next[0] == r: # this is an IF-THEN
                 return True, cfs.IF_THEN, [cblk, q]
             elif len(r.prev) == 1 and len(q.prev) == 1:
-                if getnext(r) == getnext(q) and len(getnext(r)[0].prev) == 2: # this is an IF-THEN-ELSE
+                if r_next == q_next and len(r_next[0].prev) == 2: # this is an IF-THEN-ELSE
                     return True, cfs.IF_THEN_ELSE, [cblk, r, q]
                 else:
                     if self.debug:

@@ -373,3 +373,206 @@ def t_nest_ite_org():
     assert tree.children[0].children[2].children[0].children[1].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].children[1].children[0].region_type == cfs.IF_THEN
 
+
+def t_iate():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (1 < x && x < 4) {
+                c = 1
+            } else {
+                c = 2
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+
+
+def t_iate_ite():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (1 < x && x < 4) {
+                c = 1
+            } else {
+                c = 2
+            }
+            if (c == x) {
+                c = 3
+            } else {
+                c = 4
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[1].region_type == cfs.CHAIN
+    assert tree.children[1].children[0].region_type == cfs.IF_THEN_ELSE
+
+
+def t_iate_nest_ite():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (1 < x && x < 4) {
+                c = 1
+            } else {
+                if (c == x) {
+                    c = 3
+                } else {
+                    c = 4
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
+
+
+
+def t_iate_nest_2xite():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c = 7
+            if (1 < x && x < 4) {
+                if (c == x) {
+                    c = 1
+                } else {
+                    c = 2
+                }
+            } else {
+                if (c == x) {
+                    c = 3
+                } else {
+                    c = 4
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[3].region_type == cfs.CHAIN
+    assert tree.children[0].children[3].children[0].region_type == cfs.IF_THEN_ELSE
+
+
+
+def t_iote():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (1 < x || x < 4) {
+                c = 1
+            } else {
+                c = 2
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+
+
+def t_iote_ite():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (1 < x || x < 4) {
+                c = 1
+            } else {
+                c = 2
+            }
+            if (c == x) {
+                c = 3
+            } else {
+                c = 4
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[1].region_type == cfs.CHAIN
+    assert tree.children[1].children[0].region_type == cfs.IF_THEN_ELSE
+
+
+def t_iote_nest_ite():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (1 < x || x < 4) {
+                c = 1
+            } else {
+                if (c == x) {
+                    c = 3
+                } else {
+                    c = 4
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
+
+
+def t_iote_nest_2xite():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c = 7
+            if (1 < x || x < 4) {
+                if (c == x) {
+                    c = 1
+                } else {
+                    c = 2
+                }
+            } else {
+                if (c == x) {
+                    c = 3
+                } else {
+                    c = 4
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[3].region_type == cfs.CHAIN
+    assert tree.children[0].children[3].children[0].region_type == cfs.IF_THEN_ELSE
