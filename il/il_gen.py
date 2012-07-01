@@ -9,6 +9,19 @@ from frontend.sl_parser import Parser, Lexer
 from table import SymbolTable
 import il
 
+def print_blks(blks):
+    print 'Basic Blocks:'
+    blks = sorted(blks, key=lambda x: int(x.name[1:]))
+
+    for blk in blks:
+        print ' '*2, "block:", blk.name
+        for i, inst in enumerate(blk.insts):
+            print ' '*4, '(%i)' % i, inst
+        print ' '*4, 'next ->', blk.next
+        print ' '*4, 'prev ->', blk.prev
+        print
+    print
+
 class generate(object):
 
     def __new__(cls, root, debug=False):
@@ -27,16 +40,7 @@ class generate(object):
         if debug:
             print 'Basic Blocks:'
 
-            for b in xrange(1, self.bcount+1):
-                name = 'b%i' % b
-                blk = self.blocks[name]
-                print ' '*2, "block:", name
-                for i, inst in enumerate(blk.insts):
-                    print ' '*4, '(%i)' % i, inst
-                print ' '*4, 'next ->', blk.next
-                print ' '*4, 'prev ->', blk.prev
-                print
-            print
+            print_blks(self.blocks.values())
 
             print "Functions:"
 

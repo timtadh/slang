@@ -6,6 +6,8 @@
 
 import sys, collections
 
+import cf
+
 opsr = (
     'MV', 'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
     'EXIT', 'RTRN', 'CONT', 'IMM', 'PRNT', 'NOP', 'J',
@@ -116,11 +118,15 @@ class Branch(object):
         if isinstance(other, Branch):
             return self.type == other.type and self.target == other.target
         elif isinstance(other, Block):
-            return self.target == other.target
+            return self.target == other
+        elif isinstance(other, cf.struct.Node):
+            return self.target == other
         return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __repr__(self): return str(self)
 
     def __str__(self):
         return '<Branch %s %s>' % (branch_typesr[self.type], str(self.target))

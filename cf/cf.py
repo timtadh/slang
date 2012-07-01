@@ -11,6 +11,13 @@ import sys
 import textwrap
 
 import struct as cfs
+import il
+
+def getnext(n):
+    if isinstance(n, il.Block):
+        return [b.target for b in n.next]
+    else:
+        return n.next
 
 class analyze(object):
     '''Produce a structural control flow tree for each function. Takes the output of il_gen as
@@ -24,6 +31,8 @@ class analyze(object):
         return self
 
     def __new__(cls, table, blocks, functions, stdout=None, debug=False):
+        #sys.stderr.write('WARNING : Cf broken doing nothing\n')
+        #return None
         self = super(analyze, cls).__new__(cls)
         self.debug = debug
         self.__init__()
@@ -57,8 +66,8 @@ class analyze(object):
         def visit(blk):
             visited.add(blk.name)
             for b in blk.next:
-                if b.name not in visited:
-                    visit(b)
+                if b.target.name not in visited:
+                    visit(b.target)
             order.append(blk)
 
         visit(f.entry)
@@ -132,7 +141,7 @@ class analyze(object):
                 if b is node: postctr = i; break
 
             for n in nset:
-                for v in n.next:
+                for v in getnext(n):
                     if v not in nset:
                         if v not in node.next: node.next.append(v)
                         v.prev.remove(n)
@@ -140,8 +149,13 @@ class analyze(object):
                 for u in n.prev:
                     if u not in nset:
                         if u not in node.prev: node.prev.append(u)
-                        u.next.remove(n)
-                        if node not in u.next: u.next.append(node)
+                        print n, u.next
+                        branch = u.next.pop(u.next.index(n))
+                        if node not in u.next:
+                            if isinstance(branch, il.Branch):
+                                u.next.append(il.Branch(branch.type, node))
+                            else:
+                                u.next.append(node)
             return blks, postctr
 
         node = cfs.Node(rtype, nset)
@@ -151,6 +165,28 @@ class analyze(object):
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
         ''' Detects acyclic control flow regions suchs as: chains and if-statements.'''
+
+
+
+        def find_proper(n):
+            visited = set()
+            completed = set()
+            depth = dict()
+            def visit(c, parents):
+                visited.add(c.name)
+                for kid in getnext(c):
+                    if kid.name in visited and kid.name not in completed:
+                        raise RuntimeError, 'Cyclic structure'
+                    d = depth.get(kid.name, 0)
+                    if parents + 1 > d: depth[kid.name] = parents + 1
+                    if kid.name not in visited:
+                        visit(kid, parents + 1)
+                completed.add(c.name)
+            depth.update({n.name:0})
+            visit(n, 0)
+            final_name = max(depth, key=lambda x: depth[x])
+            visited.remove(final_name)
+            return list(blk for blk in blks[::-1] if blk.name in visited)
         nset = set()
 
         ## BEGIN CHAIN CHECK:
@@ -162,7 +198,7 @@ class analyze(object):
         ## look for a chain starting with the current block
         while p and s:
             nset.add(n)
-            n = n.next[0]
+            n = getnext(n)[0]
             p = (len(n.prev) == 1)
             s = (len(n.next) == 1)
 
@@ -193,16 +229,45 @@ class analyze(object):
             if self.debug:
                 print ' '*12, 'Found ITE'
                 print ' '*12, cblk, cblk.next
-            r = cblk.next[0]
-            q = cblk.next[1]
 
-            if r.next == q.next and len(r.next[0].prev) == 2: # this is an IF-THEN-ELSE
-                return True, cfs.IF_THEN_ELSE, [cblk, r, q]
-            elif r.next[0] == q: # this is an IF-THEN
+            q = r = None
+            if isinstance(cblk, il.Block):
+                for branch in cblk.next:
+                    if branch.type == il.TRUE:
+                        assert r is None
+                        r = branch.target
+                    elif branch.type == il.FALSE:
+                        assert q is None
+                        q = branch.target
+                    else:
+                        raise RuntimeError, "Unexpected branch type"
+            else:
+                r = cblk.next[0]
+                q = cblk.next[1]
+
+            r_index = blks.index(r)
+            q_index = blks.index(q)
+            print cblk, r, q
+
+            if r.next[0] == q: # this is an IF-THEN
                 return True, cfs.IF_THEN, [cblk, r]
             elif q.next[0] == r: # this is an IF-THEN
                 return True, cfs.IF_THEN, [cblk, q]
+            elif len(r.prev) == 1 and len(q.prev) == 1:
+                if getnext(r) == getnext(q) and len(getnext(r)[0].prev) == 2: # this is an IF-THEN-ELSE
+                    return True, cfs.IF_THEN_ELSE, [cblk, r, q]
+                else:
+                    if self.debug:
+                        print ' '*12, 'wat'
+                        print ' '*12, r, r.next
+                        print ' '*12, q, q.next
+                    raise Exception
             else:
+                ## could be an AND or OR or ERROR
+                ##kids = sorted([(r, r_index), (q, q_index)], key=lambda x: x[1])
+                print blks
+                if len(cblk.prev) == 0:
+                    return True, cfs.PROPER, find_proper(cblk)
                 if self.debug:
                     print ' '*12, 'Except Not'
                     print ' '*12, r, r.next

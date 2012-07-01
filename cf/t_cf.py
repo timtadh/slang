@@ -19,9 +19,11 @@ img_dir = os.path.abspath('./imgs')
 def analyze(s):
     name = traceback.extract_stack()[-2][2]
     ast = Parser().parse(s, lexer=Lexer())
-    table, blocks, functions = il_gen.generate(ast, debug=False)
-    cf.analyze(table, blocks, functions)
-    dot(name, ast.dotty(), str(ast))
+    table, blocks, functions = il_gen.generate(ast, debug=True)
+    dot('ast.%s'%name, ast.dotty(), str(ast))
+    dot('blks.%s'%name, functions['f2'].entry.dotty())
+    cf.analyze(table, blocks, functions, debug=True)
+    dot('cf.%s'%name, functions['f2'].tree.dotty())
     return functions
 
 def mock():
@@ -36,7 +38,7 @@ def dot(name, dotty, AST=None):
         f = open(ast, 'w')
         f.write(AST)
         f.close()
-     
+
     dot = os.path.join(img_dir, name) + '.dot'
     plain = os.path.join(img_dir, name) + '.plain'
     png = os.path.join(img_dir, name) + '.png'
@@ -74,15 +76,10 @@ def chain(i):
     b4 = il.Block('b%i' % i())
     b5 = il.Block('b%i' % i())
 
-    b1.next += [ b2 ]
-    b2.next += [ b3 ]
-    b3.next += [ b4 ]
-    b4.next += [ b5 ]
-
-    b2.prev += [ b1 ]
-    b3.prev += [ b2 ]
-    b4.prev += [ b3 ]
-    b5.prev += [ b4 ]
+    b1.link(b2, il.UNCONDITIONAL)
+    b2.link(b3, il.UNCONDITIONAL)
+    b3.link(b4, il.UNCONDITIONAL)
+    b4.link(b5, il.UNCONDITIONAL)
 
     return [b1, b2, b3, b4, b5], b3, 4, 2
 
@@ -91,11 +88,9 @@ def if_then(i):
     b2 = il.Block('b%i' % i())
     b3 = il.Block('b%i' % i())
 
-    b1.next += [ b2, b3 ]
-    b2.next += [ b3 ]
-
-    b2.prev += [ b1 ]
-    b3.prev += [ b2, b3 ]
+    b1.link(b2, il.TRUE)
+    b1.link(b3, il.FALSE)
+    b2.link(b3, il.UNCONDITIONAL)
 
     return [b1, b2, b3], b1, 2, 0
 
@@ -105,15 +100,28 @@ def if_then_else(i):
     b3 = il.Block('b%i' % i())
     b4 = il.Block('b%i' % i())
 
-    b1.next += [ b2, b3 ]
-    b2.next += [ b4 ]
-    b3.next += [ b4 ]
-
-    b2.prev += [ b1 ]
-    b3.prev += [ b1 ]
-    b4.prev += [ b2, b3 ]
+    b1.link(b2, il.TRUE)
+    b1.link(b3, il.FALSE)
+    b2.link(b4, il.UNCONDITIONAL)
+    b3.link(b4, il.UNCONDITIONAL)
 
     return [b1, b2, b3, b4], b1, 2, 0
+
+def if_and_then_else(i):
+    b1 = il.Block('b%i' % i())
+    b2 = il.Block('b%i' % i())
+    b3 = il.Block('b%i' % i())
+    b4 = il.Block('b%i' % i())
+    b5 = il.Block('b%i' % i())
+
+    b1.link(b2, il.TRUE)
+    b1.link(b3, il.FALSE)
+    b2.link(b4, il.TRUE)
+    b2.link(b3, il.FALSE)
+    b3.link(b5, il.UNCONDITIONAL)
+    b4.link(b5, il.UNCONDITIONAL)
+
+    return [b1, b2, b3, b4, b5], b1, 4, 0
 
 def join(*grps):
     blks = list()
@@ -131,8 +139,7 @@ def join(*grps):
         w,x,y,z = f
         e = blks[-1]
         s = w[0]
-        e.next += [ s ]
-        s.prev += [ e ]
+        e.link(s, il.UNCONDITIONAL)
         blks += w
         postmax += (y+1)
 
@@ -216,6 +223,17 @@ def t_acyclic_ifthenelse_chain():
     assert rtype == cfs.IF_THEN_ELSE
     assert set(nset) == set(_if_then_else[0][:3])
 
+def t_acyclic_ifandthenelse():
+    #raise nose.SkipTest
+    i = I()
+    blks, cblk, postmax, postctr = if_and_then_else(i)
+    ok, rtype, nset = mock().acyclic(blks, cblk)
+    print cblk, cblk.next
+    assert ok == True
+    assert rtype == cfs.PROPER
+    print nset, blks
+    assert set(nset) == set(blks[:4])
+
 def t_none():
     #raise nose.SkipTest
     tree = analyze('''
@@ -240,14 +258,12 @@ def t_it():
         ''')['f2']
     tree = f2.tree
     entry = f2.entry
-    dot('cf.it', tree.dotty())
-    dot('cf.it_cfg', entry.dotty())
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.IF_THEN
 
 def t_ite():
     #raise nose.SkipTest
-    tree = analyze('''
+    f = analyze('''
         var f = func(x) {
             var c
             if (x > 0) {
@@ -258,15 +274,15 @@ def t_ite():
             return c
         }
         print f(10)
-        ''')['f2'].tree
-    dot('cf.ite', tree.dotty())
+        ''')['f2']
+    tree = f.tree
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.IF_THEN_ELSE
 
 
 def t_ite_it():
     #raise nose.SkipTest
-    tree = analyze('''
+    f = analyze('''
         var f = func(x) {
             var c
             if (x > 0) {
@@ -280,8 +296,8 @@ def t_ite_it():
             return c
         }
         print f(10)
-        ''')['f2'].tree
-    dot('cf.ite_it', tree.dotty())
+        ''')['f2']
+    tree = f.tree
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[1].region_type == cfs.CHAIN
@@ -313,8 +329,6 @@ def t_nest_ite():
         print f(10)
         ''')['f2']
     tree = f.tree
-    dot('cf.nest_ite', tree.dotty())
-    dot('blks.nest_ite', f.entry.dotty())
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[1].region_type == cfs.CHAIN
@@ -350,14 +364,12 @@ def t_nest_ite_org():
         print f(10)
         ''')['f2']
     tree = f.tree
-    dot('cf.nest_ite', tree.dotty())
-    dot('blks.nest_ite', f.entry.dotty())
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[1].region_type == cfs.CHAIN
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[1].children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
-    assert tree.children[0].children[2].children[0].children[2].region_type == cfs.CHAIN
-    assert tree.children[0].children[2].children[0].children[2].children[0].region_type == cfs.IF_THEN
+    assert tree.children[0].children[2].children[0].children[1].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[0].children[1].children[0].region_type == cfs.IF_THEN
 
