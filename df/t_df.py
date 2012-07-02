@@ -352,3 +352,24 @@ def t_livevar_ifthen_engine_attach():
 
     assert ids(f2.livetypes('b4', 'inn')) == set([2])
     assert ids(f2.livetypes('b4', 'out')) == set([])
+
+def t_livevar_ifandorthen_engine_attach():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var f = func(x) {
+            var c
+            if ((x > 5 || x < 3) && (1 < x || x < 4)) {
+                c = 1
+            } else {
+                c = 2
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.analyze(reachdef.ReachingDefintions, functions, True)
+    f2 = functions['f2']
+
+    assert False

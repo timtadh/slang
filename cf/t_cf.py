@@ -607,3 +607,40 @@ def t_inote_nest_2xite():
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[3].region_type == cfs.CHAIN
     assert tree.children[0].children[3].children[0].region_type == cfs.IF_THEN_ELSE
+
+def t_iaote():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if (x < 3 && (1 < x || x < 4)) {
+                c = 1
+            } else {
+                c = 2
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER
+
+
+def t_iaote_complex():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c
+            if ((x > 5 || x < 3) && (1 < x || x < 4)) {
+                c = 1
+            } else {
+                c = 2
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.PROPER

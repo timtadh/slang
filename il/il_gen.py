@@ -38,8 +38,6 @@ class generate(object):
         main.exit = blk
 
         if debug:
-            print 'Basic Blocks:'
-
             print_blks(self.blocks.values())
 
             print "Functions:"
@@ -311,11 +309,6 @@ class generate(object):
         return self.BooleanOp(c, blk, thenblk, elseblk)
 
     def BooleanOp(self, c, blk, thenblk, elseblk, negate=False):
-        if self.debug:
-            print '+'*80
-            print blk
-            print 'next:', blk.next
-            print 'prev:', blk.prev
         if c.label == 'BooleanExpr':
             return self.BooleanOp(c.children[0], blk, thenblk, elseblk, negate)
         elif c.label in ['==', '!=', '<', '<=', '>', '>=']:

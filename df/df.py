@@ -43,7 +43,7 @@
 # Other Thoughts
 #
 # 1. The Kleene Star and other operators also are dependent on the
-#    underlying latice
+#    underlying lattice
 #
 #------------------------------------------------------------------------#
 
@@ -153,6 +153,40 @@ def forward_ff(A, save, node, *kids):
         save(inn, out, node)
         return out
 
+    def proper(x):
+        acc = x
+        blks = dict()
+        blks_ff = dict()
+        blks_paths = dict()
+        ends = set()
+        for ff, node in kids:
+            blks[node.name] = node
+            blks_ff[node.name] = ff
+            blks_paths[node.name] = dict()
+            for parent in node.prev:
+                blks_paths[node.name][parent.name] = list()
+            has_kids = False
+            for branch in node.next:
+                if branch.target.name not in blks: continue
+                has_kids = True
+                break
+            if has_kids:
+                ends.add(node.name)
+        def visit(c, paths):
+            parent = paths[-1]
+            blks_paths[c.name][parent].append(paths)
+            paths = paths + [c.name]
+            for branch in c.next:
+                if branch.target.name not in blks: continue
+                visit(branch.target, paths)
+        blks_paths[kids[0][1].name]['-'] = list()
+        visit(kids[0][1], ['-'])
+        print
+        for nodename, paths in blks_paths.iteritems():
+            print nodename, paths
+        raise Exception
+        return acc
+
     if isinstance(node, il.Block):
         return single_block
     elif node.region_type == cf.cfs.CHAIN:
@@ -161,6 +195,8 @@ def forward_ff(A, save, node, *kids):
         return if_then
     elif node.region_type == cf.cfs.IF_THEN_ELSE:
         return if_then_else
+    elif node.region_type == cf.cfs.PROPER:
+        return proper
     else:
         raise Exception, "unexpect region type"
 
