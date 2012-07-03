@@ -40,14 +40,20 @@ class SlangConfig(conf.BaseConfig):
             )
             print
             while not self._d['dynlinker']:
-                dlink = raw_input('Where is your dynamic linker located? ')
+                dlink = raw_input(
+                  'We need a dynamic linker, a possible location for the '
+                  'linker is /lib/ld-linux.so.2\n'
+                  'Where is your dynamic linker located? ')
                 if os.path.exists(dlink):
                     self._d['dynlinker'] = dlink
                 else:
                     print ' '*4, 'No it is not. I checked, there is nothing there.'
             if not self._d['dynlinker']: print
             while not self._d['libc32']:
-                libc = raw_input('Where is your *32 bit* libc located? ')
+                libc = raw_input(
+                  'We need a 32 bit libc. A possible location for that is '
+                  '/lib32/libc.so.6\n'
+                  'Where is your *32 bit* libc located? ')
                 if os.path.exists(libc):
                     self._d['libc32'] = libc
                 else:
