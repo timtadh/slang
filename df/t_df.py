@@ -427,4 +427,19 @@ def t_livevar_ifandorthen_engine_attach():
     df.analyze(livevar.LiveVariable, functions, True, True)
     f2 = functions['f2']
 
-    assert False
+    def ids(pairs): return set(id for id in pairs.iterkeys())
+
+    assert ids(f2.live('b2')['inn']) == set([])
+    assert ids(f2.live('b2')['out']) == set([1])
+    assert ids(f2.live('b3')['inn']) == set([])
+    assert ids(f2.live('b3')['out']) == set([11])
+    assert ids(f2.live('b4')['inn']) == set([11])
+    assert ids(f2.live('b4')['out']) == set([])
+    assert ids(f2.live('b5')['inn']) == set([])
+    assert ids(f2.live('b5')['out']) == set([11])
+    assert ids(f2.live('b6')['inn']) == set([1])
+    assert ids(f2.live('b6')['out']) == set([1])
+    assert ids(f2.live('b7')['inn']) == set([1])
+    assert ids(f2.live('b7')['out']) == set([])
+    assert ids(f2.live('b8')['inn']) == set([1])
+    assert ids(f2.live('b8')['out']) == set([1])

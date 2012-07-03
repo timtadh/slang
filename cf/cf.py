@@ -267,7 +267,7 @@ class analyze(object):
                 ##kids = sorted([(r, r_index), (q, q_index)], key=lambda x: x[1])
                 print blks
                 if len(cblk.prev) == 0:
-                    return True, cfs.PROPER, find_proper(cblk)
+                    return True, cfs.GENERAL_ACYCLIC, find_proper(cblk)
                 if self.debug:
                     print ' '*12, 'Except Not'
                     print ' '*12, r, r.next

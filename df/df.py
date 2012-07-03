@@ -203,7 +203,7 @@ def forward_ff(A, save, node, *kids):
         return if_then
     elif node.region_type == cf.cfs.IF_THEN_ELSE:
         return if_then_else
-    elif node.region_type == cf.cfs.PROPER:
+    elif node.region_type == cf.cfs.GENERAL_ACYCLIC:
         return proper
     else:
         raise Exception, "unexpect region type"
@@ -282,7 +282,7 @@ def backward_ff(A, save, node, *kids):
         return if_then
     elif node.region_type == cf.cfs.IF_THEN_ELSE:
         return if_then_else
-    elif node.region_type == cf.cfs.PROPER:
+    elif node.region_type == cf.cfs.GENERAL_ACYCLIC:
         return proper
     else:
         raise Exception, "unexpect region type"

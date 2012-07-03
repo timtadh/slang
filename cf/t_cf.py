@@ -230,7 +230,7 @@ def t_acyclic_ifandthenelse():
     ok, rtype, nset = mock().acyclic(blks, cblk)
     print cblk, cblk.next
     assert ok == True
-    assert rtype == cfs.PROPER
+    assert rtype == cfs.GENERAL_ACYCLIC
     print nset, blks
     assert set(nset) == set(blks[:4])
 
@@ -390,7 +390,7 @@ def t_iate():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
 
 
 def t_iate_ite():
@@ -414,7 +414,7 @@ def t_iate_ite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[1].region_type == cfs.CHAIN
     assert tree.children[1].children[0].region_type == cfs.IF_THEN_ELSE
 
@@ -439,7 +439,7 @@ def t_iate_nest_ite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
 
@@ -469,7 +469,7 @@ def t_iate_nest_2xite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[3].region_type == cfs.CHAIN
@@ -493,7 +493,7 @@ def t_iote():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
 
 
 def t_iote_ite():
@@ -517,7 +517,7 @@ def t_iote_ite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[1].region_type == cfs.CHAIN
     assert tree.children[1].children[0].region_type == cfs.IF_THEN_ELSE
 
@@ -542,7 +542,7 @@ def t_iote_nest_ite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
 
@@ -571,7 +571,7 @@ def t_iote_nest_2xite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[3].region_type == cfs.CHAIN
@@ -602,7 +602,7 @@ def t_inote_nest_2xite():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[0].region_type == cfs.IF_THEN_ELSE
     assert tree.children[0].children[3].region_type == cfs.CHAIN
@@ -624,7 +624,7 @@ def t_iaote():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
 
 
 def t_iaote_complex():
@@ -643,4 +643,4 @@ def t_iaote_complex():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[0].region_type == cfs.PROPER
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
