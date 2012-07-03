@@ -353,7 +353,7 @@ def t_livevar_ifthen_engine_attach():
     assert ids(f2.livetypes('b4', 'inn')) == set([2])
     assert ids(f2.livetypes('b4', 'out')) == set([])
 
-def t_livevar_ifandorthen_engine_attach():
+def t_reachdef_ifandorthen_engine():
     #raise nose.SkipTest
 
     blocks, functions = cf_analyze('''
@@ -369,7 +369,41 @@ def t_livevar_ifandorthen_engine_attach():
         print f(10)
         ''')
 
+    name = reachdef.ReachingDefintions.name
     df.analyze(reachdef.ReachingDefintions, functions, True)
     f2 = functions['f2']
 
-    assert False
+    b1_inn = functions['main'].df[name].inn['b1']
+    b1_out = functions['main'].df[name].out['b1']
+    b2_inn = functions['f2'].df[name].inn['b2']
+    b2_out = functions['f2'].df[name].out['b2']
+    b3_inn = functions['f2'].df[name].inn['b3']
+    b3_out = functions['f2'].df[name].out['b3']
+    b4_inn = functions['f2'].df[name].inn['b4']
+    b4_out = functions['f2'].df[name].out['b4']
+    b5_inn = functions['f2'].df[name].inn['b5']
+    b5_out = functions['f2'].df[name].out['b5']
+    b6_inn = functions['f2'].df[name].inn['b6']
+    b6_out = functions['f2'].df[name].out['b6']
+    b7_inn = functions['f2'].df[name].inn['b7']
+    b7_out = functions['f2'].df[name].out['b7']
+    b8_inn = functions['f2'].df[name].inn['b8']
+    b8_out = functions['f2'].df[name].out['b8']
+
+    assert b1_inn == set()
+    assert b1_out == set([('b1', 0), ('b1', 3)])
+
+    assert b2_inn == set([])
+    assert b2_out == set([('b2', 1), ('b2', 0)])
+    assert b3_inn == set([('b6', 0), ('b8', 0), ('b7', 0), ('b2', 1), ('b2', 0)])
+    assert b3_out == set([('b6', 0), ('b3', 0), ('b8', 0), ('b7', 0), ('b2', 1), ('b2', 0)])
+    assert b4_inn == set([('b6', 0), ('b3', 0), ('b8', 0), ('b7', 0), ('b5', 0), ('b2', 1), ('b2', 0)])
+    assert b4_out == set([('b6', 0), ('b5', 0), ('b3', 0), ('b8', 0), ('b7', 0), ('b2', 1), ('b2', 0)])
+    assert b5_inn == set([('b6', 0), ('b8', 0), ('b7', 0), ('b2', 1), ('b2', 0)])
+    assert b5_out == set([('b6', 0), ('b5', 0), ('b8', 0), ('b7', 0), ('b2', 1), ('b2', 0)])
+    assert b6_inn == set([('b2', 1), ('b2', 0), ('b8', 0)])
+    assert b6_out == set([('b6', 0), ('b2', 1), ('b2', 0), ('b8', 0)])
+    assert b7_inn == set([('b6', 0), ('b2', 1), ('b2', 0), ('b8', 0)])
+    assert b7_out == set([('b7', 0), ('b6', 0), ('b2', 1), ('b2', 0), ('b8', 0)])
+    assert b8_inn == set([('b2', 1), ('b2', 0)])
+    assert b8_out == set([('b2', 1), ('b2', 0), ('b8', 0)])
