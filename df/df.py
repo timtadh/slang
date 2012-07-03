@@ -157,6 +157,8 @@ def forward_ff(A, save, node, *kids):
         blks = dict()
         blks_ff = dict()
         ends = set()
+        def prev(n):
+            return [c for c in n.prev if c.name in blks]
         for ff, node in kids:
             blks[node.name] = node
             blks_ff[node.name] = ff
@@ -171,15 +173,16 @@ def forward_ff(A, save, node, *kids):
         def compute(c):
             if c.name in computed: return computed[c.name]
             ff = blks_ff[c.name]
-            if len(c.prev) == 0:
+            c_prev = prev(c)
+            if len(c_prev) == 0:
                 result = ff(x)
                 save(x, result, c)
-            elif len(c.prev) == 1:
-                parent = compute(c.prev[0])
+            elif len(c_prev) == 1:
+                parent = compute(c_prev[0])
                 result = ff(parent)
                 save(parent, result, c)
             else:
-                parents = reduce(A.join, (compute(parent) for parent in c.prev))
+                parents = reduce(A.join, (compute(parent) for parent in c_prev))
                 result = ff(parents)
                 save(parents, result, c)
             computed[c.name] = result
@@ -243,6 +246,9 @@ def backward_ff(A, save, node, *kids):
         save(inn, out, node)
         return inn
 
+    def proper(out_proper):
+        pass
+
     if isinstance(node, il.Block):
         return single_block
     elif node.region_type == cf.cfs.CHAIN:
@@ -251,6 +257,8 @@ def backward_ff(A, save, node, *kids):
         return if_then
     elif node.region_type == cf.cfs.IF_THEN_ELSE:
         return if_then_else
+    elif node.region_type == cf.cfs.PROPER:
+        return proper
     else:
         raise Exception, "unexpect region type"
 
