@@ -407,3 +407,24 @@ def t_reachdef_ifandorthen_engine():
     assert b7_out == set([('b7', 0), ('b6', 0), ('b2', 1), ('b2', 0), ('b8', 0)])
     assert b8_inn == set([('b2', 1), ('b2', 0)])
     assert b8_out == set([('b2', 1), ('b2', 0), ('b8', 0)])
+
+def t_livevar_ifandorthen_engine_attach():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var f = func(x) {
+            var c
+            if ((x > 5 || x < 3) && (1 < x || x < 4)) {
+                c = 1
+            } else {
+                c = 2
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.analyze(livevar.LiveVariable, functions, True, True)
+    f2 = functions['f2']
+
+    assert False

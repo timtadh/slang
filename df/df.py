@@ -247,7 +247,32 @@ def backward_ff(A, save, node, *kids):
         return inn
 
     def proper(out_proper):
-        pass
+        blks = dict()
+        blks_ff = dict()
+        def next(n):
+            return [c.target for c in n.next if c.target.name in blks]
+        for ff, node in kids:
+            blks[node.name] = node
+            blks_ff[node.name] = ff
+        computed = dict()
+        def compute(c):
+            if c.name in computed: return computed[c.name]
+            ff = blks_ff[c.name]
+            c_next = next(c)
+            if len(c_next) == 0:
+                in_c = ff(out_proper)
+                save(in_c, out_proper, c)
+            elif len(c_next) == 1:
+                out_c = compute(c_next[0])
+                in_c = ff(out_c)
+                save(in_c, out_c, c)
+            else:
+                out_c = reduce(A.join, (compute(parent) for parent in c_next))
+                in_c = ff(out_c)
+                save(in_c, out_c, c)
+            computed[c.name] = in_c
+            return in_c
+        return compute(kids[0][1])
 
     if isinstance(node, il.Block):
         return single_block
