@@ -154,38 +154,43 @@ def forward_ff(A, save, node, *kids):
         return out
 
     def proper(x):
-        acc = x
         blks = dict()
         blks_ff = dict()
-        blks_paths = dict()
         ends = set()
         for ff, node in kids:
             blks[node.name] = node
             blks_ff[node.name] = ff
-            blks_paths[node.name] = dict()
-            for parent in node.prev:
-                blks_paths[node.name][parent.name] = list()
             has_kids = False
             for branch in node.next:
                 if branch.target.name not in blks: continue
                 has_kids = True
                 break
-            if has_kids:
+            if not has_kids:
                 ends.add(node.name)
-        def visit(c, paths):
-            parent = paths[-1]
-            blks_paths[c.name][parent].append(paths)
-            paths = paths + [c.name]
-            for branch in c.next:
-                if branch.target.name not in blks: continue
-                visit(branch.target, paths)
-        blks_paths[kids[0][1].name]['-'] = list()
-        visit(kids[0][1], ['-'])
-        print
-        for nodename, paths in blks_paths.iteritems():
-            print nodename, paths
-        raise Exception
-        return acc
+        computed = dict()
+        def compute(c):
+            if c.name in computed: return computed[c.name]
+            ff = blks_ff[c.name]
+            if len(c.prev) == 0:
+                result = ff(x)
+                save(x, result, c)
+            elif len(c.prev) == 1:
+                parent = compute(c.prev[0])
+                result = ff(parent)
+                save(parent, result, c)
+            else:
+                parents = reduce(A.join, (compute(parent) for parent in c.prev))
+                result = ff(parents)
+                save(parents, result, c)
+            computed[c.name] = result
+            return result
+        if len(ends) == 0:
+            raise RuntimeError, 'There should be a least one exit block'
+        elif len(ends) == 1:
+            result = compute(blks[ends.pop()])
+        else:
+            result = reduce(A.join, (compute(blks[end]) for end in ends))
+        return result
 
     if isinstance(node, il.Block):
         return single_block
