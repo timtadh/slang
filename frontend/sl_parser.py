@@ -99,6 +99,14 @@ class Parser(object):
         'Stmt : VAR NAME EQUAL FuncDecl'
         t[0] = Node('Var').addkid(t[2]).addkid(t[4])
 
+    def p_Stmt9(self, t):
+        'Stmt : WHILE BooleanExpr LCURLY Stmts RCURLY'
+        t[0] = (
+            Node('WHILE')
+                .addkid(t[2])
+                .addkid(t[4])
+        )
+
     def p_FuncDecl1(self, t):
         'FuncDecl : FUNC LPAREN RPAREN LCURLY Return RCURLY'
         t[0] = Node('Func').addkid(t[5])
