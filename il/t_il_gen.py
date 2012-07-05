@@ -605,15 +605,13 @@ def t_fib():
         ''').rstrip('\n')
 
 def t_fib_while():
-    value = run('''
+    assert str(55) == run('''
       var fib = func(x) {
           var prev = 0
           var cur = 1
           var i = 1
-          if x <= 1 {
-              if x == 0 {
-                  cur = 0
-              }
+          if x == 0 {
+              cur = 0
           } else {
               while i < x {
                   var next = prev + cur
@@ -626,5 +624,3 @@ def t_fib_while():
       }
       print fib(10)
         ''').rstrip('\n')
-    print value
-    assert str(55) == value

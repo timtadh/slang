@@ -711,3 +711,42 @@ def t_nested_if():
         }
         print f(10)
         ''').rstrip('\n')
+
+def t_fib():
+    assert str(55) == run('''
+      var fib = func(x) {
+          var c
+          if (x > 1) {
+              c = fib(x-1) + fib(x-2)
+          } else {
+              if (x == 1) {
+                  c = 1
+              } else {
+                  c = 0
+              }
+          }
+          return c
+      }
+      print fib(10)
+        ''').rstrip('\n')
+
+def t_fib_while():
+    assert str(55) == run('''
+      var fib = func(x) {
+          var prev = 0
+          var cur = 1
+          var i = 1
+          if x == 0 {
+              cur = 0
+          } else {
+              while i < x {
+                  var next = prev + cur
+                  prev = cur
+                  cur = next
+                  i = i + 1
+              }
+          }
+          return cur
+      }
+      print fib(10)
+        ''').rstrip('\n')
