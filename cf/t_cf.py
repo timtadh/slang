@@ -644,3 +644,26 @@ def t_iaote_complex():
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
+
+def t_fib():
+
+    f = analyze('''
+      var fib = func(x) {
+          var c
+          if (x > 1) {
+              c = fib(x-1) + fib(x-2)
+          } else {
+              if (x == 1) {
+                  c = 1
+              } else {
+                  c = 0
+              }
+          }
+          return c
+      }
+      print fib(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+
