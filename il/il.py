@@ -7,6 +7,7 @@
 import sys, collections
 
 import cf
+import table
 
 opsr = (
     'MV', 'ADD', 'SUB', 'MUL', 'DIV', 'CALL', 'IPRM', 'OPRM', 'GPRM', 'RPRM',
@@ -27,10 +28,12 @@ def run(table, blocks, functions, *args, **kwargs):
 
 def _run(entry, blocks, functions, params=None, var=None, stdout=None):
     if stdout == None: stdout = sys.stdout
-    if not var: var = dict()
+    if var is None: var = table.SymbolTable()
     nparams = list()
     rparams = list()
+    irparams = list()
     il = blocks[entry].insts
+    blk = entry
     c = 0
     while c < len(il):
         i = il[c]
@@ -46,56 +49,47 @@ def _run(entry, blocks, functions, params=None, var=None, stdout=None):
             var[i.result.name] = var[i.a.name] + var[i.b.name]
         elif i.op == MV:
             var[i.result.name] = var[i.a.name]
-        #elif i.op == EQ:
-            #var[i.result.name] = 1 - int(var[i.a.name] == var[i.b.name])
-        #elif i.op == NE:
-            #var[i.result.name] = 1 - int(var[i.a.name] != var[i.b.name])
-        #elif i.op == LT:
-            #var[i.result.name] = 1 - int(var[i.a.name] < var[i.b.name])
-        #elif i.op == LE:
-            #var[i.result.name] = 1 - int(var[i.a.name] <= var[i.b.name])
-        #elif i.op == GT:
-            #var[i.result.name] = 1 - int(var[i.a.name] > var[i.b.name])
-        #elif i.op == GE:
-            #var[i.result.name] = 1 - int(var[i.a.name] >= var[i.b.name])
         elif i.op == PRNT:
             print >>stdout, var[i.a.name]
         elif i.op == IPRM:
             if isinstance(i.b.type, Func):
-                nparams.insert(0, i.b)
+                nparams.insert(i.a, i.b)
             else:
-                nparams.insert(0, var[i.b.name])
+                nparams.insert(i.a, var[i.b.name])
         elif i.op == OPRM:
-            rparams.append(var[i.b.name])
+            rparams.insert(i.a, var[i.b.name])
         elif i.op == GPRM:
             var[i.result.name] = params[i.a]
         elif i.op == RPRM:
-            var[i.result.name] = params[i.a]
+            var[i.result.name] = irparams[i.a]
         elif i.op == CALL:
+            var = var.push()
             if isinstance(i.a.type, Func):
                 _entry = functions[i.a.type.name].entry.name
-                params = _run(_entry, blocks, functions, nparams, var, stdout=stdout)
+                irparams = _run(_entry, blocks, functions, nparams, var, stdout=stdout)
             else:
                 _entry = functions[var[i.a.name].type.name].entry.name
-                params = _run(_entry, blocks, functions, nparams, var, stdout=stdout)
+                irparams = _run(_entry, blocks, functions, nparams, var, stdout=stdout)
+            var = var.pop()
             nparams = list()
         elif i.op == RTRN:
             return rparams
         elif i.op in [IFEQ, IFNE, IFLT, IFLE, IFGT, IFGE]:
             ops = {
-                IFEQ : (lambda a,b: 1 - int(var[a.name] == var[b.name])),
-                IFNE : (lambda a,b: 1 - int(var[a.name] != var[b.name])),
-                IFLT : (lambda a,b: 1 - int(var[a.name] < var[b.name])),
-                IFLE : (lambda a,b: 1 - int(var[a.name] <= var[b.name])),
-                IFGT : (lambda a,b: 1 - int(var[a.name] > var[b.name])),
-                IFGE : (lambda a,b: 1 - int(var[a.name] >= var[b.name])),
+                IFEQ : (lambda a,b: var[a.name] == var[b.name]),
+                IFNE : (lambda a,b: var[a.name] != var[b.name]),
+                IFLT : (lambda a,b: var[a.name] < var[b.name]),
+                IFLE : (lambda a,b: var[a.name] <= var[b.name]),
+                IFGT : (lambda a,b: var[a.name] > var[b.name]),
+                IFGE : (lambda a,b: var[a.name] >= var[b.name]),
             }
-            if ops[i.op](i.a, i.b) == 0:
-                ##raise Exception, "go to label %s" % (i.b)
+            if ops[i.op](i.a, i.b):
+                blk = i.result.name
                 il = blocks[i.result.name].insts
                 c = 0
                 continue;
         elif i.op == J:
+            blk = i.a.name
             il = blocks[i.a.name].insts
             c = 0
             continue;

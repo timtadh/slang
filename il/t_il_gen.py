@@ -565,9 +565,8 @@ def t_recursive():
 
 def t_nested_if():
     #raise nose.SkipTest
-    print run('''
+    assert str(0) == run('''
         var f = func(x) {
-            print x
             var c
             if (x > 0) {
                 if (x/2 + x/2 == x) { // then it is even
@@ -586,4 +585,21 @@ def t_nested_if():
         }
         print f(10)
         ''').rstrip('\n')
-    #assert False
+
+def t_fib():
+    assert str(55) == run('''
+      var fib = func(x) {
+          var c
+          if (x > 1) {
+              c = fib(x-1) + fib(x-2)
+          } else {
+              if (x == 1) {
+                  c = 1
+              } else {
+                  c = 0
+              }
+          }
+          return c
+      }
+      print fib(10)
+        ''').rstrip('\n')
