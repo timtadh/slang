@@ -71,20 +71,20 @@ class Parser(object):
         )
 
     def p_Stmt4(self, t):
-        'Stmt : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY'
+        'Stmt : IF BooleanExpr LCURLY Stmts RCURLY'
         t[0] = (
             Node('If')
-                .addkid(t[3])
-                .addkid(t[6])
+                .addkid(t[2])
+                .addkid(t[4])
         )
 
     def p_Stmt5(self, t):
-        'Stmt : IF LPAREN BooleanExpr RPAREN LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY'
+        'Stmt : IF BooleanExpr LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY'
         t[0] = (
             Node('If')
-                .addkid(t[3])
-                .addkid(t[6])
-                .addkid(t[10])
+                .addkid(t[2])
+                .addkid(t[4])
+                .addkid(t[8])
         )
 
     def p_Stmt6(self, t):
@@ -98,7 +98,6 @@ class Parser(object):
     def p_Stmt8(self, t):
         'Stmt : VAR NAME EQUAL FuncDecl'
         t[0] = Node('Var').addkid(t[2]).addkid(t[4])
-
 
     def p_FuncDecl1(self, t):
         'FuncDecl : FUNC LPAREN RPAREN LCURLY Return RCURLY'
