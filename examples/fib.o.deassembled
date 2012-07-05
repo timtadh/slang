@@ -1,0 +1,114 @@
+
+fib.o:     file format elf32-i386
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	89 e5                	mov    %esp,%ebp
+   2:	89 6d 00             	mov    %ebp,0x0(%ebp)
+
+00000005 <main>:
+   5:	83 ec 24             	sub    $0x24,%esp
+
+00000008 <b1>:
+   8:	c7 45 dc 0a 00 00 00 	movl   $0xa,-0x24(%ebp)
+   f:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  12:	89 44 24 f8          	mov    %eax,-0x8(%esp)
+  16:	e8 1e 00 00 00       	call   39 <f2>
+  1b:	8b 44 24 f8          	mov    -0x8(%esp),%eax
+  1f:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  22:	ff 75 e0             	pushl  -0x20(%ebp)
+  25:	68 00 00 00 00       	push   $0x0
+  2a:	e8 fc ff ff ff       	call   2b <b1+0x23>
+  2f:	83 c4 08             	add    $0x8,%esp
+  32:	6a 00                	push   $0x0
+  34:	e8 fc ff ff ff       	call   35 <b1+0x2d>
+
+00000039 <f2>:
+  39:	89 6c 24 f8          	mov    %ebp,-0x8(%esp)
+  3d:	89 e5                	mov    %esp,%ebp
+  3f:	89 5d f4             	mov    %ebx,-0xc(%ebp)
+  42:	89 7d f0             	mov    %edi,-0x10(%ebp)
+  45:	89 75 ec             	mov    %esi,-0x14(%ebp)
+  48:	89 4d e8             	mov    %ecx,-0x18(%ebp)
+  4b:	89 55 e4             	mov    %edx,-0x1c(%ebp)
+  4e:	bb 04 00 00 00       	mov    $0x4,%ebx
+  53:	8b 83 25 00 00 00    	mov    0x25(%ebx),%eax
+  59:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  5c:	bb 04 00 00 00       	mov    $0x4,%ebx
+  61:	89 ab 25 00 00 00    	mov    %ebp,0x25(%ebx)
+  67:	83 ec 5c             	sub    $0x5c,%esp
+
+0000006a <b2>:
+  6a:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  6d:	89 45 a4             	mov    %eax,-0x5c(%ebp)
+  70:	c7 45 dc 01 00 00 00 	movl   $0x1,-0x24(%ebp)
+  77:	8b 45 a4             	mov    -0x5c(%ebp),%eax
+  7a:	3b 45 dc             	cmp    -0x24(%ebp),%eax
+  7d:	7f 02                	jg     81 <b3>
+  7f:	eb 52                	jmp    d3 <b5>
+
+00000081 <b3>:
+  81:	90                   	nop
+  82:	c7 45 a8 01 00 00 00 	movl   $0x1,-0x58(%ebp)
+  89:	8b 45 a4             	mov    -0x5c(%ebp),%eax
+  8c:	2b 45 a8             	sub    -0x58(%ebp),%eax
+  8f:	89 45 c8             	mov    %eax,-0x38(%ebp)
+  92:	8b 45 c8             	mov    -0x38(%ebp),%eax
+  95:	89 44 24 f8          	mov    %eax,-0x8(%esp)
+  99:	e8 9b ff ff ff       	call   39 <f2>
+  9e:	8b 44 24 f8          	mov    -0x8(%esp),%eax
+  a2:	89 45 ac             	mov    %eax,-0x54(%ebp)
+  a5:	c7 45 cc 02 00 00 00 	movl   $0x2,-0x34(%ebp)
+  ac:	8b 45 a4             	mov    -0x5c(%ebp),%eax
+  af:	2b 45 cc             	sub    -0x34(%ebp),%eax
+  b2:	89 45 bc             	mov    %eax,-0x44(%ebp)
+  b5:	8b 45 bc             	mov    -0x44(%ebp),%eax
+  b8:	89 44 24 f8          	mov    %eax,-0x8(%esp)
+  bc:	e8 78 ff ff ff       	call   39 <f2>
+  c1:	8b 44 24 f8          	mov    -0x8(%esp),%eax
+  c5:	89 45 d8             	mov    %eax,-0x28(%ebp)
+  c8:	8b 45 ac             	mov    -0x54(%ebp),%eax
+  cb:	03 45 d8             	add    -0x28(%ebp),%eax
+  ce:	89 45 c0             	mov    %eax,-0x40(%ebp)
+  d1:	eb 29                	jmp    fc <b4>
+
+000000d3 <b5>:
+  d3:	90                   	nop
+  d4:	c7 45 b0 01 00 00 00 	movl   $0x1,-0x50(%ebp)
+  db:	8b 45 a4             	mov    -0x5c(%ebp),%eax
+  de:	3b 45 b0             	cmp    -0x50(%ebp),%eax
+  e1:	74 02                	je     e5 <b6>
+  e3:	eb 0d                	jmp    f2 <b8>
+
+000000e5 <b6>:
+  e5:	90                   	nop
+  e6:	c7 45 c0 01 00 00 00 	movl   $0x1,-0x40(%ebp)
+  ed:	eb 00                	jmp    ef <b7>
+
+000000ef <b7>:
+  ef:	90                   	nop
+  f0:	eb 0a                	jmp    fc <b4>
+
+000000f2 <b8>:
+  f2:	90                   	nop
+  f3:	c7 45 c0 00 00 00 00 	movl   $0x0,-0x40(%ebp)
+  fa:	eb f3                	jmp    ef <b7>
+
+000000fc <b4>:
+  fc:	90                   	nop
+  fd:	bb 04 00 00 00       	mov    $0x4,%ebx
+ 102:	8b 45 e0             	mov    -0x20(%ebp),%eax
+ 105:	89 83 25 00 00 00    	mov    %eax,0x25(%ebx)
+ 10b:	8b 55 e4             	mov    -0x1c(%ebp),%edx
+ 10e:	8b 4d e8             	mov    -0x18(%ebp),%ecx
+ 111:	8b 75 ec             	mov    -0x14(%ebp),%esi
+ 114:	8b 7d f0             	mov    -0x10(%ebp),%edi
+ 117:	8b 5d f4             	mov    -0xc(%ebp),%ebx
+ 11a:	89 ec                	mov    %ebp,%esp
+ 11c:	8b 6c 24 f8          	mov    -0x8(%esp),%ebp
+ 120:	8b 44 24 c0          	mov    -0x40(%esp),%eax
+ 124:	89 44 24 fc          	mov    %eax,-0x4(%esp)
+ 128:	83 c4 04             	add    $0x4,%esp
+ 12b:	ff 64 24 fc          	jmp    *-0x4(%esp)
