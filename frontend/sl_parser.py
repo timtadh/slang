@@ -102,7 +102,7 @@ class Parser(object):
     def p_Stmt9(self, t):
         'Stmt : WHILE BooleanExpr LCURLY Stmts RCURLY'
         t[0] = (
-            Node('WHILE')
+            Node('While')
                 .addkid(t[2])
                 .addkid(t[4])
         )

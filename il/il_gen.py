@@ -4,6 +4,7 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
+import sys
 
 from frontend.sl_parser import Parser, Lexer
 from table import SymbolTable
@@ -108,6 +109,8 @@ class generate(object):
                 blk = self.Print(c, blk)
             elif c.label == 'If':
                 blk = self.If(c, blk)
+            elif c.label == 'While':
+                blk = self.While(c, blk)
             else:
                 raise Exception, c.label
         return blk
@@ -137,6 +140,19 @@ class generate(object):
 
         return finalblk
 
+    def While(self, node, blk):
+        assert node.label == 'While'
+
+        whileblk = blk
+        thenblk = self.block()
+        elseblk = self.block()
+        blk = self.BooleanExpr(node.children[0], blk, thenblk, elseblk)
+
+        thenblk = self.Stmts(node.children[1], thenblk)
+        thenblk.link(whileblk, il.UNCONDITIONAL)
+        thenblk.insts += [ il.Inst(il.J, whileblk, 0, 0) ]
+
+        return elseblk
 
     def Print(self, node, blk):
         assert node.label == 'Print'
@@ -185,6 +201,7 @@ class generate(object):
         if name in self.objs:
             result = self.objs[name]
         else:
+            print node
             raise TypeError, 'Use of name %s without prior declaration' % name
 
         if c.label == 'Expr':
