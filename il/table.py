@@ -10,7 +10,6 @@ class SymbolTable(MutableMapping):
 
     def __init__(self, *args, **kwargs):
         self.table = dict()
-        self.idindex = dict()
         self.parent = kwargs.pop('parent') if 'parent' in kwargs else dict()
         if hasattr(self.parent, 'root'):
             self.root = self.parent.root
@@ -41,11 +40,6 @@ class SymbolTable(MutableMapping):
         keys = set(self.table.keys()) | set(self.parent.keys())
         return keys
 
-    def ids(self):
-        if self.parent:
-            return set(self.idindex.keys()) | self.parent.ids()
-        return set(self.idindex.keys())
-
     def add(self, value):
         self[value.name] = value
 
@@ -57,16 +51,14 @@ class SymbolTable(MutableMapping):
 
     def __setitem__(self, name, value):
         self.table[name] = value
-        self.idindex[value.id] = value
-        if value.scope_depth is None:
-            value.scope_depth = self.depth
+        if hasattr(value, 'scope_depth'):
+            if value.scope_depth is None:
+                value.scope_depth = self.depth
         #print name, self.depth, value.id, value.__class__, value.scope_depth, id(value)
 
     def __getitem__(self, key):
-        if isinstance(key, int) or isinstance(key, long): d = self.idindex
-        else: d = self.table
-        if key in d:
-            return d[key]
+        if key in self.table:
+            return self.table[key]
         return self.parent[key]
 
     def __delitem__(self, name):
@@ -74,8 +66,6 @@ class SymbolTable(MutableMapping):
         item = self[name]
         if item.name in self.table:
             del self.table[item.name]
-        if item.id in self.idindex:
-            del self.idindex[item.id]
 
     def __str__(self):
         return str(dict((k,v) for k,v in self.iteritems()))
