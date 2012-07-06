@@ -668,7 +668,7 @@ def t_fib():
     assert tree.children[0].region_type == cfs.IF_THEN_ELSE
 
 def t_fib_while():
-    raise nose.SkipTest
+    #raise nose.SkipTest
 
     f = analyze('''
       var fib = func(x) {
@@ -693,6 +693,9 @@ def t_fib_while():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[1].region_type == cfs.WHILE
 
 
 def t_fib_for():
@@ -716,4 +719,7 @@ def t_fib_for():
         ''')['f2']
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+    assert tree.children[0].children[2].region_type == cfs.CHAIN
+    assert tree.children[0].children[2].children[1].region_type == cfs.WHILE
 
