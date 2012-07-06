@@ -107,9 +107,10 @@ def analyze(analyzer, functions, debug=False, attach_method=False):
         if debug:
             print f.name
             for blk in f.blks:
+
                 print ' '*2, blk
-                print ' '*4, 'in ', R.inn[blk.name]
-                print ' '*4, 'out', R.out[blk.name]
+                if blk.name in R.inn: print ' '*4, 'in ', R.inn[blk.name]
+                if blk.name in R.out: print ' '*4, 'out', R.out[blk.name]
                 print
 
     for f in functions.itervalues():
@@ -262,7 +263,7 @@ def backward_ff(A, save, node, *kids):
         save(inn, out, node)
         return inn
 
-    def proper(out_proper):
+    def general_acyclic(out_general_acyclic):
         blks = dict()
         blks_ff = dict()
         def next(n):
@@ -276,8 +277,8 @@ def backward_ff(A, save, node, *kids):
             ff = blks_ff[c.name]
             c_next = next(c)
             if len(c_next) == 0:
-                in_c = ff(out_proper)
-                save(in_c, out_proper, c)
+                in_c = ff(out_general_acyclic)
+                save(in_c, out_general_acyclic, c)
             elif len(c_next) == 1:
                 out_c = compute(c_next[0])
                 in_c = ff(out_c)
@@ -290,6 +291,21 @@ def backward_ff(A, save, node, *kids):
             return in_c
         return compute(kids[0][1])
 
+    def while_loop(out_while_loop):
+        _while, node_while = kids[0]
+        _body, node_body = kids[1]
+        _loop = A.star(A.compose(_body, _while))
+
+        in_body_while = _loop(out_while_loop)
+        in_while_loop = _while(in_body_while)
+        out_while = in_body_while
+        out_body = in_while_loop
+        in_while = _while(out_while)
+        in_body = _body(out_body)
+        save(in_while, out_while, node_while)
+        save(in_body, out_body, node_body)
+        return in_while_loop
+
     if isinstance(node, il.Block):
         return single_block
     elif node.region_type == cf.cfs.CHAIN:
@@ -299,7 +315,9 @@ def backward_ff(A, save, node, *kids):
     elif node.region_type == cf.cfs.IF_THEN_ELSE:
         return if_then_else
     elif node.region_type == cf.cfs.GENERAL_ACYCLIC:
-        return proper
+        return general_acyclic
+    elif node.region_type == cf.cfs.WHILE:
+        return while_loop
     else:
         raise Exception, "unexpect region type"
 

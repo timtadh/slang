@@ -534,3 +534,72 @@ def t_reachdef_fib_for_engine():
     assert b7_out == set([('b2', 3), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b7', 1), ('b2', 0)])
     assert b8_inn == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
     assert b8_out == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+
+def t_livevar_for_engine_attach():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var f = func(x) {
+            var c = 1
+            for var i = 1; i < x; i = i + 1 {
+                c = c * (c + i)
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    df.analyze(livevar.LiveVariable, functions, True, True)
+    f2 = functions['f2']
+
+    def ids(pairs): return set(id for id in pairs.iterkeys())
+
+    assert ids(f2.live('b2')['inn']) == set([])
+    assert ids(f2.live('b2')['out']) == set([1, 2, 3])
+    assert ids(f2.live('b3')['inn']) == set([1, 2, 3])
+    assert ids(f2.live('b3')['out']) == set([1, 2, 3])
+    assert ids(f2.live('b4')['inn']) == set([1, 2, 3])
+    assert ids(f2.live('b4')['out']) == set([1, 2, 3])
+    assert ids(f2.live('b5')['inn']) == set([2])
+    assert ids(f2.live('b5')['out']) == set([])
+
+def t_livevar_fib_for_engine_attach():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+      var fib = func(x) {
+          var prev = 0
+          var cur = 1
+          if x == 0 {
+              cur = 0
+          } else {
+              for var i = 1; i < x; i = i + 1 {
+                  var next = prev + cur
+                  prev = cur
+                  cur = next
+              }
+          }
+          return cur
+      }
+      print fib(10)
+        ''')
+
+    df.analyze(livevar.LiveVariable, functions, True, True)
+    f2 = functions['f2']
+
+    def ids(pairs): return set(id for id in pairs.iterkeys())
+
+    assert ids(f2.live('b2')['inn']) == set([])
+    assert ids(f2.live('b2')['out']) == set([1, 2, 3])
+    assert ids(f2.live('b3')['inn']) == set([])
+    assert ids(f2.live('b3')['out']) == set([3])
+    assert ids(f2.live('b4')['inn']) == set([3])
+    assert ids(f2.live('b4')['out']) == set([])
+    assert ids(f2.live('b5')['inn']) == set([1, 2, 3])
+    assert ids(f2.live('b5')['out']) == set([1, 2, 3, 6])
+    assert ids(f2.live('b6')['inn']) == set([1, 2, 3, 6])
+    assert ids(f2.live('b6')['out']) == set([1, 2, 3, 6])
+    assert ids(f2.live('b7')['inn']) == set([1, 2, 3, 6])
+    assert ids(f2.live('b7')['out']) == set([1, 2, 3, 6])
+    assert ids(f2.live('b8')['inn']) == set([3])
+    assert ids(f2.live('b8')['out']) == set([3])
