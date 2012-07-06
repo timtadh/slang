@@ -743,19 +743,20 @@ def t_simple_for():
 def t_for_break():
 
     f = analyze('''
-      var fib = func(x) {
-          var cur = x
-          for var i = 1; i < x; i = i + 1 {
-              if cur == 5 {
-                  break
-              }
-              cur = cur + cur
-          }
-          return cur
-      }
-      print fib(10)
+        var f = func(x) {
+            var c = 1
+            for var i = 1; i < x; i = i + 1 {
+                if c/3 == x { break }
+                c = c * (c + i)
+            }
+            return c
+        }
+        print f(10)
         ''')['f2']
 
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
-    assert tree.children[1].region_type == cfs.WHILE
+    assert tree.children[0].region_type == cfs.IF_THEN
+    assert tree.children[0].children[0].region_type == cfs.CHAIN
+    assert tree.children[0].children[0].children[1].region_type == cfs.NATURAL_LOOP
+
