@@ -38,11 +38,16 @@ class Parser(object):
 
     def p_Stmts1(self, t):
         'Stmts : Stmts Stmt'
-        t[0] = t[1].addkid(t[2])
+        for stmt in t[2]:
+            t[1].addkid(stmt)
+        t[0] = t[1]
 
     def p_Stmts2(self, t):
         'Stmts : Stmt'
-        t[0] = Node('Stmts').addkid(t[1])
+        stmts = Node('Stmts')
+        for stmt in t[1]:
+            stmts.addkid(stmt)
+        t[0] = stmts
 
     # If you want to add this back you have to add SEMI colons or line
     # terminators to the language, yuck.
@@ -52,60 +57,61 @@ class Parser(object):
 
     def p_Stmt0(self, t):
         'Stmt : PRINT Expr'
-        t[0] = Node('Print').addkid(t[2])
+        t[0] = [ Node('Print').addkid(t[2]) ]
 
     def p_Stmt1(self, t):
         'Stmt : Call'
-        t[0] = t[1]
+        t[0] = [ t[1] ]
 
     def p_Stmt2(self, t):
-        'Stmt : NAME EQUAL Expr'
-        t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
+        'Stmt : AssignExpr'
+        t[0] = [ t[1] ]
 
     def p_Stmt3(self, t):
         'Stmt : NAME EQUAL FuncDecl'
-        t[0] = (
-            Node('Assign')
-                .addkid(t[1])
-                .addkid(t[3])
-        )
+        t[0] = [ Node('Assign').addkid(t[1]).addkid(t[3]) ]
 
     def p_Stmt4(self, t):
         'Stmt : IF BooleanExpr LCURLY Stmts RCURLY'
-        t[0] = (
-            Node('If')
-                .addkid(t[2])
-                .addkid(t[4])
-        )
+        t[0] = [ Node('If').addkid(t[2]).addkid(t[4]) ]
 
     def p_Stmt5(self, t):
         'Stmt : IF BooleanExpr LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY'
-        t[0] = (
-            Node('If')
-                .addkid(t[2])
-                .addkid(t[4])
-                .addkid(t[8])
-        )
+        t[0] = [ Node('If').addkid(t[2]).addkid(t[4]).addkid(t[8]) ]
 
     def p_Stmt6(self, t):
         'Stmt : VAR NAME'
-        t[0] = Node('Var').addkid(t[2])
+        t[0] = [ Node('Var').addkid(t[2]) ]
 
     def p_Stmt7(self, t):
         'Stmt : VAR NAME EQUAL Expr'
-        t[0] = Node('Var').addkid(t[2]).addkid(t[4])
+        t[0] = [ Node('Var').addkid(t[2]).addkid(t[4]) ]
 
     def p_Stmt8(self, t):
         'Stmt : VAR NAME EQUAL FuncDecl'
-        t[0] = Node('Var').addkid(t[2]).addkid(t[4])
+        t[0] = [ Node('Var').addkid(t[2]).addkid(t[4]) ]
 
     def p_Stmt9(self, t):
         'Stmt : WHILE BooleanExpr LCURLY Stmts RCURLY'
-        t[0] = (
-            Node('While')
-                .addkid(t[2])
-                .addkid(t[4])
-        )
+        t[0] = [ Node('While').addkid(t[2]).addkid(t[4]) ]
+
+    def p_Stmt10(self, t):
+        'Stmt : FOR DeclAssignExpr SEMI BooleanExpr SEMI AssignExpr BlockStmts'
+        stmts = t[7]
+        stmts.addkid(t[6])
+        t[0] = [t[2], Node('While').addkid(t[4]).addkid(stmts)]
+
+    def p_AssignExpr(self, t):
+        'AssignExpr : NAME EQUAL Expr'
+        t[0] = Node('Assign').addkid(t[1]).addkid(t[3])
+
+    def p_DeclAssignExpr(self, t):
+        'DeclAssignExpr : VAR NAME EQUAL Expr'
+        t[0] = Node('Var').addkid(t[2]).addkid(t[4])
+
+    def p_BlockStmts1(self, t):
+        'BlockStmts : LCURLY Stmts RCURLY'
+        t[0] = t[2]
 
     def p_FuncDecl1(self, t):
         'FuncDecl : FUNC LPAREN RPAREN LCURLY Return RCURLY'

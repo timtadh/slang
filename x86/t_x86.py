@@ -735,15 +735,34 @@ def t_fib_while():
       var fib = func(x) {
           var prev = 0
           var cur = 1
-          var i = 1
           if x == 0 {
               cur = 0
           } else {
+              var i = 1
               while i < x {
                   var next = prev + cur
                   prev = cur
                   cur = next
                   i = i + 1
+              }
+          }
+          return cur
+      }
+      print fib(10)
+        ''').rstrip('\n')
+
+def t_fib_for():
+    assert str(55) == run('''
+      var fib = func(x) {
+          var prev = 0
+          var cur = 1
+          if x == 0 {
+              cur = 0
+          } else {
+              for var i = 1; i < x; i = i + 1 {
+                  var next = prev + cur
+                  prev = cur
+                  cur = next
               }
           }
           return cur

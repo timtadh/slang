@@ -143,10 +143,13 @@ class generate(object):
     def While(self, node, blk):
         assert node.label == 'While'
 
-        whileblk = blk
+        whileblk = self.block()
+        blk.link(whileblk, il.UNCONDITIONAL)
+        blk.insts += [ il.Inst(il.J, whileblk, 0, 0) ]
+
         thenblk = self.block()
         elseblk = self.block()
-        blk = self.BooleanExpr(node.children[0], blk, thenblk, elseblk)
+        blk = self.BooleanExpr(node.children[0], whileblk, thenblk, elseblk)
 
         thenblk = self.Stmts(node.children[1], thenblk)
         thenblk.link(whileblk, il.UNCONDITIONAL)
