@@ -443,3 +443,21 @@ def t_livevar_ifandorthen_engine_attach():
     assert ids(f2.live('b7')['out']) == set([])
     assert ids(f2.live('b8')['inn']) == set([1])
     assert ids(f2.live('b8')['out']) == set([1])
+
+def t_reachdef_for_engine():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var f = func(x) {
+            var c = 1
+            for var i = 1; i < x; i = i + 1 {
+                c = c * (c + i)
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    name = reachdef.ReachingDefintions.name
+    df.analyze(reachdef.ReachingDefintions, functions, True)
+    f2 = functions['f2']

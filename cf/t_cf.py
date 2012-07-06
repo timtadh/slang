@@ -723,3 +723,20 @@ def t_fib_for():
     assert tree.children[0].children[2].region_type == cfs.CHAIN
     assert tree.children[0].children[2].children[1].region_type == cfs.WHILE
 
+
+def t_simple_for():
+
+    f = analyze('''
+        var f = func(x) {
+            var c = 1
+            for var i = 1; i < x; i = i + 1 {
+                c = c * (c + i)
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[1].region_type == cfs.WHILE
+
