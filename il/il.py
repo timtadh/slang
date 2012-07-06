@@ -162,6 +162,20 @@ class Block(object):
         blk.prev.append(self)
 
     def dotty(self):
+        def reaches(s, t):
+            visited = set()
+            def visit(n):
+                if n.name == t.name:
+                    return True
+                visited.add(n.name)
+                found = False
+                for b in n.next:
+                    if b.target.name not in visited:
+                        found = found or visit(b.target)
+                    if found:
+                        break
+                return found
+            return visit(s)
         def string(n):
             #if isinstance(s, Node): return str(s.label)
             if isinstance(n, Block):
@@ -176,13 +190,16 @@ class Block(object):
                 replace('<', '[').
                 replace('>', ']')
             )
-            s = ''.join('<tr><td align="left">' + line + "</td></tr>" for line in s.split('\\n'))
+            s = ''.join(
+              '<tr><td align="left">' + line + "</td></tr>"
+              for line in s.split('\\n'))
             return s
 
         def add_node(nodes, name, label):
             nodes.append(node % locals())
         node = '%(name)s [shape=rect, fontname="Courier", label=<<table border="0">%(label)s</table>>];'
-        edge = '%s -> %s [label="%s"];'
+        edge = '%s -> %s [taillabel="%s"];'
+        backedge = '%s -> %s:w [taillabel="%s"];'
         nodes = list()
         edges = list()
 
@@ -200,7 +217,10 @@ class Block(object):
                 visited[n.name] = name
                 add_node(nodes, name, string(n))
             for v in n.next:
+                e_template = edge
                 if v.target.name in visited:
+                    if reaches(v.target, n):
+                        e_template = backedge
                     vname = visited[v.target.name]
                 else:
                     vname = 'n%d' % i
@@ -211,7 +231,7 @@ class Block(object):
                 edge_label = ''
                 if v.type != UNCONDITIONAL:
                     edge_label = branch_typesr[v.type][0]
-                edges.append(edge % (name, vname, edge_label))
+                edges.append(e_template % (name, vname, edge_label))
         return 'digraph G {\nrankdir=LR;\n' + '\n'.join(nodes) + '\n' + '\n'.join(edges) + '\n}\n'
 
     def __repr__(self): return str(self)

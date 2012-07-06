@@ -19,8 +19,8 @@ img_dir = os.path.abspath('./imgs')
 def analyze(s):
     name = traceback.extract_stack()[-2][2]
     ast = Parser().parse(s, lexer=Lexer())
-    table, blocks, functions = il_gen.generate(ast, debug=True)
     dot('ast.%s'%name, ast.dotty(), str(ast))
+    table, blocks, functions = il_gen.generate(ast, debug=True)
     dot('blks.%s'%name, functions['f2'].entry.dotty())
     cf.analyze(table, blocks, functions, debug=True)
     dot('cf.%s'%name, functions['f2'].tree.dotty())
@@ -685,6 +685,30 @@ def t_fib_while():
                   prev = cur
                   cur = next
                   i = i + 1
+              }
+          }
+          return cur
+      }
+      print fib(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+
+
+def t_fib_for():
+    raise nose.SkipTest
+
+    f = analyze('''
+      var fib = func(x) {
+          var prev = 0
+          var cur = 1
+          if x == 0 {
+              cur = 0
+          } else {
+              for var i = 1; i < x; i = i + 1 {
+                  var next = prev + cur
+                  prev = cur
+                  cur = next
               }
           }
           return cur
