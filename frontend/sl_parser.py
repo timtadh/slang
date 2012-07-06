@@ -143,9 +143,14 @@ class Parser(object):
         'LoopControlStmt : BREAK'
         t[0] = [ Node('Break').addkid(t[1]) ]
 
-    def p_LoopControlStmt2(self, t):
-        'LoopControlStmt : CONTINUE'
-        t[0] = [ Node('Continue').addkid(t[1]) ]
+    # If we want to add a continue statement back in as a loop control stmt
+    # then we need to make the for loop a distinct loop type. Right now it
+    # just generates the appropriate while loop (to simplify the il_gen) however
+    # if you continue from inside a for it should first run the update stmt.
+    # this is impossible if you don't know you are inside a for loop.
+    #def p_LoopControlStmt2(self, t):
+        #'LoopControlStmt : CONTINUE'
+        #t[0] = [ Node('Continue').addkid(t[1]) ]
 
     def p_FuncDecl1(self, t):
         'FuncDecl : FUNC LPAREN RPAREN LCURLY Return RCURLY'
