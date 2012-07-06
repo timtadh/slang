@@ -461,3 +461,76 @@ def t_reachdef_for_engine():
     name = reachdef.ReachingDefintions.name
     df.analyze(reachdef.ReachingDefintions, functions, True)
     f2 = functions['f2']
+
+    b2_inn = functions['f2'].df[name].inn['b2']
+    b2_out = functions['f2'].df[name].out['b2']
+    b3_inn = functions['f2'].df[name].inn['b3']
+    b3_out = functions['f2'].df[name].out['b3']
+    b4_inn = functions['f2'].df[name].inn['b4']
+    b4_out = functions['f2'].df[name].out['b4']
+    b5_inn = functions['f2'].df[name].inn['b5']
+    b5_out = functions['f2'].df[name].out['b5']
+
+    assert b2_inn == set([])
+    assert b2_out == set([('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b3_inn == set([('b2', 2), ('b4', 3), ('b4', 2), ('b4', 1), ('b4', 0), ('b2', 1), ('b2', 0)])
+    assert b3_out == set([('b2', 2), ('b4', 3), ('b4', 2), ('b4', 1), ('b4', 0), ('b2', 1), ('b2', 0)])
+    assert b4_inn == set([('b2', 2), ('b4', 3), ('b4', 2), ('b4', 1), ('b4', 0), ('b2', 1), ('b2', 0)])
+    assert b4_out == set([('b4', 1), ('b4', 3), ('b4', 0), ('b4', 2), ('b2', 0)])
+    assert b5_inn == set([('b2', 2), ('b4', 3), ('b4', 2), ('b4', 1), ('b4', 0), ('b2', 1), ('b2', 0)])
+    assert b5_out == set([('b2', 2), ('b4', 3), ('b4', 2), ('b4', 1), ('b4', 0), ('b2', 1), ('b2', 0)])
+
+def t_reachdef_fib_for_engine():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+      var fib = func(x) {
+          var prev = 0
+          var cur = 1
+          if x == 0 {
+              cur = 0
+          } else {
+              for var i = 1; i < x; i = i + 1 {
+                  var next = prev + cur
+                  prev = cur
+                  cur = next
+              }
+          }
+          return cur
+      }
+      print fib(10)
+        ''')
+
+    name = reachdef.ReachingDefintions.name
+    df.analyze(reachdef.ReachingDefintions, functions, True)
+    f2 = functions['f2']
+
+    b2_inn = functions['f2'].df[name].inn['b2']
+    b2_out = functions['f2'].df[name].out['b2']
+    b3_inn = functions['f2'].df[name].inn['b3']
+    b3_out = functions['f2'].df[name].out['b3']
+    b4_inn = functions['f2'].df[name].inn['b4']
+    b4_out = functions['f2'].df[name].out['b4']
+    b5_inn = functions['f2'].df[name].inn['b5']
+    b5_out = functions['f2'].df[name].out['b5']
+    b6_inn = functions['f2'].df[name].inn['b6']
+    b6_out = functions['f2'].df[name].out['b6']
+    b7_inn = functions['f2'].df[name].inn['b7']
+    b7_out = functions['f2'].df[name].out['b7']
+    b8_inn = functions['f2'].df[name].inn['b8']
+    b8_out = functions['f2'].df[name].out['b8']
+
+    assert b2_inn == set([])
+    assert b2_out == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b3_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b3_out == set([('b2', 3), ('b2', 1), ('b3', 0), ('b2', 0)])
+    assert b4_inn == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b3', 0), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+    assert b4_out == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b3', 0), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+    assert b5_inn == set([('b2', 3), ('b2', 1), ('b2', 2), ('b2', 0)])
+    assert b5_out == set([('b2', 3), ('b5', 0), ('b2', 2), ('b2', 1), ('b2', 0)])
+    assert b6_inn == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+    assert b6_out == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+    assert b7_inn == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+    assert b7_out == set([('b2', 3), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b7', 1), ('b2', 0)])
+    assert b8_inn == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])
+    assert b8_out == set([('b2', 3), ('b2', 2), ('b5', 0), ('b7', 4), ('b7', 2), ('b7', 3), ('b7', 0), ('b2', 1), ('b7', 1), ('b2', 0)])

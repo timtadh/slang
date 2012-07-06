@@ -48,6 +48,9 @@ class DataFlowAnalyzer(object):
     def star(self, a, b):
         '''the kleene star on the induced lattice of the flow functions'''
 
+    def compose(self, f, g):
+        return lambda x: f(g(x))
+
     @staticmethod
     def has_result_method():
         '''Has a custom result function been defined to attach to "function"

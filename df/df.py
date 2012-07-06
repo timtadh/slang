@@ -153,7 +153,7 @@ def forward_ff(A, save, node, *kids):
         save(inn, out, node)
         return out
 
-    def proper(x):
+    def general_acyclic(x):
         blks = dict()
         blks_ff = dict()
         ends = set()
@@ -195,6 +195,20 @@ def forward_ff(A, save, node, *kids):
             result = reduce(A.join, (compute(blks[end]) for end in ends))
         return result
 
+    def while_loop(in_while_loop):
+        _while, node_while = kids[0]
+        _body, node_body = kids[1]
+        _loop = A.star(A.compose(_body, _while))
+        out_body_while = _loop(in_while_loop)
+        out_while_loop = _while(out_body_while)
+        in_while = out_body_while
+        in_body = out_while_loop
+        out_while = _while(in_while)
+        out_body = _body(in_body)
+        save(in_while, out_while, node_while)
+        save(in_body, out_body, node_body)
+        return out_while_loop
+
     if isinstance(node, il.Block):
         return single_block
     elif node.region_type == cf.cfs.CHAIN:
@@ -204,7 +218,9 @@ def forward_ff(A, save, node, *kids):
     elif node.region_type == cf.cfs.IF_THEN_ELSE:
         return if_then_else
     elif node.region_type == cf.cfs.GENERAL_ACYCLIC:
-        return proper
+        return general_acyclic
+    elif node.region_type == cf.cfs.WHILE:
+        return while_loop
     else:
         raise Exception, "unexpect region type"
 
