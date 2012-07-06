@@ -769,3 +769,25 @@ def t_fib_for():
       }
       print fib(10)
         ''').rstrip('\n')
+
+def t_fib_for_break():
+    assert str(5) == run('''
+      var fib = func(x) {
+          var prev = 0
+          var cur = 1
+          if x == 0 {
+              cur = 0
+          } else {
+              for var i = 1; i < x; i = i + 1 {
+                  if cur == 5 && prev == 3 {
+                      break
+                  }
+                  var next = prev + cur
+                  prev = cur
+                  cur = next
+              }
+          }
+          return cur
+      }
+      print fib(10)
+        ''').rstrip('\n')

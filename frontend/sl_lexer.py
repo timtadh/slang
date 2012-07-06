@@ -9,8 +9,8 @@ from ply.lex import Token
 
 reserved = dict(
     (word.lower(), word) for word in (
-        'RETURN', 'CONTINUE', 'FUNC', 'INT', 'VAR', 'PRINT', 'IF', 'ELSE',
-        'WHILE', 'FOR',
+        'RETURN', 'FUNC', 'INT', 'VAR', 'PRINT', 'IF', 'ELSE',
+        'WHILE', 'FOR', 'BREAK', 'CONTINUE',
     )
 )
 

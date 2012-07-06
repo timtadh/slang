@@ -72,12 +72,12 @@ class Parser(object):
         t[0] = [ Node('Assign').addkid(t[1]).addkid(t[3]) ]
 
     def p_Stmt4(self, t):
-        'Stmt : IF BooleanExpr LCURLY Stmts RCURLY'
-        t[0] = [ Node('If').addkid(t[2]).addkid(t[4]) ]
+        'Stmt : IF BooleanExpr Block'
+        t[0] = [ Node('If').addkid(t[2]).addkid(t[3]) ]
 
     def p_Stmt5(self, t):
-        'Stmt : IF BooleanExpr LCURLY Stmts RCURLY ELSE LCURLY Stmts RCURLY'
-        t[0] = [ Node('If').addkid(t[2]).addkid(t[4]).addkid(t[8]) ]
+        'Stmt : IF BooleanExpr Block ELSE Block'
+        t[0] = [ Node('If').addkid(t[2]).addkid(t[3]).addkid(t[5]) ]
 
     def p_Stmt6(self, t):
         'Stmt : VAR NAME'
@@ -92,11 +92,11 @@ class Parser(object):
         t[0] = [ Node('Var').addkid(t[2]).addkid(t[4]) ]
 
     def p_Stmt9(self, t):
-        'Stmt : WHILE BooleanExpr LCURLY Stmts RCURLY'
-        t[0] = [ Node('While').addkid(t[2]).addkid(t[4]) ]
+        'Stmt : WHILE BooleanExpr Block'
+        t[0] = [ Node('While').addkid(t[2]).addkid(t[3]) ]
 
     def p_Stmt10(self, t):
-        'Stmt : FOR DeclAssignExpr SEMI BooleanExpr SEMI AssignExpr BlockStmts'
+        'Stmt : FOR DeclAssignExpr SEMI BooleanExpr SEMI AssignExpr Block'
         stmts = t[7]
         stmts.addkid(t[6])
         t[0] = [t[2], Node('While').addkid(t[4]).addkid(stmts)]
@@ -109,9 +109,43 @@ class Parser(object):
         'DeclAssignExpr : VAR NAME EQUAL Expr'
         t[0] = Node('Var').addkid(t[2]).addkid(t[4])
 
-    def p_BlockStmts1(self, t):
-        'BlockStmts : LCURLY Stmts RCURLY'
+    def p_Block(self, t):
+        'Block : LCURLY BlockStmts RCURLY'
         t[0] = t[2]
+
+    def p_LoopStmts1(self, t):
+        'BlockStmts : BlockStmts Stmt'
+        for stmt in t[2]:
+            t[1].addkid(stmt)
+        t[0] = t[1]
+
+    def p_LoopStmts2(self, t):
+        'BlockStmts : BlockStmts LoopControlStmt'
+        for stmt in t[2]:
+            t[1].addkid(stmt)
+        t[0] = t[1]
+
+    def p_LoopStmts3(self, t):
+        'BlockStmts : Stmt'
+        stmts = Node('Stmts')
+        for stmt in t[1]:
+            stmts.addkid(stmt)
+        t[0] = stmts
+
+    def p_LoopStmts4(self, t):
+        'BlockStmts : LoopControlStmt'
+        stmts = Node('Stmts')
+        for stmt in t[1]:
+            stmts.addkid(stmt)
+        t[0] = stmts
+
+    def p_LoopControlStmt1(self, t):
+        'LoopControlStmt : BREAK'
+        t[0] = [ Node('Break').addkid(t[1]) ]
+
+    def p_LoopControlStmt2(self, t):
+        'LoopControlStmt : CONTINUE'
+        t[0] = [ Node('Continue').addkid(t[1]) ]
 
     def p_FuncDecl1(self, t):
         'FuncDecl : FUNC LPAREN RPAREN LCURLY Return RCURLY'

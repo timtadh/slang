@@ -61,6 +61,7 @@ class generate(object):
 
         self.functions = dict()
         self.fstack = list()
+        self.breakstack = list()
 
         self.objs = SymbolTable()
 
@@ -111,6 +112,11 @@ class generate(object):
                 blk = self.If(c, blk)
             elif c.label == 'While':
                 blk = self.While(c, blk)
+            elif c.label == 'Break':
+                if not self.breakstack:
+                    raise SyntaxError, 'break statement outside of a loop'
+                breakblk = self.breakstack[-1]
+                blk = self.Break(c, blk, breakblk)
             else:
                 raise Exception, c.label
         return blk
@@ -129,14 +135,17 @@ class generate(object):
             blk = self.BooleanExpr(node.children[0], blk, thenblk, finalblk)
 
         thenblk = self.Stmts(node.children[1], thenblk)
-        thenblk.link(finalblk, il.UNCONDITIONAL)
-        thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
+
+        if not thenblk.next:
+            thenblk.link(finalblk, il.UNCONDITIONAL)
+            thenblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         if len(node.children) == 3:
             #blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ] ## This line must go here. subtle bug
             elseblk = self.Stmts(node.children[2], elseblk)
-            elseblk.link(finalblk, il.UNCONDITIONAL)
-            elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
+            if not elseblk.next:
+                elseblk.link(finalblk, il.UNCONDITIONAL)
+                elseblk.insts += [ il.Inst(il.J, finalblk, 0, 0) ]
 
         return finalblk
 
@@ -151,11 +160,21 @@ class generate(object):
         elseblk = self.block()
         blk = self.BooleanExpr(node.children[0], whileblk, thenblk, elseblk)
 
+        self.breakstack.append(elseblk)
         thenblk = self.Stmts(node.children[1], thenblk)
-        thenblk.link(whileblk, il.UNCONDITIONAL)
-        thenblk.insts += [ il.Inst(il.J, whileblk, 0, 0) ]
+        self.breakstack.pop()
+
+        if not thenblk.next:
+            thenblk.link(whileblk, il.UNCONDITIONAL)
+            thenblk.insts += [ il.Inst(il.J, whileblk, 0, 0) ]
 
         return elseblk
+
+    def Break(self, node, blk, elseblk):
+        assert node.label == 'Break'
+        blk.link(elseblk, il.UNCONDITIONAL)
+        blk.insts += [ il.Inst(il.J, elseblk, 0, 0) ]
+        return blk
 
     def Print(self, node, blk):
         assert node.label == 'Print'
