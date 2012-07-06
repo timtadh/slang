@@ -19,6 +19,21 @@ def getnext(n):
     else:
         return n.next
 
+def reaches(s, t):
+    visited = set()
+    def visit(n):
+        if n.name == t.name:
+            return True
+        visited.add(n.name)
+        found = False
+        for b in getnext(n):
+            if b.name not in visited:
+                found = found or visit(b)
+            if found:
+                break
+        return found
+    return visit(s)
+
 class analyze(object):
     '''Produce a structural control flow tree for each function. Takes the output of il_gen as
     input.'''
@@ -98,14 +113,24 @@ class analyze(object):
                 #print 'acyclic', postctr
                 #if f.entry in nset:
                     #f.entry = newnode
-            elif False:
-                pass
+            else:
                 ## if nessesary insert cyclic region detection here
                 ## right now, I only have if-statements and functions
                 ## so there are no inter-block cycles.
-            else:
-                #print 'not acyclic'
-                postctr += 1
+                reach_under = set()
+                reach_under.add(cblk)
+                for blk in blks:
+                    if reaches(cblk, blk) and reaches(blk, cblk):
+                        reach_under.add(blk)
+                print 'reach_under', reach_under
+                ok, rtype, nset = self.cyclic(reach_under, cblk)
+                if ok:
+                    ### Then we have an acyclic region. reduce the graph.
+                    newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
+                    pass
+                else:
+                    #print 'not acyclic'
+                    postctr += 1
 
             if self.debug:
                 print
@@ -261,7 +286,6 @@ class analyze(object):
                         print ' '*12, 'wat'
                         print ' '*12, r, r.next
                         print ' '*12, q, q.next
-                    raise Exception
             else:
                 ## could be an AND or OR or ERROR
                 ##kids = sorted([(r, r_index), (q, q_index)], key=lambda x: x[1])
@@ -272,6 +296,23 @@ class analyze(object):
                     print ' '*12, 'Except Not'
                     print ' '*12, r, r.next
                     print ' '*12, q, q.next
+
+        return False, None, None
+
+    ## Adapted from figure 7.42 on page 208
+    def cyclic(self, blks, cblk):
+        ''' Detects cyclic control flow regions suchs as while-loops.'''
+        for blk in blks:
+            if not reaches(cblk, blk):
+                raise RuntimeError, 'Improper Region'
+        blks.remove(cblk)
+        if len(blks) == 1:
+            oblk = blks.pop()
+            c_next = getnext(cblk)
+            o_next = getnext(oblk)
+            if len(c_next) == 2 and len(o_next) == 1 and \
+               len(cblk.prev) == 2 and len(oblk.prev) ==1:
+                return True, cfs.WHILE, [cblk, oblk]
 
         return False, None, None
 

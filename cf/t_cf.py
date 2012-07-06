@@ -696,7 +696,6 @@ def t_fib_while():
 
 
 def t_fib_for():
-    raise nose.SkipTest
 
     f = analyze('''
       var fib = func(x) {

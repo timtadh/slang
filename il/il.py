@@ -162,20 +162,6 @@ class Block(object):
         blk.prev.append(self)
 
     def dotty(self):
-        def reaches(s, t):
-            visited = set()
-            def visit(n):
-                if n.name == t.name:
-                    return True
-                visited.add(n.name)
-                found = False
-                for b in n.next:
-                    if b.target.name not in visited:
-                        found = found or visit(b.target)
-                    if found:
-                        break
-                return found
-            return visit(s)
         def string(n):
             #if isinstance(s, Node): return str(s.label)
             if isinstance(n, Block):
@@ -219,7 +205,7 @@ class Block(object):
             for v in n.next:
                 e_template = edge
                 if v.target.name in visited:
-                    if reaches(v.target, n):
+                    if cf.reaches(v.target, n):
                         e_template = backedge
                     vname = visited[v.target.name]
                 else:
