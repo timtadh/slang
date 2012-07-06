@@ -9,7 +9,7 @@ import sys, collections
 import il
 
 typesr = (
-    'CHAIN', 'IF_THEN', 'IF_THEN_ELSE', 'GENERAL_ACYCLIC', 'WHILE'
+    'CHAIN', 'IF_THEN', 'IF_THEN_ELSE', 'GENERAL_ACYCLIC', 'WHILE', 'NATURAL_LOOP'
 )
 types = dict((k, i) for i, k in enumerate(typesr))
 sys.modules[__name__].__dict__.update(types)

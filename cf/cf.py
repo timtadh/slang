@@ -122,8 +122,7 @@ class analyze(object):
                 for blk in blks:
                     if reaches(cblk, blk) and reaches(blk, cblk):
                         reach_under.add(blk)
-                print 'reach_under', reach_under
-                ok, rtype, nset = self.cyclic(reach_under, cblk)
+                ok, rtype, nset = self.cyclic(blks, reach_under, cblk)
                 if ok:
                     ### Then we have an acyclic region. reduce the graph.
                     newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
@@ -190,8 +189,6 @@ class analyze(object):
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
         ''' Detects acyclic control flow regions suchs as: chains and if-statements.'''
-
-
 
         def find_proper(n):
             visited = set()
@@ -300,19 +297,28 @@ class analyze(object):
         return False, None, None
 
     ## Adapted from figure 7.42 on page 208
-    def cyclic(self, blks, cblk):
+    def cyclic(self, blks, reach_under, cblk):
         ''' Detects cyclic control flow regions suchs as while-loops.'''
-        for blk in blks:
+        for blk in reach_under:
             if not reaches(cblk, blk):
                 raise RuntimeError, 'Improper Region'
-        blks.remove(cblk)
-        if len(blks) == 1:
-            oblk = blks.pop()
+        nset = set(reach_under)
+        nset = list(blk for blk in blks[::-1] if blk in nset)
+        reach_under.remove(cblk)
+        if len(reach_under) == 1:
+            oblk = reach_under.pop()
             c_next = getnext(cblk)
             o_next = getnext(oblk)
             if len(c_next) == 2 and len(o_next) == 1 and \
                len(cblk.prev) == 2 and len(oblk.prev) ==1:
                 return True, cfs.WHILE, [cblk, oblk]
-
+            else:
+                return True, cfs.NATURAL_LOOP, nset
+        elif len(reach_under) > 1:
+            if self.debug:
+                print ' '*12, 'more than one reaching under block'
+                print ' '*12, 'the blks', blks
+            return True, cfs.NATURAL_LOOP, nset
+            #raise Exception, 'unexpected cyclic structure'
         return False, None, None
 
