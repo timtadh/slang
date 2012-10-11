@@ -210,6 +210,9 @@ def forward_ff(A, save, node, *kids):
         save(in_body, out_body, node_body)
         return out_while_loop
 
+    def natural_loop(in_natural_loop):
+        return in_natural_loop
+
     if isinstance(node, il.Block):
         return single_block
     elif node.region_type == cf.cfs.CHAIN:
@@ -222,6 +225,8 @@ def forward_ff(A, save, node, *kids):
         return general_acyclic
     elif node.region_type == cf.cfs.WHILE:
         return while_loop
+    elif node.region_type == cf.cfs.NATURAL_LOOP:
+        return natural_loop
     else:
         raise Exception, "unexpect region type"
 

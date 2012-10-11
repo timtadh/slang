@@ -603,3 +603,24 @@ def t_livevar_fib_for_engine_attach():
     assert ids(f2.live('b7')['out']) == set([1, 2, 3, 6])
     assert ids(f2.live('b8')['inn']) == set([3])
     assert ids(f2.live('b8')['out']) == set([3])
+
+def t_reachdef_for_break_engine():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var f = func(x) {
+            var c = 1
+            for var i = 1; i < x; i = i + 1 {
+                if c/3 == x { break }
+                c = c * (c + i)
+            }
+            return c
+        }
+        print f(10)
+        ''')
+
+    name = reachdef.ReachingDefintions.name
+    df.analyze(reachdef.ReachingDefintions, functions, True)
+    f2 = functions['f2']
+
+    assert False

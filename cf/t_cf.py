@@ -759,4 +759,3 @@ def t_for_break():
     assert tree.children[0].region_type == cfs.IF_THEN
     assert tree.children[0].children[0].region_type == cfs.CHAIN
     assert tree.children[0].children[0].children[1].region_type == cfs.NATURAL_LOOP
-
