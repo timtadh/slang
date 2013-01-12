@@ -759,5 +759,6 @@ def t_for_iaote():
     tree = f.tree
     assert tree.region_type == cfs.CHAIN
     assert tree.children[1].region_type == cfs.WHILE
-    assert tree.children[1].children[0].region_type == cfs.GENERAL_ACYCLIC
+    assert tree.children[1].children[1].region_type == cfs.CHAIN
+    assert tree.children[1].children[1].children[0].region_type == cfs.GENERAL_ACYCLIC
 

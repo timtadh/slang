@@ -306,9 +306,9 @@ class analyze(object):
                 print blks
                 if len(cblk.prev) == 0:
                     return True, cfs.GENERAL_ACYCLIC, self.find_proper(cblk, blks)
-                #if len(cblk.prev) == 1 and \
-                  #any(b.type == il.BACKEDGE for b in cblk.prev):
-                    #return True, cfs.GENERAL_ACYCLIC, self.find_proper(cblk, blks)
+                elif len(cblk.prev) == 1 and \
+                  any(b.type == il.BACKEDGE for cb in cblk.prev for b in cb.target.prev):
+                    return True, cfs.GENERAL_ACYCLIC, self.find_proper(cblk, blks)
                 if self.debug:
                     print ' '*12, 'Except Not'
                     print ' '*12, r, r.next
