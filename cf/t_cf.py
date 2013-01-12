@@ -740,3 +740,24 @@ def t_simple_for():
     assert tree.region_type == cfs.CHAIN
     assert tree.children[1].region_type == cfs.WHILE
 
+def t_for_iaote():
+    #raise nose.SkipTest
+    f = analyze('''
+        var f = func(x) {
+            var c = 0
+            for var i = 1; i < x; i = i + 1 {
+                if (i < 3 && (1 < i || i < 4)) {
+                    c = c + 1
+                } else {
+                    c = c + 2
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[1].region_type == cfs.WHILE
+    assert tree.children[1].children[0].region_type == cfs.GENERAL_ACYCLIC
+
