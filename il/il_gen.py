@@ -152,7 +152,7 @@ class generate(object):
         blk = self.BooleanExpr(node.children[0], whileblk, thenblk, elseblk)
 
         thenblk = self.Stmts(node.children[1], thenblk)
-        thenblk.link(whileblk, il.UNCONDITIONAL)
+        thenblk.link(whileblk, il.BACKEDGE)
         thenblk.insts += [ il.Inst(il.J, whileblk, 0, 0) ]
 
         return elseblk
