@@ -165,7 +165,7 @@ class generate(object):
         self.breakstack.pop()
 
         if not thenblk.next:
-            thenblk.link(whileblk, il.UNCONDITIONAL)
+            thenblk.link(whileblk, il.BACKEDGE)
             thenblk.insts += [ il.Inst(il.J, whileblk, 0, 0) ]
 
         return elseblk

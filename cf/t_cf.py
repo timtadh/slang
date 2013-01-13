@@ -759,3 +759,73 @@ def t_for_break():
     assert tree.children[0].region_type == cfs.IF_THEN
     assert tree.children[0].children[0].region_type == cfs.CHAIN
     assert tree.children[0].children[0].children[1].region_type == cfs.NATURAL_LOOP
+
+def t_for_iaote():
+    #raise nose.skiptest
+    f = analyze('''
+        var f = func(x) {
+            var c = 0
+            for var i = 1; i < x; i = i + 1 {
+                if (i < 3 && (1 < i || i < 4)) {
+                    c = c + 1
+                } else {
+                    c = c + 2
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[1].region_type == cfs.WHILE
+    assert tree.children[1].children[1].region_type == cfs.CHAIN
+    assert tree.children[1].children[1].children[0].region_type == cfs.GENERAL_ACYCLIC
+
+def t_if_iaote():
+    #raise nose.skiptest
+    f = analyze('''
+        var f = func(x) {
+            var c = 0
+            var i = x + 2
+            if x / 2 == 1 {
+                i = i * 4
+            }
+            if (i < 3 && (1 < i || i < 4)) {
+                c = c + 1
+            } else {
+                c = c + 2
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
+    assert tree.children[0].children[0].region_type == cfs.CHAIN
+    assert tree.children[0].children[0].children[0].region_type == cfs.IF_THEN
+
+def t_iaote_in_if():
+    #raise nose.skiptest
+    f = analyze('''
+        var f = func(x) {
+            var c = 0
+            var i = x + 2
+            if x / 2 == 1 {
+                i = i * 4
+                if (i < 3 && (1 < i || i < 4)) {
+                    c = c + 1
+                } else {
+                    c = c + 2
+                }
+            }
+            return c
+        }
+        print f(10)
+        ''')['f2']
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
+

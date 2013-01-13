@@ -159,7 +159,7 @@ def forward_ff(A, save, node, *kids):
         blks_ff = dict()
         ends = set()
         def prev(n):
-            return [c for c in n.prev if c.name in blks]
+            return [b.target for b in n.prev if b.target.name in blks]
         for ff, node in kids:
             blks[node.name] = node
             blks_ff[node.name] = ff

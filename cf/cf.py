@@ -19,6 +19,12 @@ def getnext(n):
     else:
         return n.next
 
+def getprev(n):
+    if isinstance(n, il.Block):
+        return [b.target for b in n.prev]
+    else:
+        return n.prev
+
 def reaches(s, t):
     visited = set()
     def visit(n):
@@ -168,9 +174,13 @@ class analyze(object):
                 for v in getnext(n):
                     if v not in nset:
                         if v not in node.next: node.next.append(v)
-                        v.prev.remove(n)
-                        if node not in v.prev: v.prev.append(node)
-                for u in n.prev:
+                        branch = v.prev.pop(v.prev.index(n))
+                        if node not in v.prev:
+                            if isinstance(branch, il.Branch):
+                                v.prev.append(il.Branch(branch.type, node))
+                            else:
+                                v.prev.append(node)
+                for u in getprev(n):
                     if u not in nset:
                         if u not in node.prev: node.prev.append(u)
                         print n, u.next
@@ -186,29 +196,35 @@ class analyze(object):
         blks, postctr = replace(blks, node, nset, postctr)
         return node, blks, postctr
 
+    def find_proper(self, n, blks):
+        def getnext(n):
+            if isinstance(n, il.Block):
+                return [b.target for b in n.next if b.type != il.BACKEDGE]
+            else:
+                return n.next
+        visited = set()
+        completed = set()
+        depth = dict()
+        def visit(c, parents):
+            visited.add(c.name)
+            for kid in getnext(c):
+                if kid.name in visited and kid.name not in completed:
+                    raise RuntimeError, 'Cyclic structure'
+                d = depth.get(kid.name, 0)
+                if parents + 1 > d: depth[kid.name] = parents + 1
+                if kid.name not in visited:
+                    visit(kid, parents + 1)
+            completed.add(c.name)
+        depth.update({n.name:0})
+        visit(n, 0)
+        final_name = max(depth, key=lambda x: depth[x])
+        visited.remove(final_name)
+        return list(blk for blk in blks[::-1] if blk.name in visited)
+
     ## Adapted from figure 7.41 on page 208
     def acyclic(self, blks, cblk):
         ''' Detects acyclic control flow regions suchs as: chains and if-statements.'''
 
-        def find_proper(n):
-            visited = set()
-            completed = set()
-            depth = dict()
-            def visit(c, parents):
-                visited.add(c.name)
-                for kid in getnext(c):
-                    if kid.name in visited and kid.name not in completed:
-                        raise RuntimeError, 'Cyclic structure'
-                    d = depth.get(kid.name, 0)
-                    if parents + 1 > d: depth[kid.name] = parents + 1
-                    if kid.name not in visited:
-                        visit(kid, parents + 1)
-                completed.add(c.name)
-            depth.update({n.name:0})
-            visit(n, 0)
-            final_name = max(depth, key=lambda x: depth[x])
-            visited.remove(final_name)
-            return list(blk for blk in blks[::-1] if blk.name in visited)
         nset = set()
 
         ## BEGIN CHAIN CHECK:
@@ -234,7 +250,7 @@ class analyze(object):
         s = True
         while p and s:
             nset.add(n)
-            n = n.prev[0]
+            n = getprev(n)[0]
             p = (len(n.prev) == 1)
             s = (len(n.next) == 1)
 
@@ -288,7 +304,10 @@ class analyze(object):
                 ##kids = sorted([(r, r_index), (q, q_index)], key=lambda x: x[1])
                 print blks
                 if len(cblk.prev) == 0:
-                    return True, cfs.GENERAL_ACYCLIC, find_proper(cblk)
+                    return True, cfs.GENERAL_ACYCLIC, self.find_proper(cblk, blks)
+                elif len(cblk.prev) == 1 and \
+                  any(b.type == il.BACKEDGE for cb in cblk.prev for b in cb.target.prev):
+                    return True, cfs.GENERAL_ACYCLIC, self.find_proper(cblk, blks)
                 if self.debug:
                     print ' '*12, 'Except Not'
                     print ' '*12, r, r.next

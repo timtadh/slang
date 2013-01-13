@@ -19,7 +19,7 @@ opsr = (
 ops = dict((k, i) for i, k in enumerate(opsr))
 sys.modules[__name__].__dict__.update(ops)
 
-branch_typesr = ('UNCONDITIONAL', 'TRUE', 'FALSE')
+branch_typesr = ('UNCONDITIONAL', 'BACKEDGE', 'TRUE', 'FALSE')
 branch_types = dict((k, i) for i, k in enumerate(branch_typesr))
 sys.modules[__name__].__dict__.update(branch_types)
 
@@ -159,7 +159,7 @@ class Block(object):
     def link(self, blk, branch_type):
         if blk in self.next: return
         self.next.append(Branch(branch_type, blk))
-        blk.prev.append(self)
+        blk.prev.append(Branch(branch_type, self))
 
     def dotty(self):
         def string(n):
