@@ -128,7 +128,7 @@ class analyze(object):
                 for blk in blks:
                     if reaches(cblk, blk) and reaches(blk, cblk):
                         reach_under.add(blk)
-                print 'reach_under', reach_under
+                if self.debug: print 'reach_under', reach_under
                 ok, rtype, nset = self.cyclic(reach_under, cblk)
                 if ok:
                     ### Then we have an acyclic region. reduce the graph.
@@ -184,7 +184,7 @@ class analyze(object):
                 for u in getprev(n):
                     if u not in nset:
                         if u not in node.prev: node.prev.append(u)
-                        print n, u.next
+                        if self.debug: print n, u.next
                         branch = u.next.pop(u.next.index(n))
                         if node not in u.next:
                             if isinstance(branch, il.Branch):
@@ -284,7 +284,8 @@ class analyze(object):
                 r = cblk.next[0]
                 q = cblk.next[1]
 
-            print cblk, r, q
+            if self.debug:
+                print cblk, r, q
             r_next = getnext(r)
             q_next = getnext(q)
 
