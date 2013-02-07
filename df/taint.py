@@ -23,7 +23,7 @@ def istainted(func):
 
 class TaintFlow(abstract.DataFlowAnalyzer):
 
-    name = 'taintflow'
+    name = 'taint'
     direction = 'forward'
 
     def __init__(self, f, debug=False):

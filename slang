@@ -147,6 +147,7 @@ def compile(source, ofile, asm=False, images=False, debug=False, dataflow=False)
     if dataflow:
         df.analyze(df.reachdef.ReachingDefinitions, functions)
         df.analyze(df.livevar.LiveVariable, functions, attach_method=True)
+        df.analyze(df.taint.TaintFlow, functions, attach_method=True)
         log('reachdef')
         for fname, f in functions.iteritems():
             log(' '*2, fname)
@@ -161,6 +162,13 @@ def compile(source, ofile, asm=False, images=False, debug=False, dataflow=False)
                 log(' '*4, blk.name)
                 log(' '*8, ' in', f.livetypes(blk.name, dir='inn'))
                 log(' '*8, 'out', f.livetypes(blk.name, dir='out'))
+        log('taint')
+        for fname, f in functions.iteritems():
+            log(' '*2, fname)
+            for blk in f.blks:
+                log(' '*4, blk.name)
+                log(' '*8, ' in', f.taints(blk.name, 'inn'))
+                log(' '*8, 'out', f.taints(blk.name, 'out'))
     code = x86_gen.generate(table, blocks, functions)
 
     if asm:

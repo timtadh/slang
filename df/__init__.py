@@ -1,3 +1,3 @@
 from df import analyze
-import livevar, reachdef
+import livevar, reachdef, taint
 
