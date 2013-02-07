@@ -330,8 +330,9 @@ class Int(Type):
 
 class Func(Type):
 
-    def __init__(self, name):
+    def __init__(self, name, decl_name):
         self._entry = name
+        self.decl_name = decl_name
         super(Func, self).__init__()
 
     @property

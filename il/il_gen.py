@@ -187,11 +187,10 @@ class generate(object):
         assert node.label == 'Var'
         name = node.children[0]
 
-
         if len(node.children) == 2:
             c = node.children[1]
             if c.label == 'Func':
-                s = il.Symbol(name, il.Func(None))
+                s = il.Symbol(name, il.Func(None, name))
                 if name in self.objs.myscope:
                     raise TypeError, "Name '%s' redeclared in same scope." % name
                 self.objs.add(s)

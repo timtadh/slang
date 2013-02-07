@@ -18,7 +18,7 @@ from lib import DFS
 ##              +-
 
 def istainted(func):
-    if 'taint' in func.name: return True
+    if 'taint' in func.decl_name: return True
     return False
 
 class TaintFlow(abstract.DataFlowAnalyzer):
@@ -28,6 +28,12 @@ class TaintFlow(abstract.DataFlowAnalyzer):
 
     def __init__(self, f, debug=False):
         self.debug = debug
+        self.types = dict()
+        def addname(operand):
+            if not isinstance(operand, il.Symbol): return
+            if operand.type.id not in self.types:
+                self.types[operand.type.id] = set()
+            self.types[operand.type.id].add(operand.name)
         for blk in f.blks:
             iprms = list()
             call = None
@@ -40,12 +46,15 @@ class TaintFlow(abstract.DataFlowAnalyzer):
                     call = inst
                 elif inst.op == il.RPRM:
                     call.rprms.append(inst)
+                addname(inst.a)
+                addname(inst.b)
+                addname(inst.result)
 
     def flow_function(self, blk):
         #prev_blks = DFS(blk, 'prev')
         def instflow(inst):
             def flow(tainted):
-                def istaint(i)
+                def istaint(i):
                     if isinstance(i.a, il.Symbol) and i.a.type.id in tainted:
                         return True
                     elif isinstance(i.b, il.Symbol) and i.b.type.id in tainted:
@@ -57,6 +66,7 @@ class TaintFlow(abstract.DataFlowAnalyzer):
                         return tainted | set([inst.result.type.id])
                 elif inst.op == il.CALL:
                     func = inst.a.type
+                    print func
                     if ((isinstance(func, il.Func) and istainted(func)) or
                       any(istaint(iprm) for iprm in inst.iprms)):
                         new = set()
@@ -64,7 +74,7 @@ class TaintFlow(abstract.DataFlowAnalyzer):
                             new.add(rprm.result.type.id)
                         return tainted | new
                 return tainted
-            return x
+            return flow
 
         flowfuncs = list()
         for i, inst in enumerate(blk.insts):
@@ -94,4 +104,21 @@ class TaintFlow(abstract.DataFlowAnalyzer):
         def h(x):
             return self.join(self.id(x), f(x))
         return h
+
+    @staticmethod
+    def has_result_method(): return True
+
+    def get_result_method(analyzer):
+        def taint_types(self, blk_name):
+            r = self.df[analyzer.name]
+            return {
+                'inn':dict((id, analyzer.types[id]) for id in r.inn[blk_name]),
+                'out':dict((id, analyzer.types[id]) for id in r.out[blk_name])
+            }
+        def taints(self, blk_name, dir):
+            acc = set()
+            for names in taint_types(self, blk_name)[dir].itervalues():
+                acc |= names
+            return acc
+        return ('taint_types',taint_types), ('taints',taints)
 

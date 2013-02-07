@@ -808,3 +808,65 @@ def t_iaote_in_if():
     assert tree.region_type == cfs.CHAIN
     assert tree.children[0].region_type == cfs.GENERAL_ACYCLIC
 
+def t_taint_straight_engine():
+    #raise nose.SkipTest
+
+    f = analyze('''
+        var dostuff = func() {
+            var taint_source = func() {
+                return 15
+            }
+            var x = taint_source()
+            var y = 15
+            var z = 17
+            var q = x - y + z
+            print q
+            return
+        }
+        dostuff()
+        ''')['f2']
+    assert isinstance(f.tree, il.Block)
+
+def t_taint_ite_engine():
+    #raise nose.SkipTest
+
+    f = analyze('''
+        var dostuff = func(i) {
+            var taint_source = func() {
+                return 15
+            }
+            var x = taint_source()
+            var y
+            if i < 12 {
+                y = x
+            } else {
+                y = 12
+            }
+            print y
+            return
+        }
+        dostuff()
+        ''')['f2']
+
+    tree = f.tree
+    assert tree.region_type == cfs.CHAIN
+    assert tree.children[0].region_type == cfs.IF_THEN_ELSE
+
+def t_taint_func_engine():
+    #raise nose.SkipTest
+
+    f = analyze('''
+        var dostuff = func(i) {
+            var taint_source = func() {
+                return 15
+            }
+            var add = func(a, b, c) {
+                return a + b + c
+            }
+            var y = add(1, 2, taint_source())
+            print y
+            return
+        }
+        dostuff()
+        ''')['f2']
+    assert isinstance(f.tree, il.Block)

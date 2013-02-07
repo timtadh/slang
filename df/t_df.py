@@ -8,7 +8,7 @@ import os, subprocess, itertools
 
 from frontend.sl_parser import Parser, Lexer
 import cf, il, df
-import abstract, reachdef, livevar
+import abstract, reachdef, livevar, taint
 import nose
 
 def cf_analyze(s):
@@ -602,4 +602,92 @@ def t_livevar_fib_for_engine_attach():
     assert ids(f2.live('b7')['inn']) == set([1, 2, 3, 6])
     assert ids(f2.live('b7')['out']) == set([1, 2, 3, 6])
     assert ids(f2.live('b8')['inn']) == set([3])
-    assert ids(f2.live('b8')['out']) == set([3])
+ 
+def t_taint_straight_engine():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var dostuff = func() {
+            var taint_source = func() {
+                return 15
+            }
+            var x = taint_source()
+            var y = 15
+            var z = 17
+            var q = x - y + z
+            print q
+            return
+        }
+        dostuff()
+        ''')
+
+    name = taint.TaintFlow.name
+    df.analyze(taint.TaintFlow, functions, True, True)
+    f2 = functions['f2']
+
+    assert f2.taints('b2', 'inn') == set([])
+    assert f2.taints('b2', 'out') == set(['x', 'q', 'rt2'])
+
+def t_taint_ite_engine():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var dostuff = func(i) {
+            var taint_source = func() {
+                return 15
+            }
+            var x = taint_source()
+            var y
+            if i < 12 {
+                y = x
+            } else {
+                y = 12
+            }
+            print y
+            return
+        }
+        dostuff()
+        ''')
+
+    name = taint.TaintFlow.name
+    df.analyze(taint.TaintFlow, functions, True, True)
+    f2 = functions['f2']
+
+    for blk in f2.blks:
+        print blk.name, ' in', f2.taints(blk.name, 'inn')
+        print blk.name, 'out', f2.taints(blk.name, 'out')
+    assert f2.taints('b2', 'inn') == set([])
+    assert f2.taints('b2', 'out') == set(['x'])
+    assert f2.taints('b4', 'inn') == set(['x'])
+    assert f2.taints('b4', 'out') == set(['y', 'x'])
+    assert f2.taints('b5', 'inn') == set(['y', 'x'])
+    assert f2.taints('b5', 'out') == set(['y', 'x'])
+    assert f2.taints('b6', 'inn') == set(['x'])
+    assert f2.taints('b6', 'out') == set(['x'])
+
+
+def t_taint_func_engine():
+    #raise nose.SkipTest
+
+    blocks, functions = cf_analyze('''
+        var dostuff = func(i) {
+            var taint_source = func() {
+                return 15
+            }
+            var add = func(a, b, c) {
+                return a + b + c
+            }
+            var y = add(1, 2, taint_source())
+            print y
+            return
+        }
+        dostuff()
+        ''')
+
+    name = taint.TaintFlow.name
+    df.analyze(taint.TaintFlow, functions, True, True)
+    f2 = functions['f2']
+
+    assert f2.taints('b2', 'inn') == set([])
+    assert f2.taints('b2', 'out') == set(['y', 'rt9])
+
