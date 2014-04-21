@@ -10,7 +10,7 @@ import abstract, il
 from lib import DFS
 
 
-class ReachingDefintions(abstract.DataFlowAnalyzer):
+class ReachingDefinitions(abstract.DataFlowAnalyzer):
 
     name = 'reachdef'
     direction = 'forward'

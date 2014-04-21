@@ -24,7 +24,7 @@ def t_reachdef_instantiate():
     blocks, functions = cf_analyze('''
         print 10
         ''')
-    reachdef.ReachingDefintions(functions['main'])
+    reachdef.ReachingDefinitions(functions['main'])
 
 def t_reachdef_init():
     blocks, functions = cf_analyze('''
@@ -43,7 +43,7 @@ def t_reachdef_init():
         print f(10)
         ''')
 
-    rd = reachdef.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefinitions(functions['f2'])
     print set(t for t in rd.types.keys())
     print set(itertools.chain(*rd.types.values()))
     assert set(t for t in rd.types.keys()) == set([1, 4, 5, 6, 8, 10])
@@ -64,7 +64,7 @@ def t_reachdef_flowfunction():
         print f(10)
         ''')
 
-    rd = reachdef.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefinitions(functions['f2'])
     print
     ff = rd.flow_function(blocks['b3'])
 
@@ -85,7 +85,7 @@ def t_reachdef_flowfunction_finally():
         print f(10)
         ''')
 
-    rd = reachdef.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefinitions(functions['f2'])
     ff_if = rd.flow_function(blocks['b2'])
     ff_then = rd.flow_function(blocks['b3'])
     ff_else = rd.flow_function(blocks['b5'])
@@ -115,7 +115,7 @@ def t_reachdef_ifthenelse_byhand():
         print f(10)
         ''')
 
-    rd = reachdef.ReachingDefintions(functions['f2'])
+    rd = reachdef.ReachingDefinitions(functions['f2'])
     ff_if = rd.flow_function(blocks['b2'])
     ff_then = rd.flow_function(blocks['b3'])
     ff_else = rd.flow_function(blocks['b5'])
@@ -148,9 +148,9 @@ def t_reachdef_ifthenelse_engine():
         print f(10)
         ''')
 
-    df.analyze(reachdef.ReachingDefintions, functions, True)
+    df.analyze(reachdef.ReachingDefinitions, functions, True)
 
-    name = reachdef.ReachingDefintions.name
+    name = reachdef.ReachingDefinitions.name
 
     b1_inn = functions['main'].df[name].inn['b1']
     b1_out = functions['main'].df[name].out['b1']
@@ -194,9 +194,9 @@ def t_reachdef_ifthen_engine():
         print f(10)
         ''')
 
-    df.analyze(reachdef.ReachingDefintions, functions, True)
+    df.analyze(reachdef.ReachingDefinitions, functions, True)
 
-    name = reachdef.ReachingDefintions.name
+    name = reachdef.ReachingDefinitions.name
 
     b1_inn = functions['main'].df[name].inn['b1']
     b1_out = functions['main'].df[name].out['b1']
@@ -369,8 +369,8 @@ def t_reachdef_ifandorthen_engine():
         print f(10)
         ''')
 
-    name = reachdef.ReachingDefintions.name
-    df.analyze(reachdef.ReachingDefintions, functions, True)
+    name = reachdef.ReachingDefinitions.name
+    df.analyze(reachdef.ReachingDefinitions, functions, True)
     f2 = functions['f2']
 
     b1_inn = functions['main'].df[name].inn['b1']
@@ -458,8 +458,8 @@ def t_reachdef_for_engine():
         print f(10)
         ''')
 
-    name = reachdef.ReachingDefintions.name
-    df.analyze(reachdef.ReachingDefintions, functions, True)
+    name = reachdef.ReachingDefinitions.name
+    df.analyze(reachdef.ReachingDefinitions, functions, True)
     f2 = functions['f2']
 
     b2_inn = functions['f2'].df[name].inn['b2']
@@ -501,8 +501,8 @@ def t_reachdef_fib_for_engine():
       print fib(10)
         ''')
 
-    name = reachdef.ReachingDefintions.name
-    df.analyze(reachdef.ReachingDefintions, functions, True)
+    name = reachdef.ReachingDefinitions.name
+    df.analyze(reachdef.ReachingDefinitions, functions, True)
     f2 = functions['f2']
 
     b2_inn = functions['f2'].df[name].inn['b2']

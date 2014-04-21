@@ -128,9 +128,10 @@ class analyze(object):
                 for blk in blks:
                     if reaches(cblk, blk) and reaches(blk, cblk):
                         reach_under.add(blk)
+                if self.debug: print 'reach_under', reach_under
                 ok, rtype, nset = self.cyclic(blks, reach_under, cblk)
                 if ok:
-                    ### Then we have an acyclic region. reduce the graph.
+                    ### Then we have a cyclic region. reduce the graph.
                     newnode, blks, postctr = self.reduce(blks, rtype, nset, postctr)
                     pass
                 else:
@@ -183,7 +184,7 @@ class analyze(object):
                 for u in getprev(n):
                     if u not in nset:
                         if u not in node.prev: node.prev.append(u)
-                        print n, u.next
+                        if self.debug: print n, u.next
                         branch = u.next.pop(u.next.index(n))
                         if node not in u.next:
                             if isinstance(branch, il.Branch):
@@ -283,7 +284,8 @@ class analyze(object):
                 r = cblk.next[0]
                 q = cblk.next[1]
 
-            print cblk, r, q
+            if self.debug:
+                print cblk, r, q
             r_next = getnext(r)
             q_next = getnext(q)
 
@@ -331,8 +333,6 @@ class analyze(object):
             if len(c_next) == 2 and len(o_next) == 1 and \
                len(cblk.prev) == 2 and len(oblk.prev) ==1:
                 return True, cfs.WHILE, [cblk, oblk]
-            else:
-                return True, cfs.NATURAL_LOOP, nset
         elif len(reach_under) > 1:
             if self.debug:
                 print ' '*12, 'more than one reaching under block'

@@ -12,4 +12,8 @@ exe
 *.swp
 fib
 fib.s
+fib-for
+fib-for.s
+*.s
+.noseids
 
