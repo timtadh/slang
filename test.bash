@@ -1,1 +1,1 @@
-nosetests -m "t_.*" -v
+nosetests -m "t_.*" -v $@
