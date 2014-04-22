@@ -4,12 +4,16 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
+import traceback
 import cStringIO
+
+import nose
+from nose.tools import eq_ as eq
 
 from frontend.sl_parser import Parser, Lexer
 from table import SymbolTable
 import il_gen, il
-import nose
+from cf.t_cf import dot
 
 def blocks(s):
     objs, blocks, funcs = il_gen.generate(Parser().parse(s, lexer=Lexer()))
@@ -17,7 +21,12 @@ def blocks(s):
 
 def run(s):
     out = cStringIO.StringIO()
-    il.run(*il_gen.generate(Parser().parse(s, lexer=Lexer())), stdout=out)
+    name = traceback.extract_stack()[-2][2]
+    ast = Parser().parse(s, lexer=Lexer())
+    #dot('il.ast.%s'%name, ast.dotty(), str(ast))
+    table, blocks, functions = il_gen.generate(ast, debug=True)
+    #dot('il.blks.%s'%name, functions['f2'].entry.dotty())
+    il.run(table, blocks, functions, stdout=out)
     return out.getvalue()
 
 def t_expr_const():
@@ -645,7 +654,7 @@ def t_fib_for():
         ''').rstrip('\n')
 
 def t_fib_for_break():
-    assert str(5) == run('''
+    eq(str(3), run('''
       var fib = func(x) {
           var prev = 0
           var cur = 1
@@ -654,6 +663,7 @@ def t_fib_for_break():
           } else {
               for var i = 1; i < x; i = i + 1 {
                   if cur == 5 && prev == 3 {
+                      cur = prev
                       break
                   }
                   var next = prev + cur
@@ -664,4 +674,4 @@ def t_fib_for_break():
           return cur
       }
       print fib(10)
-        ''').rstrip('\n')
+        ''').rstrip('\n'))

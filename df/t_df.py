@@ -4,16 +4,23 @@
 #Email: tim.tadh@hackthology.com
 #For licensing see the LICENSE file in the top level directory.
 
-import os, subprocess, itertools
+import os, subprocess, itertools, traceback
 
-from frontend.sl_parser import Parser, Lexer
-import cf, il, df
-import abstract, reachdef, livevar
 import nose
 
+from frontend.sl_parser import Parser, Lexer
+import abstract, reachdef, livevar
+import cf, il, df
+from cf.t_cf import dot
+
 def cf_analyze(s):
-    table, blocks, functions = il.il_gen.generate(Parser().parse(s, lexer=Lexer()), True)
-    cf.analyze(table, blocks, functions)
+    name = traceback.extract_stack()[-2][2]
+    ast = Parser().parse(s, lexer=Lexer())
+    dot('df.ast.%s'%name, ast.dotty(), str(ast))
+    table, blocks, functions = il.il_gen.generate(ast, debug=True)
+    if 'f2' in functions: dot('df.blks.%s'%name, functions['f2'].entry.dotty())
+    cf.analyze(table, blocks, functions, debug=True)
+    if 'f2' in functions: dot('df.cf.%s'%name, functions['f2'].tree.dotty())
     return blocks, functions
 
 @nose.tools.raises(TypeError)
@@ -611,7 +618,9 @@ def t_reachdef_for_break_engine():
         var f = func(x) {
             var c = 1
             for var i = 1; i < x; i = i + 1 {
-                if c/3 == x { break }
+                if c/3 == x {
+                    break
+                }
                 c = c * (c + i)
             }
             return c
@@ -619,8 +628,9 @@ def t_reachdef_for_break_engine():
         print f(10)
         ''')
 
-    name = reachdef.ReachingDefintions.name
-    df.analyze(reachdef.ReachingDefintions, functions, True)
+    name = reachdef.ReachingDefinitions.name
+    df.analyze(reachdef.ReachingDefinitions, functions, True)
     f2 = functions['f2']
 
     assert False
+

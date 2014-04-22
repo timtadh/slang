@@ -120,9 +120,6 @@ class analyze(object):
                 #if f.entry in nset:
                     #f.entry = newnode
             else:
-                ## if nessesary insert cyclic region detection here
-                ## right now, I only have if-statements and functions
-                ## so there are no inter-block cycles.
                 reach_under = set()
                 reach_under.add(cblk)
                 for blk in blks:
@@ -320,24 +317,30 @@ class analyze(object):
     ## Adapted from figure 7.42 on page 208
     def cyclic(self, blks, reach_under, cblk):
         ''' Detects cyclic control flow regions suchs as while-loops.'''
+
         for blk in reach_under:
             if not reaches(cblk, blk):
                 raise RuntimeError, 'Improper Region'
-        nset = set(reach_under)
-        nset = list(blk for blk in blks[::-1] if blk in nset)
-        reach_under.remove(cblk)
-        if len(reach_under) == 1:
-            oblk = reach_under.pop()
-            c_next = getnext(cblk)
-            o_next = getnext(oblk)
-            if len(c_next) == 2 and len(o_next) == 1 and \
-               len(cblk.prev) == 2 and len(oblk.prev) ==1:
-                return True, cfs.WHILE, [cblk, oblk]
-        elif len(reach_under) > 1:
-            if self.debug:
-                print ' '*12, 'more than one reaching under block'
-                print ' '*12, 'the blks', blks
+
+        if len(reach_under) <= 1:
+            return False, None, None
+
+        nset = list(blk for blk in blks[::-1] if blk in reach_under)
+        exit_blks = set(
+            blk
+            for blk in nset
+            if any(n not in reach_under for n in getnext(blk))
+        )
+
+        if cblk not in exit_blks:
+            return False, None, None
+
+        if len(exit_blks) == 1 and len(reach_under) == 2:
+            return True, cfs.WHILE, nset
+        elif len(exit_blks) == 1:
+            raise RuntimeError, "While loop with a non-reduced body"
+        elif len(exit_blks) > 1:
             return True, cfs.NATURAL_LOOP, nset
-            #raise Exception, 'unexpected cyclic structure'
+
         return False, None, None
 

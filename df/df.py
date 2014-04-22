@@ -211,6 +211,24 @@ def forward_ff(A, save, node, *kids):
         return out_while_loop
 
     def natural_loop(in_natural_loop):
+        nodes = set(n for ff, n in kids)
+        _entrance, node_entrance = kids[0]
+        exits = list(
+            (ff, node)
+            for ff, node in kids
+            if any(n not in nodes for n in cf.getnext(node)) and
+               node != node_entrance
+        )
+        exit_nodes = set(n for ff, n in exits)
+        body = list(
+            (ff, node)
+            for ff, node in kids
+            if node != node_entrance and node not in exit_nodes
+        )
+        ## What I need to do here:
+        ## Compute the _loop for the acyclic structure with in.
+        ## then compute each exit separately from what was computed by
+        ## the loop.
         return in_natural_loop
 
     if isinstance(node, il.Block):
@@ -310,6 +328,24 @@ def backward_ff(A, save, node, *kids):
         save(in_while, out_while, node_while)
         save(in_body, out_body, node_body)
         return in_while_loop
+
+    def natural_loop(out_natural_loop):
+        nodes = set(n for ff, n in kids)
+        _entrance, node_entrance = kids[0]
+        exits = list(
+            (ff, node)
+            for ff, node in kids
+            if any(n not in nodes for n in cf.getnext(node)) and
+               node != node_entrance
+        )
+        exit_nodes = set(n for ff, n in exits)
+        body = list(
+            (ff, node)
+            for ff, node in kids
+            if node != node_entrance and node not in exit_nodes
+        )
+        raise RuntimeError, "Can't do natural loops backwards!"
+        return out_natural_loop
 
     if isinstance(node, il.Block):
         return single_block

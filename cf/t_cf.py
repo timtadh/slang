@@ -19,11 +19,11 @@ img_dir = os.path.abspath('./imgs')
 def analyze(s):
     name = traceback.extract_stack()[-2][2]
     ast = Parser().parse(s, lexer=Lexer())
-    dot('ast.%s'%name, ast.dotty(), str(ast))
+    dot('cf.ast.%s'%name, ast.dotty(), str(ast))
     table, blocks, functions = il_gen.generate(ast, debug=True)
-    dot('blks.%s'%name, functions['f2'].entry.dotty())
+    dot('cf.blks.%s'%name, functions['f2'].entry.dotty())
     cf.analyze(table, blocks, functions, debug=True)
-    dot('cf.%s'%name, functions['f2'].tree.dotty())
+    dot('cf.cf.%s'%name, functions['f2'].tree.dotty())
     return functions
 
 def mock():
